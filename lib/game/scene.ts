@@ -2,6 +2,7 @@ import * as T from 'three';
 import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import {createAxieActor} from './model';
 import {FollowCamera} from './camera';
+import {pixelMaterial,voxelIsland,type PixelSurface} from './environment';
 import { CROPS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, beginExpedition, emptyLoot, rewardKill, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
 import { registerGameTools } from './webmcp';
 
@@ -32,7 +33,7 @@ export class WildseedGame {
  this.makeFarm();this.makeArena();
  this.followCamera=new FollowCamera(this.camera,this.renderer.domElement,()=>this.started&&!this.paused&&!this.upgrade&&!this.result&&!document.hidden,this.click);
  this.scene.updateMatrixWorld(true);
- for(const world of [this.farmWorld,this.arena])world.traverse(o=>{if(o instanceof T.Mesh){const box=new T.Box3().setFromObject(o);if(box.max.y>1&&box.max.y-box.min.y>.8)this.cameraObstacles.push(o);}});
+ for(const world of [this.farmWorld,this.arena])world.traverse(o=>{if(o instanceof T.Mesh&&!o.userData.cameraIgnore){const box=new T.Box3().setFromObject(o);if(box.max.y>1&&box.max.y-box.min.y>.8)this.cameraObstacles.push(o);}});
  this.followCamera.snap(this.player.position);
  this.ring=new T.Mesh(new T.RingGeometry(.8,1,48),new T.MeshBasicMaterial({color:'#ffedac',side:T.DoubleSide,transparent:true,opacity:.85}));this.ring.rotation.x=-Math.PI/2;this.ring.position.y=.22;this.farmWorld.add(this.ring);
  this.portal=this.farmWorld.getObjectByName('portal') as T.Mesh;
@@ -42,43 +43,49 @@ export class WildseedGame {
  this.abortTools=registerGameTools(()=>this.farm,(i,seed)=>{if(this.mode!=='farm'||!this.started)throw Error('Enter the garden before tending plots');this.seed=seed;this.selectPlot(i);return this.tendPlot();});
  this.loadActors();this.emit();this.frame=requestAnimationFrame(this.tick);
  }
- private mat(color:string){let m=this.materialCache.get(color);if(!m){m=new T.MeshStandardMaterial({color,roughness:.86});this.materialCache.set(color,m);}return m;}
+ private mat(color:string,surface:PixelSurface='stone'){const key=color+surface;let m=this.materialCache.get(key);if(!m){m=pixelMaterial(color,surface);this.materialCache.set(key,m);}return m;}
  private shape(parent:T.Object3D,geo:T.BufferGeometry,color:string,x:number,y:number,z:number,sx=1,sy=1,sz=1){const m=new T.Mesh(geo,this.mat(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
  private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new T.BoxGeometry(w,h,d),c,x,y,z);}
- private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
- private tree(p:T.Object3D,x:number,z:number,s:number,color='#5a974f'){this.shape(p,new T.CylinderGeometry(.16,.25,2.4,7),'#785844',x,1.1*s,z,s,s,s);this.blob(p,color,x,3.1*s,z,1.5*s,1.8*s,1.4*s);this.blob(p,'#83b45b',x-.55*s,3.1*s,z+.6*s,.95*s);this.blob(p,'#6ba250',x+.6*s,3.8*s,z,.8*s);}
+ private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){if(p===this.farmWorld||p===this.arena||this.plants.some(group=>group===p))return this.box(p,c,x,y,z,sx*1.65,sy*1.65,sz*1.65);return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
+ private tree(p:T.Object3D,x:number,z:number,s:number,color='#5a974f'){
+ const trunk=this.box(p,'#785844',x,1.25*s,z,.5*s,2.5*s,.5*s);trunk.material=this.mat('#785844','wood');
+ const tiers=[{y:2.5,w:2.5,h:1.05},{y:3.35,w:2.05,h:.9},{y:4.05,w:1.2,h:.65}];
+ tiers.forEach((t,i)=>{const crown=this.box(p,i===1?(color==='#5a974f'?'#83b45b':'#659889'):color,x,t.y*s,z,t.w*s,t.h*s,t.w*s);crown.material=this.mat(i===1?(color==='#5a974f'?'#83b45b':'#659889'):color,'leaves');});
+ this.box(p,color,x+.95*s,2.75*s,z+.6*s,.85*s,.7*s,.9*s);this.box(p,color,x-.8*s,3.05*s,z-.45*s,.85*s,.65*s,.8*s);
+ }
+
 
  private makeFarm(){
- const p=this.farmWorld;this.shape(p,new T.CylinderGeometry(14,12.7,2.2,64),'#876c50',0,-1.25,0);this.shape(p,new T.CylinderGeometry(14.1,14,.25,64),'#86b95d',0,-.08,0);
+ const p=this.farmWorld;voxelIsland(p,14,this.mat('#8ac563','grass'),this.mat('#997050','soil'),this.mat('#686d79','stone'));
  // A winding footpath connects the cottage, beds, and expedition gate.
- for(let i=0;i<24;i++){const x=-8+i*.7,z=-2.5+Math.sin(i*.22)*1.7;this.shape(p,new T.CylinderGeometry(.75,.8,.055,7),'#d1c38a',x,.07,z,1,.9,1);}
+ for(let i=0;i<24;i++){const x=-8+i*.7,z=-2.5+Math.sin(i*.22)*1.7;const tile=this.box(p,'#d1c38a',Math.round(x*2)/2,.055,Math.round(z*2)/2,1,.07,1);tile.material=this.mat('#d1c38a','tile');}
  for(let i=0;i<12;i++){const pos=plotPosition(i);const b=this.box(p,'#776049',pos.x,.10,pos.z,1.94,.21,1.94);b.userData.plot=i;this.plots.push(b);const plant=new T.Group();plant.position.copy(pos);this.plants.push(plant);p.add(plant);
  for(const dx of [-1,1])this.box(p,'#bca479',pos.x+dx*.97,.22,pos.z,.1,.16,2.04);for(const dz of [-1,1])this.box(p,'#bca479',pos.x,.22,pos.z+dz*.97,2.04,.16,.1);}
  // Cottage and open-air cooking nook.
  const house=new T.Group();house.position.set(-7,0,-5);p.add(house);this.box(house,'#f0dfb4',0,1.45,0,4,2.9,3.5);this.box(house,'#80664a',0,.18,0,4.5,.35,4);
- const roof=this.shape(house,new T.ConeGeometry(3.7,2.2,4),'#cd7754',0,3.55,0,1,1,.93);roof.rotation.y=Math.PI/4;
+ for(let i=0;i<6;i++){const roof=this.box(house,i%2?'#bf6548':'#db8255',0,3+i*.28,0,4.9-i*.65,.3,4.35-i*.52);roof.material=this.mat(i%2?'#bf6548':'#db8255','tile');}
  this.box(house,'#547569',0,.85,1.78,.9,1.65,.14);this.box(house,'#fbd890',-1.15,1.6,1.79,.7,.8,.1);this.box(house,'#fbd890',1.15,1.6,1.79,.7,.8,.1);this.box(house,'#eee3bd',1.1,3.6,-.65,.55,1.6,.55);
  for(const x of [-1.15,1.15]){this.box(house,'#7e654c',x,1.6,1.9,.05,.85,.06);this.box(house,'#7e654c',x,1.6,1.9,.8,.05,.06);}
  
- this.shape(p,new T.CylinderGeometry(.72,.55,.7,12),'#555952',-7,.6,.5);this.blob(p,'#faaf55',-7,.2,.5,.42,.15,.42);for(let i=0;i<5;i++){const a=i*1.256;this.blob(p,'#9ba196',-7+Math.cos(a)*.62,.15,.5+Math.sin(a)*.62,.25);}
+ this.box(p,'#555952',-7,.6,.5,1.2,.7,1.2);this.blob(p,'#faaf55',-7,.2,.5,.42,.15,.42);for(let i=0;i<5;i++){const a=i*1.256;this.blob(p,'#9ba196',-7+Math.cos(a)*.62,.15,.5+Math.sin(a)*.62,.25);}
  
  // Pond, lily pads and stepping stones.
- const pond=this.shape(p,new T.CylinderGeometry(2.7,2.7,.09,48),'#69b9bf',8,.07,5,1,1,1.15);(pond.material as T.MeshStandardMaterial).roughness=.22;
+ for(let row=-2;row<=2;row++){const water=this.box(p,'#69c9d3',8,.045,5+row,Math.abs(row)===2?3:5,.07,1);water.material=this.mat('#69c9d3','water');}for(let i=0;i<9;i++)this.box(p,'#bbefdc',6.4+i%3*1.3,.089,3.7+Math.floor(i/3)*1.1,.6,.012,.1);
  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;this.blob(p,'#bec5a0',8+Math.cos(a)*2.8,.1,5+Math.sin(a)*3.15,.4,.25,.38);}
- for(let i=0;i<4;i++)this.shape(p,new T.CylinderGeometry(.35,.35,.035,10),'#6c9b5d',7.2+i*.55,.13,4.5+Math.sin(i)*1.1);
+ for(let i=0;i<4;i++)this.box(p,'#6c9b5d',7.2+i*.55,.13,4.5+Math.sin(i)*1.1,.55,.04,.55);
  // The ancient gate is part of the world, rather than a separate menu page.
  this.box(p,'#8c9b87',6,1.5,-6,.8,3,1);this.box(p,'#8c9b87',9,1.5,-6,.8,3,1);this.box(p,'#a4b09a',7.5,3.2,-6,4,.8,1.1);
- const portal=new T.Mesh(new T.CircleGeometry(1.45,48),new T.MeshBasicMaterial({color:'#b8b1ff',transparent:true,opacity:.62,side:T.DoubleSide}));portal.name='portal';portal.position.set(7.5,1.6,-5.8);p.add(portal);
- const ring=new T.Mesh(new T.TorusGeometry(1.45,.075,8,48),new T.MeshStandardMaterial({color:'#d9cdff',emissive:'#8b6de9',emissiveIntensity:.4}));ring.position.copy(portal.position);p.add(ring);
+ const portal=new T.Mesh(new T.PlaneGeometry(2.7,2.8),new T.MeshBasicMaterial({color:'#b8b1ff',transparent:true,opacity:.62,side:T.DoubleSide}));portal.name='portal';portal.position.set(7.5,1.6,-5.8);p.add(portal);
+ for(const dx of [-1.4,1.4])this.box(p,'#d9cdff',7.5+dx,1.6,-5.7,.1,2.9,.1);for(const dy of [.2,3])this.box(p,'#d9cdff',7.5,dy,-5.7,2.9,.1,.1);
  for(let i=0;i<20;i++){const a=i/20*Math.PI*2,x=Math.cos(a)*12.6,z=Math.sin(a)*12.6;if(z>7&&x>-7&&x<8)continue;this.tree(p,x,z,.65+(i%4)*.13);}
  for(let i=0;i<10;i++){const x=-11+i*2.4;this.box(p,'#d4c6a0',x,.65,10.5,.15,1.3,.15);if(i<9){this.box(p,'#d4c6a0',x+1.2,.75,10.5,2.4,.12,.1);this.box(p,'#d4c6a0',x+1.2,.35,10.5,2.4,.12,.1);}}
- const geo=new T.ConeGeometry(.09,.37,3),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<5&&z>-3&&z<6||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
+ const geo=new T.BoxGeometry(.13,.32,.13),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<5&&z>-3&&z<6||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
  for(let i=0;i<55;i++){const x=Math.sin(i*51.9)*12,z=Math.cos(i*37.7)*12;if(x*x+z*z>165||Math.abs(x)<5&&z>-3&&z<7)continue;this.blob(p,i%3===0?'#fff0a9':i%3===1?'#e8adbb':'#c2b4e7',x,.22,z,.13,.17,.13);}
  for(let i=0;i<9;i++){const a=i*.73;this.blob(p,'#84ad8f',Math.cos(a)*31,-6-i%3,Math.sin(a)*30,6,3,5);}
  }
- private makeArena(){const p=this.arena;this.shape(p,new T.CylinderGeometry(24,23,1.8,64),'#343e4f',0,-1,0);this.shape(p,new T.CylinderGeometry(24,24,.15,64),'#5a766d',0,-.05,0);
+ private makeArena(){const p=this.arena;voxelIsland(p,24,this.mat('#668f7e','grass'),this.mat('#536275','soil'),this.mat('#343e4f','stone'));
  for(let i=0;i<30;i++){const a=i/30*Math.PI*2;this.tree(p,Math.cos(a)*22,Math.sin(a)*22,1+(i%3)*.25,'#416660');}
- for(let i=0;i<40;i++){const x=Math.sin(i*34.3)*21,z=Math.cos(i*61.3)*21;if(x*x+z*z>430)continue;this.blob(p,'#536762',x,.1,z,.6,.18,.55);if(i%4===0){const crystal=this.shape(p,new T.OctahedronGeometry(.55),'#b3a8df',x,.65,z,.55,1.7,.55);(crystal.material as T.MeshStandardMaterial).emissive=new T.Color('#29213e');}}
+ for(let i=0;i<40;i++){const x=Math.sin(i*34.3)*21,z=Math.cos(i*61.3)*21;if(x*x+z*z>430)continue;this.blob(p,'#536762',x,.1,z,.6,.18,.55);if(i%4===0){const crystal=this.box(p,'#b3a8df',x,.65,z,.4,1.3,.4);this.box(p,'#d5ccff',x+.26,.4,z+.13,.25,.8,.25);(crystal.material as T.MeshStandardMaterial).emissive=new T.Color('#29213e');}}
  const ring=new T.Mesh(new T.RingGeometry(22.4,22.6,96),new T.MeshBasicMaterial({color:'#acd4b4',transparent:true,opacity:.3,side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.1;p.add(ring);
  }
  private actor(g:GLTF,height:number):Actor{return createAxieActor(g,height);}
@@ -87,7 +94,7 @@ export class WildseedGame {
  const g=await loader.loadAsync('/assets/axie/sapidae.glb');if(this.stopped)return;this.npc=this.actor(g,1.9);this.npc.root.position.set(-5,0,-3);this.npc.root.rotation.y=.7;this.farmWorld.add(this.npc.root);
  this.ready=true;this.emit();}catch(e){this.error='An Axie could not load. Reload to try again.';console.error('Axie asset loading failed',e);this.emit();}}
  private animate(a:Actor,name:string){if(a.current===name)return;const next=a.actions.get(name)||a.actions.get('Idle');if(!next)return;a.actions.get(a.current)?.fadeOut(.18);next.reset().fadeIn(.18).play();a.current=name;}
- private refreshPlants(){for(let i=0;i<12;i++){const group=this.plants[i],p=this.farm.plots[i];while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b');if(!p.crop)continue;
+ private refreshPlants(){for(let i=0;i<12;i++){const group=this.plants[i],p=this.farm.plots[i];while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b','soil');if(!p.crop)continue;
  const stage=Math.floor(p.growth*3),size=.3+stage*.2;for(let j=0;j<4;j++){const x=(j%2)*.75-.38,z=Math.floor(j/2)*.75-.38;this.blob(group,'#4b8648',x,.15+size*.28,z,.18,size,.12);this.blob(group,'#80b84f',x+.17,.22+size*.3,z,.26,.09,.12);this.blob(group,'#5f9e43',x-.16,.29+size*.3,z,.25,.09,.12);if(stage>=1){const color=CROPS[p.crop].color;this.blob(group,color,x,.15+size*.8,z,size*.32,p.crop==='embercorn'?size*.55:size*.3,size*.32);if(p.crop==='moonberry')this.blob(group,color,x+.17,.25+size*.7,z+.05,size*.2);}}
  }
  }
@@ -162,4 +169,5 @@ export class WildseedGame {
  moveKey(key:string,down:boolean){if(down)this.keys.add(key);else this.keys.delete(key);}
  dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
 }
+
 

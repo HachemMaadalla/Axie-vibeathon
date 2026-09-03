@@ -1,4 +1,6 @@
 import * as T from 'three';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {TILE} from './terrain';
 export type PixelSurface='grass'|'soil'|'stone'|'wood'|'leaves'|'water'|'tile';
 export function pixelMaterial(color:string,surface:PixelSurface='stone'){
  const size=16,data=new Uint8Array(size*size*4);
@@ -18,22 +20,43 @@ export function pixelMaterial(color:string,surface:PixelSurface='stone'){
  return new T.MeshStandardMaterial({color,map,roughness:1,flatShading:true});
 }
 
-export function voxelIsland(parent:T.Group,radius:number,grass:T.Material,earth:T.Material,stone:T.Material){
- const step=1.25,cells:{x:number;z:number;depth:number}[]=[];
+export function voxelIsland(parent:T.Group,radius:number,grass:T.Material,earth:T.Material,stone:T.Material,height:(x:number,z:number)=>number=()=>0){
+ const step=TILE,cells:{x:number;z:number;depth:number}[]=[];
  for(let x=-radius;x<=radius;x+=step)for(let z=-radius;z<=radius;z+=step){
   if(x*x+z*z>(radius+.25)**2)continue;
   const edge=Math.sqrt(x*x+z*z)>radius-2;
   cells.push({x,z,depth:edge?1.5+((Math.round((x+radius)/step)*7+Math.round((z+radius)/step)*3)%4)*.35:2.1});
  }
  const geo=new T.BoxGeometry(1,1,1),top=new T.InstancedMesh(geo,grass,cells.length),dirt=new T.InstancedMesh(geo,earth,cells.length),base=new T.InstancedMesh(geo,stone,cells.length);
+ top.name='terrain-surface';
  const m=new T.Matrix4(),q=new T.Quaternion(),tint=new T.Color();
  cells.forEach((c,i)=>{
-  m.compose(new T.Vector3(c.x,-.105,c.z),q,new T.Vector3(step,.25,step));top.setMatrixAt(i,m);
+  m.compose(new T.Vector3(c.x,height(c.x,c.z)-.105,c.z),q,new T.Vector3(step,.25,step));top.setMatrixAt(i,m);
   tint.setScalar(.86+(i*17%13)/100);top.setColorAt(i,tint);
-  m.compose(new T.Vector3(c.x,-.23-c.depth/2,c.z),q,new T.Vector3(step,c.depth,step));dirt.setMatrixAt(i,m);
+  m.compose(new T.Vector3(c.x,(height(c.x,c.z)-.46-c.depth)/2,c.z),q,new T.Vector3(step,height(c.x,c.z)+c.depth,step));dirt.setMatrixAt(i,m);
   m.compose(new T.Vector3(c.x,-.23-c.depth-.2,c.z),q,new T.Vector3(step,.4,step));base.setMatrixAt(i,m);
  });
  for(const mesh of [top,dirt,base]){mesh.receiveShadow=true;mesh.castShadow=true;mesh.userData.cameraIgnore=true;mesh.instanceMatrix.needsUpdate=true;parent.add(mesh);}
  return {top,dirt,base};
+}
+
+
+export function batchTrees(world:T.Group){
+ world.updateMatrixWorld(true);
+ const inverse=world.matrixWorld.clone().invert(),groups=new Map<T.Material,T.BufferGeometry[]>();
+ for(const root of [...world.children]){
+  if(!root.userData.voxelTree)continue;
+  root.traverse(object=>{if(object instanceof T.Mesh&&!Array.isArray(object.material)){
+   const geometry=object.geometry.clone().applyMatrix4(inverse.clone().multiply(object.matrixWorld));
+   const list=groups.get(object.material)??[];list.push(geometry);groups.set(object.material,list);
+   object.geometry.dispose();
+  }});
+  world.remove(root);
+ }
+ for(const [material,geometries] of groups){
+  const geometry=mergeGeometries(geometries,false);
+  if(geometry){const mesh=new T.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;world.add(mesh);}
+  geometries.forEach(g=>g.dispose());
+ }
 }
 

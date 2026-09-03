@@ -21,7 +21,7 @@ export class SpellEngine{
  private sphere(color:string,size:number){return new T.Mesh(new T.IcosahedronGeometry(size,1),new T.MeshBasicMaterial({color}));}
  private ring(point:T.Vector3,radius:number,color:string){
   const mesh=new T.Mesh(new T.RingGeometry(radius*.85,radius,40),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.65}));
-  mesh.rotation.x=-Math.PI/2;mesh.position.copy(point);mesh.position.y=.22;this.root.add(mesh);return mesh;
+  mesh.rotation.x=-Math.PI/2;mesh.position.copy(point);mesh.position.y=point.y+.22;this.root.add(mesh);return mesh;
  }
  private line(from:T.Vector3,to:T.Vector3,color:string){
   const mid=from.clone().lerp(to,.5).add(new T.Vector3(.3,.6,-.2));
@@ -30,7 +30,7 @@ export class SpellEngine{
  }
  private zone(point:T.Vector3,radius:number,life:number,damage:number,slow:boolean,heal:boolean,color:string){
   const mesh=new T.Mesh(new T.CircleGeometry(radius,32),new T.MeshBasicMaterial({color,transparent:true,opacity:.22,side:T.DoubleSide}));
-  mesh.rotation.x=-Math.PI/2;mesh.position.copy(point);mesh.position.y=.16;this.root.add(mesh);
+  mesh.rotation.x=-Math.PI/2;mesh.position.copy(point);mesh.position.y=point.y+.16;this.root.add(mesh);
   this.zones.push({mesh,radius,life,damage,slow,heal,tick:0});
  }
  speedMultiplier(target:SpellTarget){return this.zones.some(z=>z.slow&&z.mesh.position.distanceTo(target.mesh.position)<z.radius)? .65:1;}
@@ -73,7 +73,7 @@ export class SpellEngine{
     for(let i=0;i<s.count;i++){
      const point=list[i%list.length].mesh.position.clone();
      if(i>=list.length)point.add(new T.Vector3(Math.cos(i*2.4),0,Math.sin(i*2.4)).multiplyScalar(.7));
-     const mesh=this.sphere(color,.35);mesh.position.copy(point).y=8;this.root.add(mesh);
+     const mesh=this.sphere(color,.35);mesh.position.copy(point).y=point.y+8;this.root.add(mesh);
      this.meteors.push({mesh,marker:this.ring(point,s.area,'#ffb269'),point,life:.7+i*.08,radius:s.area,damage,burn:s.evolved});
     }
    }
@@ -98,7 +98,7 @@ export class SpellEngine{
    if(p.life<=0){this.discard(p.mesh);this.projectiles.splice(i,1);}
   }
   for(let i=this.meteors.length-1;i>=0;i--){
-   const m=this.meteors[i];m.life-=dt;m.mesh.position.y=Math.max(.35,m.life*10);
+   const m=this.meteors[i];m.life-=dt;m.mesh.position.y=m.point.y+Math.max(.35,m.life*10);
    if(m.life<=0){splash(m.point,m.radius,m.damage);this.discard(m.mesh);this.discard(m.marker);this.flashes.push({object:this.ring(m.point,m.radius,'#ffe2a1'),life:.3});if(m.burn)this.zone(m.point,m.radius,4,m.damage*.15,false,false,'#ff9757');this.meteors.splice(i,1);}
   }
   for(let i=this.zones.length-1;i>=0;i--){

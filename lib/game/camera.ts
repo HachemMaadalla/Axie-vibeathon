@@ -30,7 +30,7 @@ export class FollowCamera {
  snap(player:T.Vector3){this.focus.copy(player).y+=1.1;this.zoomDistance=this.distance;this.place([]);}
  reset(yaw=0){this.yaw=yaw;this.pitch=.48;this.distance=10;}
  movement(x:number,z:number){return cameraMovement(x,z,this.yaw);}
- update(dt:number,player:T.Vector3,obstacles:T.Object3D[]){
+ update(dt:number,player:T.Vector3,obstacles:T.Object3D[],height?:(x:number,z:number)=>number){
   if(!this.active())this.cancel();
   // Smooth the target rather than the camera's world position, so rotating can never
   // interpolate through the Axie when the view changes by 180 degrees.
@@ -38,6 +38,7 @@ export class FollowCamera {
   this.focus.lerp(target,1-Math.exp(-dt*16));
   this.zoomDistance=T.MathUtils.lerp(this.zoomDistance,this.distance,1-Math.exp(-dt*12));
   this.place(obstacles);
+  if(height){this.camera.position.y=Math.max(this.camera.position.y,height(this.camera.position.x,this.camera.position.z)+1);this.camera.lookAt(this.focus);this.camera.updateMatrixWorld();}
  }
  private place(obstacles:T.Object3D[]){
   const offset=new T.Vector3(Math.sin(this.yaw)*Math.cos(this.pitch),Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch));

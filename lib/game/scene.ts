@@ -41,7 +41,7 @@ export class WildseedGame {
  private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new T.BoxGeometry(w,h,d),c,x,y,z);}
  private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
  private tree(p:T.Object3D,x:number,z:number,s:number,color='#5a974f'){this.shape(p,new T.CylinderGeometry(.16,.25,2.4,7),'#785844',x,1.1*s,z,s,s,s);this.blob(p,color,x,3.1*s,z,1.5*s,1.8*s,1.4*s);this.blob(p,'#83b45b',x-.55*s,3.1*s,z+.6*s,.95*s);this.blob(p,'#6ba250',x+.6*s,3.8*s,z,.8*s);}
- private label(p:T.Object3D,text:string,x:number,y:number,z:number){const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d')!;ctx.fillStyle='#fff8de';ctx.beginPath();ctx.roundRect(5,8,502,80,22);ctx.fill();ctx.fillStyle='#354b37';ctx.font='bold 30px Trebuchet MS';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,49);const map=new T.CanvasTexture(c);map.colorSpace=T.SRGBColorSpace;const sprite=new T.Sprite(new T.SpriteMaterial({map,depthTest:false}));sprite.scale.set(3.7,.69,1);sprite.position.set(x,y,z);p.add(sprite);return sprite;}
+
  private makeFarm(){
  const p=this.farmWorld;this.shape(p,new T.CylinderGeometry(14,12.7,2.2,64),'#876c50',0,-1.25,0);this.shape(p,new T.CylinderGeometry(14.1,14,.25,64),'#86b95d',0,-.08,0);
  // A winding footpath connects the cottage, beds, and expedition gate.
@@ -53,9 +53,9 @@ export class WildseedGame {
  const roof=this.shape(house,new T.ConeGeometry(3.7,2.2,4),'#cd7754',0,3.55,0,1,1,.93);roof.rotation.y=Math.PI/4;
  this.box(house,'#547569',0,.85,1.78,.9,1.65,.14);this.box(house,'#fbd890',-1.15,1.6,1.79,.7,.8,.1);this.box(house,'#fbd890',1.15,1.6,1.79,.7,.8,.1);this.box(house,'#eee3bd',1.1,3.6,-.65,.55,1.6,.55);
  for(const x of [-1.15,1.15]){this.box(house,'#7e654c',x,1.6,1.9,.05,.85,.06);this.box(house,'#7e654c',x,1.6,1.9,.8,.05,.06);}
- this.label(p,'SUNPETAL HOMESTEAD',-7,5.65,-5);
+ 
  this.shape(p,new T.CylinderGeometry(.72,.55,.7,12),'#555952',-7,.6,.5);this.blob(p,'#faaf55',-7,.2,.5,.42,.15,.42);for(let i=0;i<5;i++){const a=i*1.256;this.blob(p,'#9ba196',-7+Math.cos(a)*.62,.15,.5+Math.sin(a)*.62,.25);}
- this.label(p,'CAMP KITCHEN',-7,2.6,.5);
+ 
  // Pond, lily pads and stepping stones.
  const pond=this.shape(p,new T.CylinderGeometry(2.7,2.7,.09,48),'#69b9bf',8,.07,5,1,1,1.15);(pond.material as T.MeshStandardMaterial).roughness=.22;
  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;this.blob(p,'#bec5a0',8+Math.cos(a)*2.8,.1,5+Math.sin(a)*3.15,.4,.25,.38);}
@@ -63,7 +63,7 @@ export class WildseedGame {
  // The ancient gate is part of the world, rather than a separate menu page.
  this.box(p,'#8c9b87',6,1.5,-6,.8,3,1);this.box(p,'#8c9b87',9,1.5,-6,.8,3,1);this.box(p,'#a4b09a',7.5,3.2,-6,4,.8,1.1);
  const portal=new T.Mesh(new T.CircleGeometry(1.45,48),new T.MeshBasicMaterial({color:'#b8b1ff',transparent:true,opacity:.62,side:T.DoubleSide}));portal.name='portal';portal.position.set(7.5,1.6,-5.8);p.add(portal);
- const ring=new T.Mesh(new T.TorusGeometry(1.45,.075,8,48),new T.MeshStandardMaterial({color:'#d9cdff',emissive:'#8b6de9',emissiveIntensity:.4}));ring.position.copy(portal.position);p.add(ring);this.label(p,'INTO THE WILDS',7.5,4.6,-6);
+ const ring=new T.Mesh(new T.TorusGeometry(1.45,.075,8,48),new T.MeshStandardMaterial({color:'#d9cdff',emissive:'#8b6de9',emissiveIntensity:.4}));ring.position.copy(portal.position);p.add(ring);
  for(let i=0;i<20;i++){const a=i/20*Math.PI*2,x=Math.cos(a)*12.6,z=Math.sin(a)*12.6;if(z>7&&x>-7&&x<8)continue;this.tree(p,x,z,.65+(i%4)*.13);}
  for(let i=0;i<10;i++){const x=-11+i*2.4;this.box(p,'#d4c6a0',x,.65,10.5,.15,1.3,.15);if(i<9){this.box(p,'#d4c6a0',x+1.2,.75,10.5,2.4,.12,.1);this.box(p,'#d4c6a0',x+1.2,.35,10.5,2.4,.12,.1);}}
  const geo=new T.ConeGeometry(.09,.37,3),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<5&&z>-3&&z<6||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
@@ -83,13 +83,13 @@ export class WildseedGame {
  private animate(a:Actor,name:string){if(a.current===name)return;const next=a.actions.get(name)||a.actions.get('Idle');if(!next)return;a.actions.get(a.current)?.fadeOut(.18);next.reset().fadeIn(.18).play();a.current=name;}
  private refreshPlants(){for(let i=0;i<12;i++){const group=this.plants[i],p=this.farm.plots[i];while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b');if(!p.crop)continue;
  const stage=Math.floor(p.growth*3),size=.3+stage*.2;for(let j=0;j<4;j++){const x=(j%2)*.75-.38,z=Math.floor(j/2)*.75-.38;this.blob(group,'#4b8648',x,.15+size*.28,z,.18,size,.12);this.blob(group,'#80b84f',x+.17,.22+size*.3,z,.26,.09,.12);this.blob(group,'#5f9e43',x-.16,.29+size*.3,z,.25,.09,.12);if(stage>=1){const color=CROPS[p.crop].color;this.blob(group,color,x,.15+size*.8,z,size*.32,p.crop==='embercorn'?size*.55:size*.3,size*.32);if(p.crop==='moonberry')this.blob(group,color,x+.17,.25+size*.7,z+.05,size*.2);}}
- if(p.growth>=1)this.label(group,'READY TO PICK',0,1.4,0);}
+ }
  }
  private save(){try{localStorage.setItem('wildseed-v1',JSON.stringify(this.farm));this.saved=true;}catch{this.saved=false;}}
  private emit(){this.listener({farm:structuredClone(this.farm),mode:this.mode,ready:this.ready,error:this.error,selected:this.selected,seed:this.seed,hp:this.hp,maxHp:this.maxHp,time:this.time,kills:this.kills,level:this.level,dash:this.dash,loot:{...this.loot},upgrade:this.upgrade,result:this.result?structuredClone(this.result):null,message:this.message,paused:this.paused,saved:this.saved,meal:this.meal,tier:this.tier});}
- private toast(s:string){this.message=s;this.messageUntil=this.elapsed+4;this.emit();return s;}
+ private toast(s:string){this.message=s;this.messageUntil=this.elapsed+2.5;this.emit();return s;}
  private changed(s:string){this.save();this.refreshPlants();return this.toast(s);}
- start(){if(!this.ready)return;this.started=true;this.toast('Welcome home! Pick the golden crops, then plant your next harvest.');}
+ start(){if(!this.ready)return;this.started=true;this.toast('Welcome home.');}
  setPaused(value:boolean){this.paused=value;this.keys.clear();this.emit();}
  setMuted(value:boolean){this.muted=value;if(!value){this.audio??=new AudioContext();void this.audio.resume();this.sound(440);}}
  private sound(freq:number){if(this.muted||!this.audio)return;const osc=this.audio.createOscillator(),gain=this.audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,this.audio.currentTime);osc.frequency.exponentialRampToValueAtTime(freq*.7,this.audio.currentTime+.15);gain.gain.setValueAtTime(.035,this.audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,this.audio.currentTime+.2);osc.connect(gain);gain.connect(this.audio.destination);osc.start();osc.stop(this.audio.currentTime+.21);}
@@ -101,7 +101,7 @@ export class WildseedGame {
  cookMeal(id:CropId){if(this.mode==='farm')this.changed(cook(this.farm,id));}
  equipMeal(id:CropId){if(this.mode!=='farm')return;if(this.farm.meals[id]<1){this.toast('Cook this meal first.');return;}this.farm.meal=this.farm.meal===id?null:id;this.save();this.emit();}
  unlock(){if(this.mode==='farm')this.changed(offerHarvest(this.farm));}
- expedition(tier:number){if(!this.ready||!this.started||this.mode!=='farm')return;let stats;try{stats=beginExpedition(this.farm,tier);}catch(e){this.toast((e as Error).message);return;}this.mode='dungeon';this.tier=tier;this.time=0;this.kills=0;this.level=1;this.loot=emptyLoot();this.hp=this.maxHp=stats.hp;this.damage=stats.damage;this.speed=stats.speed;this.meal=stats.meal;this.nextUpgrade=6;this.bossDead=false;this.bossSpawned=false;this.spawnTimer=0;this.attackTimer=0;this.invuln=1;this.dash=0;this.dashTime=0;this.target=null;this.paused=false;this.player.position.set(0,0,0);this.farmWorld.visible=false;this.arena.visible=true;this.scene.background=new T.Color(tier===1?'#92b4b0':'#858ba8');this.scene.fog=new T.Fog(tier===1?'#92b4b0':'#858ba8',38,85);this.save();this.toast('Survive 90 seconds and defeat the guardian. Attacks fire automatically.');}
+ expedition(tier:number){if(!this.ready||!this.started||this.mode!=='farm')return;let stats;try{stats=beginExpedition(this.farm,tier);}catch(e){this.toast((e as Error).message);return;}this.mode='dungeon';this.tier=tier;this.time=0;this.kills=0;this.level=1;this.loot=emptyLoot();this.hp=this.maxHp=stats.hp;this.damage=stats.damage;this.speed=stats.speed;this.meal=stats.meal;this.nextUpgrade=6;this.bossDead=false;this.bossSpawned=false;this.spawnTimer=0;this.attackTimer=0;this.invuln=1;this.dash=0;this.dashTime=0;this.target=null;this.paused=false;this.player.position.set(0,0,0);this.farmWorld.visible=false;this.arena.visible=true;this.scene.background=new T.Color(tier===1?'#92b4b0':'#858ba8');this.scene.fog=new T.Fog(tier===1?'#92b4b0':'#858ba8',38,85);this.save();this.toast('Survive & defeat the guardian.');}
  escape(){if(this.mode==='dungeon')this.finish('escaped');}
  private finish(outcome:'won'|'escaped'|'lost'){if(this.mode!=='dungeon')return;const loot=settleExpedition(this.farm,this.loot,outcome,this.tier);this.result={outcome,loot,kills:this.kills,tier:this.tier};this.mode='farm';this.upgrade=false;this.paused=false;this.farmWorld.visible=true;this.arena.visible=false;this.player.position.set(5,0,-3);this.target=null;this.keys.clear();for(const e of this.enemies)this.removeEnemy(e);this.enemies=[];for(const s of this.shots){this.scene.remove(s.mesh);s.mesh.geometry.dispose();}this.shots=[];this.scene.background=new T.Color('#a9d8dd');this.scene.fog=new T.Fog('#a9d8dd',42,100);this.refreshPlants();this.save();this.emit();}
  dismissResult(){this.result=null;this.emit();}
@@ -118,7 +118,7 @@ export class WildseedGame {
  private combat(dt:number){
  this.time+=dt;this.dash=Math.max(0,this.dash-dt);this.dashTime=Math.max(0,this.dashTime-dt);this.invuln=Math.max(0,this.invuln-dt);this.spawnTimer-=dt;this.attackTimer-=dt;
  if(this.spawnTimer<=0&&this.enemies.length<26){this.spawn(false);this.spawnTimer=Math.max(.52,1.35-this.time*.008);}
- if(this.time>=60&&!this.bossSpawned){this.spawn(true);this.bossSpawned=true;this.toast('The Grove Guardian has arrived!');}
+ if(this.time>=60&&!this.bossSpawned){this.spawn(true);this.bossSpawned=true;this.toast('Guardian incoming!');}
  const player=this.player.position;
  for(const e of [...this.enemies]){const delta=player.clone().sub(e.mesh.position);delta.y=0;const distance=delta.length();if(distance>.3)e.mesh.position.addScaledVector(delta.normalize(),e.speed*dt);e.mesh.rotation.y=Math.atan2(delta.x,delta.z);e.mesh.position.y=Math.abs(Math.sin(this.time*4+e.phase))*.13;e.bar.quaternion.copy(this.camera.quaternion);e.bar.rotateY(-e.mesh.rotation.y);
  if(distance<(e.boss?2.2:1.05)&&this.invuln<=0){this.hp-=e.boss?19:8+this.tier*2;this.invuln=.75;this.pulse(player,'#ff907e');this.sound(130);if(this.hp<=0){this.hp=0;this.finish('lost');return;}}}

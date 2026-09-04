@@ -65,6 +65,6 @@ export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:
 }
 export function CombatBelt({view:v,onOpen}:{view:View;onOpen:()=>void}){
  const ids=[...WEAPONS,...PASSIVES].filter(id=>itemLevel(v.build,id)>0);
- return <div className="combat-belt panel" aria-label="Equipped spells and items">{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
+ return <div className="combat-belt panel" aria-label="Equipped spells and items">{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25} evolved={v.build.evolved.includes(id as WeaponId)}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
 }
 

@@ -50,7 +50,7 @@ function addGroundDetails(parent:T.Group){
   if(r<18||isWater(x,z)||isBridge(x,z)||terrainRoads.distanceToRoad(x,-z)<6)continue;
   const rock=createGroundRockVisual({material:rockMaterials[i%3],prng:rng});rock.position.set(x,terrainHeight('dungeon',x,z)-.15,z);
   if(i%7===0){rock.scale.multiplyScalar(2.7);rock.position.y-=.35;}
-  ground.add(rock);
+  rock.userData.solid=true;ground.add(rock);
  }
  const materials=['#288449','#a8d951','#17776e','#f5c366'].map(c=>toonMaterial(c));
  const patch=new T.Group();patch.userData.batchable=true;patch.name='meadow-patches';parent.add(patch);

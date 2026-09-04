@@ -19,7 +19,7 @@ export class SpellEngine{
  private flashes:{object:T.Object3D;life:number}[]=[];
  private clock=0;private melee:Melee[]=[];private previousTargets=new WeakMap<SpellTarget,T.Vector3>();
  private orbitTick=0;private trailAt=0;
- constructor(scene:T.Scene,private feedback:{fx?:CombatFX;audio?:CombatAudio;height?:(x:number,z:number)=>number;cast?:(id:WeaponId,target:T.Vector3)=>void}={}){scene.add(this.root);}
+ constructor(scene:T.Scene,private feedback:{fx?:CombatFX;audio?:CombatAudio;height?:(x:number,z:number)=>number;cast?:(id:WeaponId,target:T.Vector3)=>void;collision?:(from:T.Vector3,to:T.Vector3)=>T.Vector3|null}={}){scene.add(this.root);}
  private discard(object:T.Object3D){this.visuals.release(object);}
  private ring(point:T.Vector3,radius:number,color:string){
   const mesh=this.visuals.ring(point,radius,color,this.feedback.height);this.root.add(mesh);return mesh;
@@ -56,7 +56,8 @@ export class SpellEngine{
    if(!itemLevel(build,id)||id==='petal')continue;
    this.timers[id]=(this.timers[id]??0)-dt;
    if(this.timers[id]!>0)continue;
-   const list=near(player),target=list[0];if(!target||target.mesh.position.distanceTo(player)>17)continue;
+   const candidates=near(player),origin=player.clone().add(new T.Vector3(0,.9,0));
+   const list=id==="thorn"||id==="cannon"?candidates.filter(t=>!this.feedback.collision?.(origin,center(t))):candidates,target=list[0];if(!target||target.mesh.position.distanceTo(player)>17)continue;
    const s=spellStats(build,id),damage=baseDamage*s.damage,color=s.evolved?SPELL_COLORS[id].evolved:SPELL_COLORS[id].base;
    if(['sword','axe','hammer'].includes(id)&&(Math.hypot(target.mesh.position.x-player.x,target.mesh.position.z-player.z)>s.area+(target.radius??.6)||Math.abs(target.mesh.position.y-player.y)>2.2))continue;
    this.timers[id]=s.cooldown;this.feedback.cast?.(id,target.mesh.position);this.feedback.audio?.play(id==='storm'?'storm':id==='cannon'?'cannon':id==='sword'||id==='axe'?'slash':'cast');
@@ -128,7 +129,7 @@ export class SpellEngine{
    if(this.orbitTick<=0){this.orbitTick=s.cooldown;for(const t of alive())if(this.petals.some(p=>p.position.distanceTo(center(t))<((t.radius??(t.boss?2:.7))+.3)))hurt(t,baseDamage*s.damage);}
   }
   for(let i=this.projectiles.length-1;i>=0;i--){
-   const p=this.projectiles[i];p.life-=dt;const previous=p.mesh.position.clone();p.mesh.position.addScaledVector(p.velocity,dt);const segment=new T.Line3(previous,p.mesh.position);if(emitTrail)this.feedback.fx?.trail(p.mesh.position,p.color??(p.burst?'#ffe16a':'#aceb3d'),.12);
+   const p=this.projectiles[i];p.life-=dt;const previous=p.mesh.position.clone();p.mesh.position.addScaledVector(p.velocity,dt);const wall=this.feedback.collision?.(previous,p.mesh.position);if(wall){p.mesh.position.copy(wall);p.life=0;this.feedback.fx?.burst(wall,p.color??"#b8e96a",4,2);}const segment=new T.Line3(previous,p.mesh.position);if(emitTrail)this.feedback.fx?.trail(p.mesh.position,p.color??(p.burst?'#ffe16a':'#aceb3d'),.12);
    for(const t of alive()){
     if(t.hp<=0||p.hit.has(t)||segment.closestPointToPoint(center(t),true,new T.Vector3()).distanceTo(center(t))>(t.radius??(t.boss?2:.85)))continue;
     p.hit.add(t);if(p.explosion){splash(t.mesh.position,p.explosion,p.damage);this.feedback.fx?.burst(center(t),p.color??'#9de8ff',14,4);this.flashes.push({object:this.ring(t.mesh.position,p.explosion,p.color??'#9de8ff'),life:.25});this.feedback.audio?.play('hit');}else hurt(t,p.damage);

@@ -25,7 +25,7 @@ Axie/Sapidae models, textures, animations and preview portraits are from the eve
 - This is a Round 1 foundation, not a finalized competition submission.
 - Uses supplied fixed Axie GLB models. The Round 2 live approved Mixer integration remains outstanding.
 - Single-player, local saves, two expedition tiers; no cross-device saves.
-- No obstacle collision or pathfinding around scenery; player/enemy movement is bounded by the island.
+- Solid scenery uses spatially indexed collisions. Player movement slides along edges, can jump onto low obstacles, and stops dashes at walls. Projectiles stop at scenery and ranged weapons prefer clear targets. Enemies use collision and local obstacle steering; full route pathfinding is not implemented.
 - Keyboard/mouse and basic touch controls are implemented. Full mobile performance QA and broad browser QA remain to be done.
 - A fallback demo video, final pitch, device information, and final submission package still need preparation.
 - Optional WebMCP garden tools are feature-detected; live WebMCP registration verification depends on a supporting browser.

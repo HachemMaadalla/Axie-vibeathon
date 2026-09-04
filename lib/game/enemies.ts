@@ -1,4 +1,5 @@
 import * as T from 'three';
+import type {CollisionWorld} from './collisions';
 import {toonMaterial} from './toon';
 import {HealthBar} from './health-bar';
 export type EnemyKind='beetle'|'stalker'|'shaman'|'moth'|'guardian';
@@ -86,7 +87,8 @@ export function disposeEnemy(e:EnemyUnit){
  e.mesh.traverse(o=>{if(o instanceof T.Mesh){geometry.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>materials.add(m));}});
  geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
 }
-export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,height:(x:number,z:number)=>number,slow:number,events:EnemyEvents){
+export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,height:(x:number,z:number)=>number,slow:number,events:EnemyEvents,collisions?:CollisionWorld){
+ const previous=collisions?e.mesh.position.clone():null;
  const hitStop=e.stagger>0;e.stagger=Math.max(0,e.stagger-dt);const moveDt=hitStop?dt*.12:dt;
  e.spawnAge+=dt;e.cooldown-=moveDt;e.flash=Math.max(0,e.flash-dt);
  const delta=player.clone().sub(e.mesh.position);delta.y=0;const distance=delta.length(),direction=delta.normalize();
@@ -101,6 +103,7 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
  for(const m of materials){m.emissive.set(e.flash>0?'#fff4d4':m.userData.glow?m.color:'#000000');m.emissiveIntensity=e.flash>0?1.2:m.userData.glow?.65:0;}
  e.bar.visible=e.hp>0&&e.spawnAge>.2;e.bar.update(e.hp,e.max,dt);
  if(e.state==='seek'){
+  if(collisions)direction.copy(collisions.steer(e.mesh.position,direction,e.radius,e.boss?5:1.5,Math.sin(e.phase)>=0?1:-1));
   e.mesh.rotation.y=Math.atan2(direction.x,direction.z);
   const range=e.kind==='shaman'?12:e.boss?8:e.kind==='beetle'?10:2.1;
   const movement=e.kind==='shaman'?(distance<8?-1:distance>12?1:0):1;
@@ -130,6 +133,7 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
   if(e.timer<=0){e.state='recover';e.timer=e.boss?1:e.kind==='beetle'?.8:.45;}
  }else{e.timer-=moveDt;if(e.timer<=0){e.state='seek';e.cooldown=e.boss?2.8:e.kind==='shaman'?1.8:1;}}
  e.mesh.position.addScaledVector(e.push,dt);e.push.multiplyScalar(Math.exp(-dt*12));
+ if(collisions&&previous)collisions.move(previous,e.mesh.position,e.push,e.radius,e.boss?5:1.5);
  e.mesh.position.y=height(e.mesh.position.x,e.mesh.position.z)+(e.kind==='moth'?(e.state==='attack'?.25:1.1+Math.sin(time*3+e.phase)*.25):0);
 }
 

@@ -39,3 +39,5 @@ Each expedition starts with one character weapon spell at level 1: Pomodoro / Th
 
 
 Battle drops use an 8% seed chance, 4% fertilizer chance and 2% soil chance per ordinary monster. Guardians drop one seed and one soil. Rewards enter the pack only on pickup; ending a run grants no extra seeds. Cleared runs retain all collected supplies, early returns and defeats retain half. Old 12-bed saves migrate to 24 beds while preserving existing crops and resources. The shop and currency system have been removed.
+
+The battle arena has a 120-unit radius (about half the area of the previous 170-unit arena). Biomes, hills, paths, bridges and landmarks fit the smaller footprint; vegetation counts follow its area.

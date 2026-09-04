@@ -12,7 +12,7 @@ let passed=0;const check=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 check('Live terrain uses GameBlocks samplers and smooth cel-shaded meshes',()=>{
  assert.ok(dungeonTerrain instanceof NaturalTerrainSampler);
  assert.equal(terrainRoads.distanceToRoad(0,0),0);
- assert.ok(chunks.length>100&&chunks.length<300);
+ assert.ok(chunks.length>60&&chunks.length<130);
  let triangles=0;
  for(const c of chunks){assert.ok(c.geometry.attributes.uv);assert.ok(c.material.isMeshToonMaterial);assert.equal(c.material.map,null);assert.equal(c.material.gradientMap.magFilter,T.NearestFilter);assert.ok(!c.material.flatShading);triangles+=c.geometry.index.count/3;}
  assert.ok(triangles<65000,'Triangle budget: '+triangles);

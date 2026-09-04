@@ -5,12 +5,15 @@ export type WorldMode='farm'|'dungeon';
 export type Biome='woodland'|'marsh'|'badlands'|'crystal';
 export const TILE=1.25;
 export const TERRAIN_STEP=2.5;
-export const WORLD_RADIUS={farm:30,dungeon:170};
+export const WORLD_RADIUS={farm:30,dungeon:120};
 // Keep the same amount of open space as the arena footprint changes.
 export const DUNGEON_DETAIL_SCALE=(WORLD_RADIUS.dungeon/(64*Math.sqrt(10)))**2;
-export const BRIDGES=[-135,-65,35,115];
-export const riverX=(z:number)=>Math.sin(z*.022)*22+Math.cos(z*.008)*25;
+// Bring terrain features inward with the arena while keeping paths and bridges walkable.
+export const DUNGEON_LAYOUT_SCALE=WORLD_RADIUS.dungeon/170;
+export const BRIDGES=[-135,-65,35,115].map(z=>z*DUNGEON_LAYOUT_SCALE);
+export const riverX=(z:number)=>(Math.sin(z/DUNGEON_LAYOUT_SCALE*.022)*22+Math.cos(z/DUNGEON_LAYOUT_SCALE*.008)*25)*DUNGEON_LAYOUT_SCALE;
 export function terrainBiome(x:number,z:number):Biome{
+ x/=DUNGEON_LAYOUT_SCALE;z/=DUNGEON_LAYOUT_SCALE;
  if(x>65&&z<45)return 'crystal';
  if(z>65)return 'badlands';
  if(x< -65&&z> -45)return 'marsh';
@@ -25,8 +28,9 @@ const paths:number[][][]=[
  [[0,0],[-35,25],[-65,50],[-112,60],[-150,85]],
  [[0,0],[10,40],[35,70],[65,125],[110,145],[135,110]],
  [[-112,60],[-85,115],[-35,155],[15,155],[65,125]],
- ...BRIDGES.map(z=>[[riverX(z)-38,z],[riverX(z),z],[riverX(z)+38,z]])
 ];
+paths.forEach(path=>path.forEach(point=>{point[0]*=DUNGEON_LAYOUT_SCALE;point[1]*=DUNGEON_LAYOUT_SCALE;}));
+paths.push(...BRIDGES.map(z=>[[riverX(z)-38,z],[riverX(z),z],[riverX(z)+38,z]]));
 const segments=paths.flatMap(path=>path.slice(1).map((p,i)=>({start:{right:path[i][0],forward:-path[i][1]},end:{right:p[0],forward:-p[1]}})));
 export const terrainRoads=new RoadTerrainSampler({seed:71031,roadSegments:segments,roadHalfWidth:3.4,roadFlatnessAtHalfWidth:.5});
 const detail=new ArchipelagoTerrainSampler({seed:71031});
@@ -34,13 +38,15 @@ const palettes={woodland:'#75c746',marsh:'#209985',badlands:'#e8914e',crystal:'#
 class WildseedTerrainSampler extends NaturalTerrainSampler{
  constructor(){super({baseHeight:5,undulation:5.5,hillFrequency:.65,normalStep:TERRAIN_STEP,basis:DEFAULT_WORLD_BASIS});}
  heightAt(right:number,forward:number):number{
-  const x=right,z=-forward,r=Math.hypot(x,z),start=smooth(12,40,r);
-  let h=super.heightAt(right,forward);
+  const x=right,z=-forward,r=Math.hypot(x,z),start=smooth(12,40*DUNGEON_LAYOUT_SCALE,r);
+  const u=x/DUNGEON_LAYOUT_SCALE,v=z/DUNGEON_LAYOUT_SCALE;
+  let h=super.heightAt(u,-v);
   // GameBlocks fBm adds several scales of coherent detail to the larger landforms.
-  h+=detail.fbm(x*.018,forward*.018,4,2,.5,19)*3.2;
-  h+=Math.exp(-(((x+104)/48)**2+((z+85)/50)**2))*26;
-  h+=Math.exp(-(((x-112)/48)**2+((z+60)/58)**2))*23;
-  h+=Math.exp(-(((x-55)/54)**2+((z-127)/46)**2))*20;
+  h+=detail.fbm(u*.018,-v*.018,4,2,.5,19)*3.2;
+  h+=Math.exp(-(((u+104)/48)**2+((v+85)/50)**2))*26;
+  h+=Math.exp(-(((u-112)/48)**2+((v+60)/58)**2))*23;
+  h+=Math.exp(-(((u-55)/54)**2+((v-127)/46)**2))*20;
+  h*=DUNGEON_LAYOUT_SCALE;
   const road=terrainRoads.roadFlatnessAt(right,forward);
   h-=detail.fbm(x*.06,forward*.06,3,2,.5,32)*1.4*(1-road);
   // Low rock shelves soften into runnable ramps along the path network.

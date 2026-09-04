@@ -65,11 +65,11 @@ check('Particle and warning pools remain bounded and reduced motion disables cam
  fx.update(2);assert.equal(fx.root.children[0].count,0);assert.equal(fx.root.children.length,1);
  fx.dispose();assert.equal(scene.children.length,0);
 });
-check('Four biomes, river crossings, peaks, and the reduced 170-unit arena',()=>{
- assert.equal(WORLD_RADIUS.dungeon,170);
+check('Four biomes, river crossings, peaks, and the compact 120-unit arena',()=>{
+ assert.equal(WORLD_RADIUS.dungeon,120);
  assert.equal(new Set([[0,0],[100,0],[-100,0],[0,100]].map(([x,z])=>terrainBiome(x,z))).size,4);
  for(const z of BRIDGES){assert.ok(terrainHeight('dungeon',riverX(z),z)>=1);assert.equal(isWater(riverX(z),z),false);}
- assert.ok(terrainHeight('dungeon',-104,-85)>15);assert.equal(terrainHeight('dungeon',0,0),0);
+ assert.ok(terrainHeight('dungeon',-104*120/170,-85*120/170)>12);assert.equal(terrainHeight('dungeon',0,0),0);
 });
 check('A full mixed-enemy run earns levels and an evolution while traversing the terrain',()=>{
  const engine=new SpellEngine(new T.Scene()),b=freshBuild();applyChoice(b,eligibleChoices(b).find(c=>c.id==='storm'));

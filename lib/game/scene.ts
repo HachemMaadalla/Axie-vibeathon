@@ -7,7 +7,7 @@ import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import {createAxieActor} from './model';
 import {FollowCamera} from './camera';
 import {MovementMotor} from './movement';
-import {WORLD_RADIUS,DUNGEON_DETAIL_SCALE,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX,terrainRoads} from './terrain';
+import {WORLD_RADIUS,DUNGEON_DETAIL_SCALE,DUNGEON_LAYOUT_SCALE,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX,terrainRoads} from './terrain';
 import {makeLandscape,makeFarmLandscape} from './landscape';
 import {makeEnemy,disposeEnemy,updateEnemy,enemyKindFor,ENEMY_INFO,type EnemyUnit} from './enemies';
 import {EnemyBatch} from './enemy-batch';
@@ -167,7 +167,7 @@ export class WildseedGame {
  }
  const points=mode==='farm'?[[-22,-10],[19,20],[-18,21]]:[[35,-28],[-55,-65],[104,-58],[-112,60],[65,125],[-105,-95],[160,25],[-35,155],[-170,-15],[80,-153],[0,-160],[135,110]];
  points.forEach(([x,z],index)=>{
-  if(mode==='dungeon'){const r=Math.hypot(x,z),limit=radius-23;if(r>limit){x*=limit/r;z*=limit/r;}}
+  if(mode==='dungeon'){x*=DUNGEON_LAYOUT_SCALE;z*=DUNGEON_LAYOUT_SCALE;const r=Math.hypot(x,z),limit=radius-23;if(r>limit){x*=limit/r;z*=limit/r;}}
   const y=terrainHeight(mode,x,z),group=new T.Group();group.userData.batchable=true;p.add(group);
   const color=['#b3a8df','#76c9d5','#d9b46c','#95c778'][index%4];
   if(index%3===0){

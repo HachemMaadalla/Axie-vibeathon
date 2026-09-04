@@ -47,7 +47,10 @@ export function draftChoices(b:Build,rng:()=>number=Math.random):Choice[]{
  const take=(c:Choice|undefined)=>{if(c&&!picked.some(x=>x.id===c.id)){picked.push(c);pool.splice(pool.indexOf(c),1);}};
  const random=(list:Choice[])=>list[Math.floor(Math.min(.999999,Math.max(0,rng()))*list.length)];
  take(pool.find(c=>c.kind==='evolution'));
- take(random(pool.filter(c=>c.kind!=='evolution'&&c.id!=='heal'&&itemLevel(b,c.id)>0)));
+ const owned=pool.filter(c=>c.kind!=='evolution'&&c.id!=='heal'&&itemLevel(b,c.id)>0);
+ const ownedSpells=owned.filter(c=>c.kind==='spell');
+ const pairedSpells=ownedSpells.filter(c=>c.id!=='heal'&&isWeapon(c.id)&&itemLevel(b,EVOLUTIONS[c.id].passive)>0);
+ take(random(pairedSpells.length?pairedSpells:ownedSpells.length?ownedSpells:owned));
  const partners=pool.filter(c=>c.id!=='heal'&&itemLevel(b,c.id)===0&&WEAPONS.some(w=>itemLevel(b,w)>0&&EVOLUTIONS[w].passive===c.id));
  take(random(partners.length?partners:pool.filter(c=>c.id!=='heal'&&itemLevel(b,c.id)===0)));
  while(picked.length<3&&pool.length)take(random(pool));
@@ -60,7 +63,11 @@ export function applyChoice(b:Build,c:Choice){
  return true;
 }
 export function modifiers(b:Build){return{damage:1+itemLevel(b,'sun')*.12,cooldown:1-itemLevel(b,'wind')*.1,area:1+itemLevel(b,'heart')*.15,extra:itemLevel(b,'echo'),health:itemLevel(b,'dew')*12,regen:itemLevel(b,'dew')*.5};}
-export const xpNeeded=(level:number)=>3+Math.floor(level/3);
+// Growing costs give each upgrade time in combat.
+export const xpNeeded=(level:number)=>{
+ const progress=Math.max(0,Math.floor(level)-1);
+ return 6+progress*2+Math.floor(progress*progress/5);
+};
 export function spellStats(b:Build,id:WeaponId){
  const level=itemLevel(b,id),evolved=b.evolved.includes(id),m=modifiers(b);
  const base={

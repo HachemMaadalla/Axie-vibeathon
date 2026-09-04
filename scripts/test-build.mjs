@@ -85,7 +85,9 @@ check('A 90-second moving-player simulation can reach an evolution',()=>{
   }
  }
  assert.ok(kills>=25,'Enough kills for equipment progression: '+kills);
+ console.log('  Pacing: '+kills+' kills, level '+level+', build '+JSON.stringify(b));
  assert.ok(b.evolved.length>0,'A focused build should evolve during one run');
+ assert.ok(level>=6&&level<=12,'Level-ups should be spaced out over the run: '+level);
  console.log('  Simulated '+kills+' kills, level '+level+', evolved '+b.evolved.join(', '));
  engine.dispose();
 });
@@ -95,11 +97,12 @@ console.log(passed+' equipment and combat checks passed.');
 
 const {WildseedGame}=await import('../lib/game/scene.ts');
 check('Level-up choices consume queued XP without losing levels or accepting stale clicks',()=>{
+ const queuedXp=xpNeeded(1)+xpNeeded(2)+xpNeeded(3)+1;
  const b=freshBuild(),game=Object.assign(Object.create(WildseedGame.prototype),{
   mode:'dungeon',upgrade:true,build:b,choices:[eligibleChoices(b).find(c=>c.id==='thorn')],
-  xp:11,level:1,hp:80,maxHp:135,baseMaxHp:135,keys:new Set(),sound:()=>{},emit:()=>{},toast:()=>{}
+  xp:queuedXp,level:1,hp:80,maxHp:135,baseMaxHp:135,keys:new Set(),sound:()=>{},emit:()=>{},toast:()=>{}
  });
- game.chooseUpgrade('heal');assert.equal(b.items.thorn,1);assert.equal(game.xp,11);
+ game.chooseUpgrade('heal');assert.equal(b.items.thorn,1);assert.equal(game.xp,queuedXp);
  let picks=0;while(game.upgrade&&picks++<10)game.chooseUpgrade(game.choices[0].id);
  assert.equal(game.level,4);assert.equal(game.xp,1);assert.equal(game.upgrade,false);
  const before=JSON.stringify(game.build);game.chooseUpgrade('thorn');assert.equal(JSON.stringify(game.build),before);

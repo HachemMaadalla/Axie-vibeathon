@@ -83,6 +83,7 @@ check('A full mixed-enemy run earns levels and an evolution while traversing the
   enemies=enemies.filter(e=>{if(e.hp>0)return true;disposeEnemy(e);return false;});
   while(xp>=xpNeeded(level)){xp-=xpNeeded(level++);const c=eligibleChoices(b);applyChoice(b,c.find(c=>c.kind==='evolution')??c.find(c=>c.id==='thorn')??c.find(c=>c.id==='sun')??c.find(c=>c.id==='storm')??c[0]);}
  }
+ assert.ok(level>=6&&level<=12,'Mixed roster should not flood the player with upgrades: '+level);
  assert.equal(kinds.size,4);assert.ok(kills>25,'Kills: '+kills);assert.ok(b.evolved.length>0,'Focused build should evolve');
  console.log('  Mixed roster: '+kills+' kills, level '+level+', evolved '+b.evolved.join(', '));enemies.forEach(disposeEnemy);engine.dispose();
 });

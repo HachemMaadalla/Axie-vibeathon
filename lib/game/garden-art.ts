@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {toonMaterial} from './toon';
+import {windMaterial,waterMaterial,setGardenMotionTime} from './garden-motion';
 import {terrainHeight} from './terrain';
 import type {CropId} from './state';
 
@@ -9,7 +10,7 @@ function mesh(parent:T.Object3D,g:T.BufferGeometry,color:string,x=0,y=0,z=0,sx=1
  const m=new T.Mesh(g,mat(color,glow));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=!glow;m.receiveShadow=!glow;m.userData.solid=solid;m.userData.cameraIgnore=!solid;parent.add(m);return m;
 }
 function box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number,solid=false){return mesh(p,new T.BoxGeometry(w,h,d),c,x,y,z,1,1,1,solid);}
-function puff(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){return mesh(p,new T.IcosahedronGeometry(1,1),c,x,y,z,sx,sy,sz);}
+function puff(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx,wind=0){const m=new T.Mesh(new T.IcosahedronGeometry(1,1),wind?windMaterial(c,wind):mat(c));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;m.userData.cameraIgnore=true;p.add(m);return m;}
 const ground=(x:number,z:number)=>terrainHeight('farm',x,z);
 export const gardenStreamX=(z:number)=>8+Math.sin((z-5)*.13)*4.6;
 export function gardenStreamNear(x:number,z:number,margin=2.8){return z>6&&z<30&&Math.abs(x-gardenStreamX(z))<margin;}
@@ -18,7 +19,7 @@ export function createGardenTree(x:number,z:number,scale:number,pink=false){
  mesh(root,new T.CylinderGeometry(.25,.48,3.8,7),'#785039',0,1.8,0);
  for(let i=0;i<3;i++){const a=i*2.09,branch=mesh(root,new T.CylinderGeometry(.14,.25,2.1,6),'#785039',Math.cos(a)*.48,2.85,Math.sin(a)*.48);branch.rotation.z=Math.cos(a)*.65;branch.rotation.x=Math.sin(a)*.65;}
  const palette=pink?['#a94688','#d86caa','#ed97c1']:['#23705d','#3e9156','#78b744','#acd858'];
- for(let i=0;i<15;i++){const a=i*2.399,r=i<3?.5:1.35+(i%3)*.15,y=3.6+(i%4)*.43;puff(root,palette[i%palette.length],Math.cos(a)*r,y,Math.sin(a)*r,1.12,.9,1.02);}
+ for(let i=0;i<15;i++){const a=i*2.399,r=i<3?.5:1.35+(i%3)*.15,y=3.6+(i%4)*.43;puff(root,palette[i%palette.length],Math.cos(a)*r,y,Math.sin(a)*r,1.12,.9,1.02,.14);}
  return root;
 }
 export function createGardenCottage(){
@@ -58,11 +59,11 @@ export function createGardenCrop(crop:CropId,stage:number){
  const root=new T.Group(),mature=stage>=1,size=.55+stage*.18;
  for(let i=0;i<4;i++){
   const plant=new T.Group();plant.position.set((i%2)*.8-.4,.08,Math.floor(i/2)*.8-.4);plant.scale.setScalar(size);root.add(plant);
-  for(let j=0;j<4;j++){const a=j*Math.PI/2,leaf=puff(plant,j%2?'#83b83a':'#369652',Math.cos(a)*.2,.25,Math.sin(a)*.2,.1,.42,.16);leaf.rotation.z=-Math.cos(a)*.7;leaf.rotation.x=Math.sin(a)*.7;}
+  for(let j=0;j<4;j++){const a=j*Math.PI/2,leaf=puff(plant,j%2?'#83b83a':'#369652',Math.cos(a)*.2,.25,Math.sin(a)*.2,.1,.42,.16,.035);leaf.rotation.z=-Math.cos(a)*.7;leaf.rotation.x=Math.sin(a)*.7;}
   if(!mature)continue;
   if(crop==='sunroot'){const carrot=mesh(plant,new T.ConeGeometry(.23,.62,9),'#ffb449',0,.13,0);carrot.rotation.z=Math.PI+.18;for(let j=0;j<3;j++)box(plant,'#db792d',.04,.11+j*.11,.22,.18,.032,.025);}
-  if(crop==='moonberry')for(let j=0;j<6;j++){const a=j*2.4;puff(plant,j%2?'#8371cf':'#5b4e9e',Math.cos(a)*.19,.43+(j%3)*.13,Math.sin(a)*.19,.17);}
-  if(crop==='embercorn'){mesh(plant,new T.CylinderGeometry(.15,.18,.8,8),'#ed9a2f',0,.51,0);for(let row=0;row<5;row++)for(let j=0;j<4;j++){const a=j*Math.PI/2;puff(plant,(row+j)%2?'#ffd05e':'#efa13b',Math.cos(a)*.16,.23+row*.145,Math.sin(a)*.16,.105,.11,.1);}for(const side of [-1,1]){const husk=puff(plant,'#509b43',side*.2,.35,0,.13,.45,.18);husk.rotation.z=-side*.35;}}
+  if(crop==='moonberry')for(let j=0;j<6;j++){const a=j*2.4;puff(plant,j%2?'#8371cf':'#5b4e9e',Math.cos(a)*.19,.43+(j%3)*.13,Math.sin(a)*.19,.17,.17,.17,.025);}
+  if(crop==='embercorn'){mesh(plant,new T.CylinderGeometry(.15,.18,.8,8),'#ed9a2f',0,.51,0);for(let row=0;row<5;row++)for(let j=0;j<4;j++){const a=j*Math.PI/2;puff(plant,(row+j)%2?'#ffd05e':'#efa13b',Math.cos(a)*.16,.23+row*.145,Math.sin(a)*.16,.105,.11,.1);}for(const side of [-1,1]){const husk=puff(plant,'#509b43',side*.2,.35,0,.13,.45,.18,.03);husk.rotation.z=-side*.35;}}
  }
  return root;
 }
@@ -77,7 +78,7 @@ export function cliffGeometry(radius=30){
 }
 export class GardenArt{
  readonly root=new T.Group();
- private foam:T.InstancedMesh;private smoke:T.InstancedMesh;private falls:{x:number;z:number;y:number;angle:number;width:number}[]=[];
+ private foam:T.InstancedMesh;private smoke:T.InstancedMesh;private windLeaves:T.InstancedMesh;private clouds:{mesh:T.Object3D;x:number;z:number;phase:number}[]=[];private falls:{x:number;z:number;y:number;angle:number;width:number}[]=[];
  private matrix=new T.Matrix4();private q=new T.Quaternion();
  constructor(parent:T.Group){
   this.root.name='sky-garden-art';parent.add(this.root);
@@ -86,6 +87,8 @@ export class GardenArt{
   for(const [x,z] of [[-4.9,-3.3],[5,-2.7],[-6.5,6.1],[6.2,6.4],[-5,14.9],[5,14.9],[-9,-10],[9.8,-8.5],[15,20]])this.lantern(staticArt,x,z);
   const foamMat=new T.MeshBasicMaterial({color:'#e7fbff',transparent:true,opacity:.72,depthWrite:false});
   this.foam=new T.InstancedMesh(new T.SphereGeometry(1,6,4),foamMat,60);this.foam.userData.cameraIgnore=true;this.foam.name='waterfall-foam';this.foam.frustumCulled=false;this.root.add(this.foam);
+  const leafShape=new T.Shape();leafShape.moveTo(-.38,0);leafShape.quadraticCurveTo(0,.3,.48,0);leafShape.quadraticCurveTo(0,-.3,-.38,0);
+  this.windLeaves=new T.InstancedMesh(new T.ShapeGeometry(leafShape),toonMaterial('#9dcc51'),48);this.windLeaves.name='windborne-leaves';this.windLeaves.userData.cameraIgnore=true;this.windLeaves.frustumCulled=false;this.root.add(this.windLeaves);
   this.smoke=new T.InstancedMesh(new T.IcosahedronGeometry(1,1),new T.MeshBasicMaterial({color:'#fff5df',transparent:true,opacity:.4,depthWrite:false}),8);this.smoke.userData.cameraIgnore=true;this.smoke.name='cottage-smoke';this.root.add(this.smoke);
   this.update(0);
  }
@@ -94,7 +97,7 @@ export class GardenArt{
    const a=i/48*Math.PI*2,r=29.5,x=Math.cos(a)*r,z=Math.sin(a)*r;
    puff(p,['#929d8d','#768983','#a4aa95'][i%3],x,-2.3,z,1.7,3.2+(i%3)*.6,1.8);
    puff(p,i%2?'#5d9d45':'#89b854',x*.992,-.32,z*.992,1.5,.42,1.3);
-   if(i%3===0)for(let j=0;j<7;j++){const v=a+Math.sin(j*1.7)*.017,rr=29.5-j*.32;puff(p,j%2?'#80ad45':'#428255',Math.cos(v)*rr,-.7-j*.83,Math.sin(v)*rr,.35,.58,.3);}
+   if(i%3===0)for(let j=0;j<7;j++){const v=a+Math.sin(j*1.7)*.017,rr=29.5-j*.32;puff(p,j%2?'#80ad45':'#428255',Math.cos(v)*rr,-.7-j*.83,Math.sin(v)*rr,.35,.58,.3,.075);}
   }
  }
  private paths(p:T.Group){
@@ -128,7 +131,7 @@ export class GardenArt{
   const positions:number[]=[],indices:number[]=[];
   for(let i=0;i<=46;i++){const z=6+i*.5,x=gardenStreamX(z);positions.push(x-.95,ground(x-.95,z)+.075,z,x+.95,ground(x+.95,z)+.075,z);if(i<46){const a=i*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}}
   const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();
-  mesh(p,geo,'#34bce2',0,0,0,1,1,1,false,true);
+  const stream=new T.Mesh(geo,waterMaterial('#34bce2'));stream.name='animated-stream';stream.userData.cameraIgnore=true;p.add(stream);
   for(let i=0;i<35;i++){const z=6+i*.64,x=gardenStreamX(z),side=i%2?1:-1;puff(p,i%3?'#98a697':'#c9c7a4',x+side*1.1,ground(x+side*1.1,z)+.12,z,.4,.27,.38);}
   const x=gardenStreamX(17);for(let i=0;i<8;i++)box(p,i%2?'#bc874f':'#d1a265',x-1.75+i*.5,.38,17,.47,.18,2.15,true);
   for(const z of [16,18]){for(const dx of [-1.75,1.75])box(p,'#795538',x+dx,.85,z,.16,1.2,.16,true);box(p,'#a57743',x,1.2,z,3.6,.12,.12,true);}
@@ -136,8 +139,8 @@ export class GardenArt{
    const r=Math.hypot(fx,fz),xx=fx/r*30,zz=fz/r*30,angle=Math.atan2(xx,zz),root=new T.Group();root.position.set(xx,-.18,zz);root.rotation.y=angle;root.userData.cameraIgnore=true;this.root.add(root);
    const ribbon=new T.BufferGeometry(),v:number[]=[],idx:number[]=[];for(let j=0;j<=12;j++){const t=j/12,y=-t*18,z=.3+Math.sin(t*Math.PI*.75)*1.15;v.push(-w/2*(1+t*.3),y,z,w/2*(1+t*.3),y,z);if(j<12){const k=j*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}}
    ribbon.setAttribute('position',new T.Float32BufferAttribute(v,3));ribbon.setIndex(idx);ribbon.computeVertexNormals();
-   const fall=new T.Mesh(ribbon,new T.MeshBasicMaterial({color:'#69d1f1',side:T.DoubleSide,transparent:true,opacity:.86,depthWrite:false}));fall.userData.cameraIgnore=true;root.add(fall);
-   for(const side of [-.32,.15]){const line=new T.Mesh(ribbon,new T.MeshBasicMaterial({color:'#e3ffff',side:T.DoubleSide,transparent:true,opacity:.65,depthWrite:false}));line.scale.x=.12;line.position.x=side*w;line.position.z=.015;line.userData.cameraIgnore=true;root.add(line);}
+   const fall=new T.Mesh(ribbon,waterMaterial('#69d1f1',true));fall.userData.cameraIgnore=true;root.add(fall);
+   for(const side of [-.32,.15]){const line=new T.Mesh(ribbon,waterMaterial('#e3ffff',true));(line.material as T.MeshBasicMaterial).opacity=.6;line.scale.x=.12;line.position.x=side*w;line.position.z=.015;line.userData.cameraIgnore=true;root.add(line);}
    this.falls.push({x:xx,z:zz,y:-.18,angle,width:w});
   }
  }
@@ -146,12 +149,12 @@ export class GardenArt{
    const a=i*2.399,r=7+Math.sqrt((i+.5)/310)*21,x=Math.cos(a)*r,z=Math.sin(a)*r;
    if(Math.abs(x)<6.7&&z>-4&&z<15||Math.abs(x)<5.5&&z<-15||gardenStreamNear(x,z)||x< -4.5&&x> -14&&z> -8&&z<12)continue;
    const y=ground(x,z),c=['#ffcf65','#f1a4c4','#e3eab0','#91be60'][i%4];
-   for(let j=0;j<3;j++){const b=j*2.09;puff(p,'#599642',x+Math.cos(b)*.12,y+.18,z+Math.sin(b)*.12,.06,.23,.08);}
-   for(let j=0;j<4;j++){const b=j*Math.PI/2;puff(p,c,x+Math.cos(b)*.095,y+.38,z+Math.sin(b)*.095,.095,.045,.08);}
+   for(let j=0;j<3;j++){const b=j*2.09;puff(p,'#599642',x+Math.cos(b)*.12,y+.18,z+Math.sin(b)*.12,.06,.23,.08,.025);}
+   for(let j=0;j<4;j++){const b=j*Math.PI/2;puff(p,c,x+Math.cos(b)*.095,y+.38,z+Math.sin(b)*.095,.095,.045,.08,.035);}
    puff(p,'#fff3b1',x,y+.41,z,.055);
   }
   for(const [x,z] of [[-3.7,-11],[4.5,-11],[-6.9,14.5],[6.5,11.4],[11.6,-3],[-16,7]]){
-   for(let i=0;i<6;i++){const a=i*2.4;puff(p,i%2?'#398753':'#78ac4c',x+Math.cos(a)*.5,ground(x,z)+.35,z+Math.sin(a)*.5,.6,.45,.6);puff(p,i%2?'#ffc66d':'#dc85b4',x+Math.cos(a)*.57,ground(x,z)+.76,z+Math.sin(a)*.57,.16);}
+   for(let i=0;i<6;i++){const a=i*2.4;puff(p,i%2?'#398753':'#78ac4c',x+Math.cos(a)*.5,ground(x,z)+.35,z+Math.sin(a)*.5,.6,.45,.6,.07);puff(p,i%2?'#ffc66d':'#dc85b4',x+Math.cos(a)*.57,ground(x,z)+.76,z+Math.sin(a)*.57,.16);}
   }
  }
  private distantIslands(p:T.Group){
@@ -160,18 +163,21 @@ export class GardenArt{
    const island=new T.Group();island.position.set(x,y,z);island.userData.cameraIgnore=true;p.add(island);
    const material=toonMaterial('#ffffff');material.vertexColors=true;const cliff=new T.Mesh(cliffGeometry(size),material);cliff.userData.cameraIgnore=true;island.add(cliff);
    mesh(island,new T.CylinderGeometry(size,size*.93,.4,16),'#78b961',0,0,0);
-   for(let j=0;j<3;j++){const px=Math.sin(j*2.4)*size*.45,pz=Math.cos(j*2.4)*size*.45;mesh(island,new T.CylinderGeometry(.1,.2,1.3,5),'#7e6750',px,.7,pz);puff(island,'#52995c',px,1.9,pz,1.15,1.3,1.1);}
+   for(let j=0;j<3;j++){const px=Math.sin(j*2.4)*size*.45,pz=Math.cos(j*2.4)*size*.45;mesh(island,new T.CylinderGeometry(.1,.2,1.3,5),'#7e6750',px,.7,pz);puff(island,'#52995c',px,1.9,pz,1.15,1.3,1.1,.07);}
   }
-  for(let i=0;i<22;i++){const a=i*2.399,r=42+(i%5)*21;puff(p,'#eaf7fa',Math.cos(a)*r,-22-i%4*5,Math.sin(a)*r,9,2.6,5);}
+  for(let i=0;i<22;i++){const a=i*2.399,r=42+(i%5)*21,x=Math.cos(a)*r,z=Math.sin(a)*r,cloud=puff(this.root,'#eaf7fa',x,-22-i%4*5,z,9,2.6,5);cloud.userData.cameraIgnore=true;this.clouds.push({mesh:cloud,x,z,phase:i*.73});}
  }
- update(time:number){
+ update(time:number,reduced=false){
+  const motionTime=reduced?0:time;setGardenMotionTime(motionTime,reduced);
   let index=0;
   for(const f of this.falls)for(let j=0;j<20;j++){
-   const t=(time*.43+j/20)%1,lateral=Math.sin(j*2.399)*f.width*.42,away=.35+Math.sin(t*Math.PI*.75)*1.15;
+   const t=(motionTime*.43+j/20)%1,lateral=Math.sin(j*2.399)*f.width*.42,away=.35+Math.sin(t*Math.PI*.75)*1.15;
    const x=f.x+Math.cos(f.angle)*lateral+Math.sin(f.angle)*away,z=f.z-Math.sin(f.angle)*lateral+Math.cos(f.angle)*away;
    this.matrix.compose(new T.Vector3(x,f.y-t*18,z),this.q,new T.Vector3(.05+j%3*.025,.32+t*.6,.07));this.foam.setMatrixAt(index++,this.matrix);
   }
   this.foam.instanceMatrix.needsUpdate=true;
-  for(let i=0;i<8;i++){const t=(time*.16+i/8)%1;this.matrix.compose(new T.Vector3(-5.75+Math.sin(t*4)*.35,5.5+t*3.2,-5.75+t*.8),this.q,new T.Vector3(.16+t*.37,.22+t*.35,.19+t*.3));this.smoke.setMatrixAt(i,this.matrix);}this.smoke.instanceMatrix.needsUpdate=true;
+  for(let i=0;i<8;i++){const t=(motionTime*.16+i/8)%1;this.matrix.compose(new T.Vector3(-5.75+Math.sin(t*4)*.35,5.5+t*3.2,-5.75+t*.8),this.q,new T.Vector3(.16+t*.37,.22+t*.35,.19+t*.3));this.smoke.setMatrixAt(i,this.matrix);}this.smoke.instanceMatrix.needsUpdate=true;
+  for(let i=0;i<48;i++){const t=(motionTime*.075+i*.618033)%1,x=-34+t*68,z=-27+(i*17%54),r=Math.hypot(x,z),y=(r<29?ground(x,z):0)+1.2+i%6*.7+Math.sin(motionTime*2+i)*.35;this.q.setFromEuler(new T.Euler(0,motionTime*1.8+i,motionTime*3+i*.7));this.matrix.compose(new T.Vector3(x,y,z),this.q,new T.Vector3(.32,.32,.32));this.windLeaves.setMatrixAt(i,this.matrix);}this.windLeaves.instanceMatrix.needsUpdate=true;
+  for(const c of this.clouds){c.mesh.position.x=c.x+(reduced?0:Math.sin(motionTime*.035+c.phase)*5);c.mesh.position.z=c.z+(reduced?0:motionTime*.16%12-6);}
  }
 }

@@ -11,7 +11,7 @@ function check(name,f){f();checks++;console.log('PASS '+name)}
 function fixture(){return Object.assign(Object.create(WildseedGame.prototype),{
  farm:freshFarm(),player:new T.Group(),farmWorld:new T.Group(),actors:new Map(['pomodoro','bing','kotaro'].map(id=>[id,{root:new T.Group()}])),
  mode:'farm',started:true,paused:false,result:null,upgrade:false,keys:new Set(),selected:0,inReach:false,nearby:null,seed:'sunroot',
- emit:()=>{},save:()=>{},animate:()=>{},toast:()=>{},tendPlot:()=>{}
+ emit:()=>{},save:()=>{},animate:()=>{},toast:()=>{},changed:()=>{},tendPlot:()=>{}
 })}
 check('Legacy saves gain coins without losing farm progress',()=>{
  const old=freshFarm();delete old.coins;old.day=7;old.seeds.sunroot=64;old.hero='kotaro';old.unlocked=true;

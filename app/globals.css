@@ -261,3 +261,24 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 .farm-dock .tend-slot{width:135px}
 @media(max-width:600px){.game-dialog.service-dialog{padding:18px!important}.shop-good{gap:6px;padding:7px}.shop-good>.loot-art{width:35px;height:35px}.shop-good strong{font-size:11px}.shop-good .secondary{min-width:56px;padding:7px 6px;font-size:10px}.island-portals{gap:9px}.portal-choice{padding:18px 10px;min-height:220px}.portal-choice strong{font-size:19px}.portal-gem{width:59px;height:75px}.companion-talk{grid-template-columns:85px 1fr;gap:12px}.companion-talk img{width:85px;height:85px}.island-interact{bottom:18px;font-size:13px;padding:10px 17px}.farm-dock .tend-slot{width:106px}}
 
+
+/* Brief action feedback replaces success-message clutter. */
+.action-feedback-layer{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
+.action-popup{position:absolute;left:0;top:0;width:82px;height:82px;will-change:transform,opacity;pointer-events:none;filter:drop-shadow(0 3px 2px #10242b66)}
+.action-visual{display:block;width:100%;height:100%;transform-origin:50% 75%}
+.action-visual img,.action-visual svg{display:block;width:100%;height:100%;object-fit:contain}
+.action-popup>b{position:absolute;right:-7px;bottom:1px;font:bold 24px/1 'Trebuchet MS',sans-serif;color:#b6ffba;-webkit-text-stroke:4px #182e37;paint-order:stroke fill;text-shadow:0 2px #182e37}
+.action-popup>b.spent{color:#ffe0a1}
+.action-water .action-visual{animation:action-pour 1.35s ease both}
+.action-plant .action-visual{animation:action-plant 1.35s ease both}
+.action-harvest .action-visual,.action-soil .action-visual{animation:action-sway 1.35s ease both}
+.action-coin .action-visual{animation:action-coin 1.35s ease both}
+.action-fertilizer .action-visual{animation:action-pour 1.35s ease both}
+.action-meal .action-visual,.action-unlock .action-visual{animation:action-sway 1.35s ease both}
+@keyframes action-pour{0%{rotate:-18deg}25%,65%{rotate:14deg}85%,100%{rotate:0deg}}
+@keyframes action-plant{0%{translate:0 -8px;rotate:-12deg}35%{translate:0 6px;rotate:12deg}65%,100%{translate:0 0;rotate:0deg}}
+@keyframes action-sway{0%{rotate:-12deg}35%{rotate:9deg}70%,100%{rotate:0deg}}
+@keyframes action-coin{0%{scale:.45 1;rotate:-12deg}35%{scale:1 1;rotate:9deg}65%{scale:.75 1}100%{scale:1 1;rotate:0deg}}
+@media(prefers-reduced-motion:reduce){.action-visual{animation:none!important}}
+@media(max-width:600px){.action-popup{width:70px;height:70px}.action-popup>b{font-size:21px}}
+

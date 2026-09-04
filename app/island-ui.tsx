@@ -4,7 +4,7 @@ import {CROPS,HEROES,type CropId,type FarmState,type HeroId} from '@/lib/game/st
 import {PRICES,type TradeKind} from '@/lib/game/economy';
 import {LootArt} from './inventory-ui';
 export function IslandShop({farm,onTrade}:{farm:FarmState;onTrade:(side:'buy'|'sell',kind:TradeKind,id:CropId)=>void}){
- return <div className="island-shop"><div className="shop-coins" aria-label={farm.coins+' coins'}><Coins size={19}/>{farm.coins}</div>
+ return <div className="island-shop"><div className="shop-coins" data-feedback-anchor="shop" aria-label={farm.coins+' coins'}><Coins size={19}/>{farm.coins}</div>
  <div className="shop-goods">{(['seeds','crops'] as TradeKind[]).flatMap(kind=>(Object.keys(CROPS) as CropId[]).map(id=>{
  const price=PRICES[kind][id],locked=id==='embercorn'&&!farm.unlocked;
  return <article className="shop-good" key={kind+id}><LootArt kind={kind==='seeds'?'seed':'crop'} crop={id} size={50}/><div><strong>{CROPS[id].name}{kind==='seeds'?' seeds':''}</strong><small>×{farm[kind][id]}</small></div>
@@ -17,6 +17,6 @@ export function CompanionTalk({id,onChoose,onClose}:{id:HeroId;onChoose:()=>void
 }
 export function IslandPortal({farm,onEnter,onUnlock}:{farm:FarmState;onEnter:(tier:number)=>void;onUnlock:()=>void}){
  return <div className="island-portals"><button className="portal-choice" onClick={()=>onEnter(1)}><span className="portal-gem grove-gem"/><strong>Whispering Grove</strong><small>Enter →</small></button>
- <div className="portal-choice hollow-choice"><span className="portal-gem hollow-gem"/><strong>Bramble Hollow</strong>{farm.unlocked?<button className="primary" onClick={()=>onEnter(2)}>Enter →</button>:<><div className="portal-cost"><span><LootArt kind="crop" crop="sunroot" size={25}/>{farm.crops.sunroot}/4</span><span><LootArt kind="crop" crop="moonberry" size={25}/>{farm.crops.moonberry}/2</span></div><button className="secondary" disabled={farm.crops.sunroot<4||farm.crops.moonberry<2} onClick={onUnlock}>Unlock</button></>}</div></div>;
+ <div className="portal-choice hollow-choice"><span className="portal-gem hollow-gem" data-feedback-anchor="portal"/><strong>Bramble Hollow</strong>{farm.unlocked?<button className="primary" onClick={()=>onEnter(2)}>Enter →</button>:<><div className="portal-cost"><span><LootArt kind="crop" crop="sunroot" size={25}/>{farm.crops.sunroot}/4</span><span><LootArt kind="crop" crop="moonberry" size={25}/>{farm.crops.moonberry}/2</span></div><button className="secondary" disabled={farm.crops.sunroot<4||farm.crops.moonberry<2} onClick={onUnlock}>Unlock</button></>}</div></div>;
 }
 

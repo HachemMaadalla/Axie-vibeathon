@@ -27,7 +27,7 @@ check('Missing seeds, distant actions, and paused E never trigger a success icon
 check('Soil, fertilizer, cooking, and portal rewards only animate on a real state change',()=>{
  const {g,events}=fixture();g.player.position.copy(plotPosition(0));g.farm.soil=2;g.farm.plots[0].rich=false;g.improvePlot('soil');g.improvePlot('soil');assert.deepEqual(events.map(e=>e[0]),['soil']);
  g.farm.plots[0]={crop:'sunroot',growth:0,watered:false,rich:true,fertilized:false};g.farm.fertilizer=2;g.improvePlot('fertilizer');g.improvePlot('fertilizer');assert.equal(events.length,2);
- g.farm.crops.sunroot=2;g.cookMeal('sunroot');g.cookMeal('sunroot');assert.equal(events.length,3);assert.equal(events[2][2].anchor,'cook-sunroot');assert.equal(events[2][2].amount,1);
+ g.farm.crops.sunroot=2;g.cookMeal('sunroot');g.cookMeal('sunroot');assert.equal(events.length,3);assert.equal(events[2][2].anchor,'cook-sunroot');assert.equal(events[2][2].amount,1);assert.equal(events[2][2].crop,'sunroot');
  g.farm.crops.sunroot=4;g.farm.crops.moonberry=2;g.unlock();g.unlock();assert.equal(events.length,4);assert.equal(events[3][0],'unlock');
 });
 check('World anchors follow the camera and hide points behind it; reduced motion has no bounce',()=>{

@@ -269,7 +269,7 @@ export class WildseedGame {
  this.actionDone(kind,point.clone().add(new T.Vector3(0,1,0)),amount,undefined,kind==='harvest'?'Harvested '+amount+' '+CROPS[before.crop!].name:kind==='water'?'Watered':CROPS[this.seed].name+' planted');
  return msg;
  }
- private actionDone(kind:ActionKind,point:T.Vector3,amount?:number,anchor?:string,label?:string){this.actionFx?.spawn(kind,point,{amount,anchor,label});this.changed('');}
+ private actionDone(kind:ActionKind,point:T.Vector3,amount?:number,anchor?:string,label?:string,crop?:CropId){this.actionFx?.spawn(kind,point,{amount,anchor,label,crop});this.changed('');}
  improvePlot(kind:'soil'|'fertilizer'){
  if(this.mode!=='farm'||!this.started||this.paused||this.result)return;
  this.syncNearbyPlot();if(!this.inReach){this.toast('Move closer');return;}
@@ -280,7 +280,7 @@ export class WildseedGame {
  cookMeal(id:CropId){
  if(this.mode!=='farm')return;const before=this.farm.meals[id],msg=cook(this.farm,id);
  if(this.farm.meals[id]===before){this.toast(msg);return;}
- this.sound(660);this.actionDone('meal',new T.Vector3(-7,2,.5),1,'cook-'+id,'Meal cooked');
+ this.sound(660);this.actionDone('meal',new T.Vector3(-7,2,.5),1,'cook-'+id,'Meal cooked',id);
  }
  equipMeal(id:CropId){if(this.mode!=='farm')return;if(this.farm.meals[id]<1){this.toast('Cook a meal first');return;}this.farm.meal=this.farm.meal===id?null:id;this.save();this.emit();}
  unlock(){

@@ -1,7 +1,9 @@
 import * as T from 'three';
 import {ACTION_SYMBOLS} from './action-symbols';
+import {itemSprite} from './item-art';
+import type {CropId} from './state';
 export type ActionKind='plant'|'water'|'harvest'|'coin'|keyof typeof ACTION_SYMBOLS;
-type Options={amount?:number;anchor?:string;label?:string};
+type Options={amount?:number;anchor?:string;label?:string;crop?:CropId};
 type Popup={node:HTMLDivElement;point:T.Vector3;anchor:Element|null;age:number;duration:number};
 const ART=['plant','water','harvest','coin'] as const;
 export function popupMotion(age:number,reduced=false){
@@ -18,7 +20,7 @@ export class ActionFeedback{
  constructor(private container:HTMLElement){
   this.root=document.createElement('div');this.root.className='action-feedback-layer';this.root.setAttribute('aria-hidden','true');document.body.appendChild(this.root);
   this.live=document.createElement('span');this.live.className='sr-only';this.live.setAttribute('role','status');this.live.setAttribute('aria-live','polite');this.container.appendChild(this.live);
-  for(const key of ART){const img=new Image();img.src='/assets/actions/'+key+'.png';}
+  for(const src of [...ART.map(key=>'/assets/actions/'+key+'.png'),itemSprite('fertilizer')!,...(['sunroot','moonberry','embercorn'] as CropId[]).map(crop=>itemSprite('meal',crop)!)]){const img=new Image();img.src=src;}
  }
  spawn(kind:ActionKind,point:T.Vector3,options:Options={}){
   // Keep one popup per location so rapid actions cannot cover each other.
@@ -28,7 +30,9 @@ export class ActionFeedback{
   if(this.popups.length>=8)this.remove(this.popups[0]);
   const node=document.createElement('div');node.className='action-popup action-'+kind;
   const visual=document.createElement('span');visual.className='action-visual';
-  if(Object.hasOwn(ACTION_SYMBOLS,kind))visual.innerHTML=ACTION_SYMBOLS[kind as keyof typeof ACTION_SYMBOLS];
+  const sprite=itemSprite(kind,options.crop);
+  if(sprite){const img=document.createElement('img');img.src=sprite;img.alt='';img.draggable=false;visual.appendChild(img);}
+  else if(Object.hasOwn(ACTION_SYMBOLS,kind))visual.innerHTML=ACTION_SYMBOLS[kind as keyof typeof ACTION_SYMBOLS];
   else{const img=document.createElement('img');img.src='/assets/actions/'+kind+'.png';img.alt='';img.draggable=false;visual.appendChild(img);}
   node.appendChild(visual);
   if(options.amount!==undefined){const n=document.createElement('b');n.textContent=(options.amount>0?'+':'')+options.amount;n.className=options.amount<0?'spent':'gained';node.appendChild(n);}

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {CROPS,type CropId,type Loot} from './state';
 import {toonMaterial} from './toon';
+import {itemSprite} from './item-art';
 export type PickupKind='xp'|keyof Loot;
 export type Pickup={kind:PickupKind;amount:number;position:T.Vector3;ground:number;age:number;pulling:boolean;pullAge:number;visual?:T.Group};
 export type Drop={kind:PickupKind;amount:number};
@@ -39,8 +40,11 @@ export class BattlePickups{
    if(texture){texture.colorSpace=T.SRGBColorSpace;this.textures.push(texture);}
    this.materials.set(id,new T.SpriteMaterial({map:texture,color:texture?'#ffffff':CROPS[id].color,transparent:true,depthWrite:false}));
   }
-  this.supplyGeometry.set('soil',new T.BoxGeometry(.62,.72,.45));this.supplyGeometry.set('fertilizer',new T.CylinderGeometry(.18,.3,.65,7));this.shapes.push(...this.supplyGeometry.values());
-  this.materials.set('soil',toonMaterial('#bf8953'));this.materials.set('fertilizer',toonMaterial('#67e6bc'));
+  this.supplyGeometry.set('soil',new T.BoxGeometry(.62,.72,.45));this.shapes.push(...this.supplyGeometry.values());
+  this.materials.set('soil',toonMaterial('#bf8953'));
+  const fertilizer=loader?.load(itemSprite('fertilizer')!)??null;
+  if(fertilizer){fertilizer.colorSpace=T.SRGBColorSpace;this.textures.push(fertilizer);}
+  this.materials.set('fertilizer',new T.SpriteMaterial({map:fertilizer,color:fertilizer?'#ffffff':'#67e6bc',transparent:true,depthWrite:false}));
  }
  spawn(kind:PickupKind,amount:number,at:T.Vector3){
   if(amount<=0)return;
@@ -57,7 +61,7 @@ export class BattlePickups{
   const item:Pickup={kind,amount,position:point,ground,age:0,pulling:false,pullAge:0};
   if(kind!=='xp'){
    const group=new T.Group();group.name='pickup-'+kind;
-   if(Object.hasOwn(CROPS,kind)){
+   if(Object.hasOwn(CROPS,kind)||kind==='fertilizer'){
     const sprite=new T.Sprite(this.materials.get(kind) as T.SpriteMaterial);sprite.scale.set(1.65,1.65,1);sprite.position.y=.45;group.add(sprite);
    }else{
     const geometry=this.supplyGeometry.get(kind)!;const body=new T.Mesh(geometry,this.materials.get(kind));body.position.y=.28;group.add(body);

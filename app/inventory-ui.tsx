@@ -1,5 +1,6 @@
 'use client';
 import {useState,type CSSProperties} from 'react';
+import {itemSprite} from '@/lib/game/item-art';
 import {Check,Sparkles} from 'lucide-react';
 import {CROPS,type CropId} from '@/lib/game/state';
 import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,type WeaponId,type ItemId} from '@/lib/game/build';
@@ -8,7 +9,8 @@ import {ItemIcon} from './build-ui';
 type Category='All'|'Seeds'|'Crops'|'Supplies'|'Meals';
 type PackItem={key:string;name:string;category:Exclude<Category,'All'>;count:number;color:string;description:string;crop?:CropId;art:string};
 export function LootArt({kind,crop,size=48}:{kind:string;crop?:CropId;size?:number}){
- if(crop&&(kind==='seed'||kind==='crop'))return <img src={'/assets/crops/'+crop+'-'+kind+'.png'} width={size} height={size} alt="" aria-hidden="true" draggable={false} className="loot-art crop-art" style={{width:size,height:size}}/>;
+ const sprite=itemSprite(kind,crop);
+ if(sprite)return <img src={sprite} width={size} height={size} alt="" aria-hidden="true" draggable={false} className="loot-art crop-art" style={{width:size,height:size}}/>;
  const color=crop?CROPS[crop].color:'#7de3c4';
  return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true" className="loot-art">
  <ellipse cx="32" cy="55" rx="20" ry="4" fill="#09151e" opacity=".35"/>

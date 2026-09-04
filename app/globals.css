@@ -215,3 +215,23 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 @media(max-height:740px) and (min-width:601px){.power-heading{height:44px}.power-crest{width:38px;height:45px;padding-bottom:5px}.power-crest svg{height:18px;width:18px}.power-crest b{font-size:16px;line-height:16px}.game-dialog.power-dialog .dialog-title{font-size:28px!important}.level-art{min-height:116px;margin:8px 0}.level-art .skill-art-icon{width:110px!important;height:110px!important}.card-effect{min-height:57px;font-size:12px;margin-bottom:10px}.level-card-action{padding:8px;margin-top:10px}.card-name{font-size:23px}.level-card{padding:11px 14px}.power-loadout{padding-top:8px}}
 @media(prefers-reduced-motion:reduce){.level-card,.card-selected:after{animation:none!important}.game-dialog .level-card{transition:none}.level-card:hover:not(:disabled),.level-card:focus-visible,.level-card.card-selected{transform:none}.has-selection .level-card:not(.card-selected){transform:none}}
 
+
+/* A small bag: items first, one selection strip, no navigation or category tabs. */
+.game-dialog.inventory-dialog{max-width:600px!important;width:calc(100% - 32px);padding:22px!important;gap:15px!important}
+.inventory-dialog .dialog-title{font-size:25px!important;text-transform:none;letter-spacing:0;padding-right:35px}
+.simple-inventory{display:flex;flex-direction:column;gap:14px}
+.simple-inventory .inventory-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:10px}
+.simple-inventory .inventory-slot{min-height:0}
+.simple-inventory .inventory-slot>.loot-art{max-width:58px}
+.simple-inventory .empty-slot{opacity:.45}
+.pack-selection{display:flex;align-items:center;gap:12px;min-height:70px;border-top:1px solid #ac8d5855;padding-top:12px}
+.pack-selection>.loot-art{flex-shrink:0}.pack-selection>div{flex:1;min-width:0}
+.game-dialog .pack-selection h3{font-size:20px;margin:0 0 5px;line-height:1.2}
+.game-dialog .pack-selection p{font-size:11px;line-height:1.4;margin:0;color:#a6bac1}
+.pack-selection .primary{width:auto;min-width:90px;padding:10px 12px;font-size:12px;gap:6px;flex-shrink:0}
+.simple-pack-exit{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:10px;border-top:1px solid #ac8d5833}
+.simple-pack-exit>span{font-size:10px;color:#9eb4be}.simple-pack-exit .secondary{font-size:11px;padding:8px 12px}
+.game-dialog .empty-pack{text-align:center;font-size:12px;margin:8px 0;color:#b0c2c7}
+@media(max-width:600px){.game-dialog.inventory-dialog{padding:17px!important;max-width:calc(100% - 24px)!important;gap:12px!important}.simple-inventory .inventory-grid{gap:6px;padding:8px}.pack-selection{gap:8px}.pack-selection>.loot-art{width:36px;height:36px}.game-dialog .pack-selection h3{font-size:17px}.game-dialog .pack-selection p{font-size:10px}.pack-selection .primary{min-width:70px;padding:9px 8px;font-size:11px}}
+@media(max-width:380px){.simple-inventory .inventory-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.pack-selection>.loot-art{display:none}}
+

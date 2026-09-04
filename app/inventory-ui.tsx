@@ -1,7 +1,7 @@
 'use client';
 import {useState,type CSSProperties} from 'react';
-import {Heart,Star,Swords,Package,Check,Plus,Sparkles} from 'lucide-react';
-import {CROPS,HEROES,type CropId} from '@/lib/game/state';
+import {Check,Sparkles} from 'lucide-react';
+import {CROPS,type CropId} from '@/lib/game/state';
 import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,type WeaponId} from '@/lib/game/build';
 import type {View} from '@/lib/game/scene';
 import {ItemIcon} from './build-ui';
@@ -32,35 +32,22 @@ export function packItems(v:View):PackItem[]{
  return rows;
 }
 export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:CropId)=>void;onMeal:(id:CropId)=>void;onReturn:()=>void}){
- const [category,setCategory]=useState<Category>('All'),[selected,setSelected]=useState('seed-sunroot');
- const farm=v.mode==='farm',hero=HEROES[v.farm.hero],items=packItems(v),filtered=items.filter(i=>category==='All'||i.category===category);
- const item=filtered.find(i=>i.key===selected)??filtered[0],equipped=item?.crop&&(item.category==='Seeds'?v.seed===item.crop:item.category==='Meals'?v.farm.meal===item.crop:false);
- const tabs:Category[]=farm?['All','Seeds','Crops','Supplies','Meals']:['All','Seeds','Supplies'];
- return <div className="rpg-inventory">
- <aside className="pack-character">
-  <div className="character-crest"><img src={'/assets/axie/'+v.farm.hero+'.png'} alt={hero.name}/><span className="crest-level">{farm?'DAY '+v.farm.day:'LV '+v.level}</span></div>
-  <h2>{hero.name}</h2><span className="hero-title">{hero.role}</span>
-  <div className="pack-stats"><span><Heart size={15}/>Health<b>{Math.ceil(v.hp)}/{v.maxHp}</b></span><span>{farm?<Package size={15}/>:<Swords size={15}/>} {farm?'Harvests':'Defeated'}<b>{farm?v.farm.harvests:v.kills}</b></span></div>
-  <div className="packed-meal"><span className="section-label">PACKED MEAL</span><div className="meal-pocket">{(farm?v.farm.meal:v.meal)?<><LootArt kind="meal" crop={(farm?v.farm.meal:v.meal)!}/><span>{CROPS[(farm?v.farm.meal:v.meal)!].meal}<small>{CROPS[(farm?v.farm.meal:v.meal)!].effect}</small></span></>:<><Plus size={24}/><span>Empty<small>Prepare at the kitchen</small></span></>}</div></div>
-  <p className="hero-perk">{hero.perk}</p>
- </aside>
- <section className="pack-storage">
-  <div className="pack-category" aria-label="Inventory categories">{tabs.map(tab=><button key={tab} aria-pressed={category===tab} onClick={()=>setCategory(tab)}>{tab}</button>)}</div>
-  <div className="pack-section-heading"><span>{farm?'GARDEN STORES':'EXPEDITION LOOT'}</span><small>{items.filter(i=>i.count>0).length} stacks</small></div>
-  <div className="inventory-grid" aria-label="Item slots">
-   {filtered.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected ':'')+(i.count===0?'unowned':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+i.count} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><b>{i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.seed===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
-   {Array.from({length:24-filtered.length},(_,i)=><div key={'empty-'+i} className="inventory-slot empty-slot" aria-label="Empty inventory slot"><span>✦</span></div>)}
+ const [selected,setSelected]=useState('seed-'+v.seed);
+ const farm=v.mode==='farm',items=packItems(v).filter(i=>i.count>0),item=items.find(i=>i.key===selected)??items[0];
+ const equipped=item?.crop&&(item.category==='Seeds'?v.seed===item.crop:item.category==='Meals'?v.farm.meal===item.crop:false);
+ const hint=item?.category==='Seeds'?(farm?'Plant with E':'Bring home to plant'):item?.category==='Meals'?CROPS[item.crop!].effect:item?.category==='Crops'?'Cook at the kitchen':item?.key==='soil'?'Faster growth · +1 crop':'Faster crop growth';
+ return <div className="simple-inventory">
+  <div className="inventory-grid" aria-label="Inventory items">
+   {items.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+i.count} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><b>{i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.seed===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
+   {Array.from({length:12-items.length},(_,i)=><div key={'empty-'+i} className="inventory-slot empty-slot" aria-hidden="true"/>)}
   </div>
-  <div className="pack-footnote"><span>{farm?'Choose an item to inspect':'Loot returns home after the expedition'}</span><kbd>I</kbd> Close</div>
- </section>
- <aside className="item-inspector" aria-label="Item details">
-  {item&&<><div className="inspector-art" style={{'--item-color':item.color} as CSSProperties}><LootArt kind={item.art} crop={item.crop} size={94}/></div><span className="item-category">{item.category}</span><h3 style={{color:item.color}}>{item.name}</h3><p>{item.description}</p><div className="item-quantity">In your pack <strong>×{item.count}</strong></div>
-  {farm&&item.category==='Seeds'&&<button className="primary" disabled={item.count===0} onClick={()=>onSeed(item.crop!)}>{equipped?<Check size={16}/>:<Sparkles size={16}/>} {equipped?'Equipped':'Equip seed'}</button>}
-  {farm&&item.category==='Meals'&&<button className="primary" disabled={item.count===0} onClick={()=>onMeal(item.crop!)}>{equipped?'Unpack meal':'Pack meal'}</button>}
-  {farm&&item.category==='Crops'&&<small className="item-hint">Use at the kitchen or the Bramble Gate.</small>}
-  {!farm&&<small className="item-hint">Bring this home to use it in your garden.</small>}</>}
-  {!farm&&<div className="inventory-exit"><button className="secondary" onClick={onReturn}>Return to farm</button><small>Keep half your finds when returning early.</small></div>}
- </aside>
+  {item?<div className="pack-selection" aria-live="polite">
+   <LootArt kind={item.art} crop={item.crop} size={48}/>
+   <div><h3 style={{color:item.color}}>{item.name}</h3><p>{hint}</p></div>
+   {farm&&item.category==='Seeds'&&<button className="primary" onClick={()=>onSeed(item.crop!)}>{equipped?<Check size={16}/>:null}{equipped?'Equipped':'Equip'}</button>}
+   {farm&&item.category==='Meals'&&<button className="primary" onClick={()=>onMeal(item.crop!)}>{equipped?'Unpack':'Pack'}</button>}
+  </div>:<p className="empty-pack">Your pack is empty.</p>}
+  {!farm&&<div className="simple-pack-exit"><span>Early return keeps half.</span><button className="secondary" onClick={onReturn}>Return home</button></div>}
  </div>;
 }
 export function CombatBelt({view:v,onOpen}:{view:View;onOpen:()=>void}){

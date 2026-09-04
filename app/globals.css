@@ -52,3 +52,122 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 
 
 .plot-grid .plot-cell{display:flex;align-items:center;justify-content:center;cursor:default}.tend-slot .bed-selector{cursor:default;display:flex;align-items:center;justify-content:center}
+
+/* Lunacia equipment UI: brass frames, inset slots and illustrated loot. */
+:root{--game-ink:#10202e;--game-panel:#1b3040;--game-gold:#efd098;--game-brass:#a78352;--game-text:#f3e7cd;--game-muted:#b3c3c5}
+.game-shell{color:var(--game-text)}
+.game-shell .panel,.game-dialog{background:linear-gradient(135deg,#294555f5,#142735fa)!important;border:2px solid var(--game-brass);border-radius:7px!important;box-shadow:0 0 0 2px #101d28,0 8px 25px #07121c66,inset 0 1px #fff2,inset 0 -3px #08172499;color:var(--game-text)}
+.game-shell .primary,.game-dialog .primary{background:linear-gradient(#f7dc9b,#cf9f5c);color:#34271d;border:1px solid #ffe7b3;border-radius:5px;box-shadow:0 3px 0 #735338,0 4px 0 1px #101d28,inset 0 1px #fff9;text-shadow:0 1px #fff5}
+.game-shell .primary:hover:not(:disabled),.game-dialog .primary:hover:not(:disabled){background:linear-gradient(#ffebb8,#e6b56f)}
+.game-dialog .secondary{background:linear-gradient(#304a59,#203642);color:var(--game-gold);border:1px solid #8e7758;border-radius:5px;box-shadow:inset 0 1px #ffffff18,0 2px #101e29}
+.game-dialog .secondary:hover:not(:disabled){background:#3e5962;border-color:#efd098}
+.game-dialog button{transition:background .12s,border-color .12s,box-shadow .12s}
+.game-dialog button:focus-visible,.game-shell button:focus-visible{outline:2px solid #ffe5a3;outline-offset:3px}
+.game-dialog{max-width:850px!important;padding:25px!important;border:3px solid #b1905e!important;box-shadow:0 0 0 3px #101e2b,0 0 0 4px #ddb77666,0 28px 100px #0009,inset 0 0 0 1px #e8c48433!important;gap:10px!important}
+.game-dialog.inventory-dialog{max-width:1040px!important;width:calc(100% - 40px)}
+.game-dialog .dialog-title{font-size:30px!important;letter-spacing:1px;color:#ffe2a4;text-shadow:0 2px #07121c;text-transform:uppercase}
+.menu-kicker{font-size:9px;font-weight:bold;letter-spacing:.25em;color:#bda77c}
+.game-dialog p,.game-dialog [data-slot="dialog-description"],.game-dialog .dialog-note,.game-dialog .help-content li,.game-dialog .hero-option p{color:var(--game-muted)}
+.game-dialog [data-slot="dialog-description"]{font-size:12px;margin:0 0 3px}
+.game-dialog [data-slot="dialog-close"]{color:var(--game-gold);background:#102331;border:1px solid #9b7e52;border-radius:4px;top:13px;right:13px}
+[data-slot="dialog-overlay"]{background:#0817258c;backdrop-filter:blur(5px)}
+.game-menu-tabs{display:flex;gap:5px;border-bottom:1px solid #ad8e514f;padding:2px 0 12px;margin:0 0 7px;overflow-x:auto}
+.game-menu-tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-width:78px;padding:10px 9px;background:#132734;color:#a4b7bc;border:1px solid #52636a;border-radius:4px;font-weight:bold;font-size:12px;white-space:nowrap}
+.game-menu-tabs button[aria-pressed="true"]{color:#ffe2a4;background:linear-gradient(#5c5140,#393c35);border-color:#c7a361;box-shadow:inset 0 -2px #d5b475}
+.game-menu-tabs button:hover{color:#ffe2a4;border-color:#c7a361}
+.rpg-inventory{display:grid;grid-template-columns:180px minmax(0,1fr) 205px;gap:20px;align-items:start;padding-top:4px}
+.pack-character{min-width:0;text-align:center}
+.character-crest{position:relative;background:radial-gradient(ellipse at 50% 45%,#5d6b64,#263e48 65%,#101f2a);border:2px solid #a98952;box-shadow:inset 0 0 0 4px #172936,0 0 0 1px #07131c;border-radius:6px;margin-bottom:20px}
+.character-crest:before,.character-crest:after{content:'◆';position:absolute;left:50%;transform:translateX(-50%);color:#e9c07c;font-size:12px;line-height:12px;z-index:1}
+.character-crest:before{top:-7px}.character-crest:after{bottom:-7px}
+.character-crest img{width:100%;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 8px 5px #0005)}
+.crest-level{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(#ddbb79,#b1864c);color:#29251d;white-space:nowrap;padding:4px 15px;font-size:10px;font-weight:bold;border:2px solid #132632;z-index:2;border-radius:3px}
+.pack-character h2{margin:8px 0 3px;font-size:25px;color:#ffe1a4}
+.hero-title{color:#aebfc0;text-transform:uppercase;font-size:9px;letter-spacing:.13em}
+.pack-stats{margin:18px 0;text-align:left;border-top:1px solid #91744755;border-bottom:1px solid #91744755;padding:9px 0}
+.pack-stats>span{display:flex;align-items:center;gap:6px;font-size:11px;color:#b4c4c3;padding:5px 0}
+.pack-stats svg{color:#e6ba80}.pack-stats b{margin-left:auto;color:#f4e8d0;font-size:11px}
+.section-label{display:block;text-align:left;font-size:9px;letter-spacing:.13em;color:#bda880;margin-bottom:8px}
+.meal-pocket{display:flex;align-items:center;gap:7px;padding:6px;background:#0e222e;border:1px solid #5e6a68;border-radius:4px;text-align:left;min-height:64px}
+.meal-pocket>svg{flex-shrink:0;color:#526b75}.meal-pocket span{font-size:11px;color:#e8d6b0}.meal-pocket small{display:block;font-size:9px;line-height:1.5;color:#99adb5;margin-top:4px}
+.game-dialog .hero-perk{font-size:10px;line-height:1.5;font-style:italic;margin-top:15px;color:#92a8b1}
+.pack-storage{min-width:0}.pack-category{display:flex;gap:3px;margin-bottom:18px}
+.pack-category button{padding:8px 0;flex:1;border:1px solid #4f6269;background:#122633;border-radius:3px;color:#a4b9be;font-size:11px}
+.pack-category button[aria-pressed="true"]{background:#4b493b;border-color:#c39d61;color:#ffe1a5}
+.pack-section-heading{display:flex;justify-content:space-between;gap:5px;margin-bottom:10px;color:#c4ad80;font-size:9px;letter-spacing:.14em}
+.pack-section-heading small{color:#829ba6;font-size:9px;letter-spacing:0}
+.inventory-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;padding:10px;background:#10232e;border:1px solid #49606a;box-shadow:inset 0 2px 9px #0005;border-radius:5px}
+.inventory-slot{position:relative;aspect-ratio:1;min-width:0;display:grid;place-items:center;background:radial-gradient(ellipse at bottom,#344b54,#192e3b 75%);border:1px solid #65747a;box-shadow:inset 0 0 0 2px #10212c,inset 0 0 9px #0005;border-radius:4px;padding:3px}
+.inventory-slot>.loot-art{width:100%;height:100%;max-width:55px;filter:drop-shadow(0 2px 1px #0004)}
+.inventory-slot b{position:absolute;bottom:3px;right:5px;font-size:11px;color:#fff0d3;text-shadow:1px 1px #08121c,-1px -1px #08121c;font-weight:800}
+.inventory-slot i{position:absolute;left:3px;top:3px;display:grid;place-items:center;background:#99d8aa;border:1px solid #113e36;color:#173529;border-radius:2px}
+.inventory-slot.inspected{border:2px solid var(--item-color,#f0ce8e);box-shadow:inset 0 0 12px #e9cf6e22,0 0 0 1px #091925,0 0 12px #ffe39d22;padding:2px}
+.inventory-slot:not(.empty-slot):hover{background:#3c5360;border-color:#ffe3a4}
+.inventory-slot.unowned>.loot-art{opacity:.32}.inventory-slot.unowned b{color:#7d919b}
+.empty-slot{background:#142936;border-color:#344e5b}.empty-slot span{color:#738c92;opacity:.16;font-size:24px}
+.pack-footnote{display:flex;align-items:center;gap:5px;color:#829eaa;font-size:9px;margin-top:13px}.pack-footnote span{margin-right:auto}.pack-footnote kbd{color:#e9cf99;border:1px solid #657071;background:#122532;padding:2px 5px;border-radius:3px}
+.item-inspector{align-self:stretch;background:linear-gradient(#162c39,#122431);border:1px solid #645d4b;border-top:2px solid #c49b5b;border-radius:4px;padding:15px;min-width:0;display:flex;flex-direction:column;align-items:stretch}
+.inspector-art{display:grid;place-items:center;aspect-ratio:1.25;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--item-color) 19%,transparent),transparent 70%);margin-bottom:12px}
+.inspector-art svg{filter:drop-shadow(0 6px 5px #0004)}
+.item-category{font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#8fa7b3}
+.game-dialog .item-inspector h3{font-size:23px;line-height:1.2;margin:7px 0 10px}
+.game-dialog .item-inspector p{font-size:12px;line-height:1.6;min-height:70px;margin:0 0 12px;color:#b7c4c9}
+.item-quantity{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #60707566;border-bottom:1px solid #60707566;padding:11px 0;margin-bottom:16px;font-size:11px;color:#8da5b0}.item-quantity strong{color:#f2dbb0;font-size:16px}
+.item-inspector .primary,.item-inspector .secondary{padding:10px 6px;font-size:12px;gap:6px}
+.item-hint,.inventory-exit small{font-size:10px;line-height:1.6;color:#8ea4af}
+.inventory-exit{margin-top:auto;padding-top:18px}.inventory-exit .secondary{width:100%;margin-bottom:8px}.inventory-exit small{display:block;text-align:center}
+.quiet-topbar,.in-dungeon .quiet-topbar{background:linear-gradient(#10253966,transparent)}
+.quiet-topbar .wordmark{color:#ffe3a6;text-shadow:0 2px #152638,0 0 12px #10223399}.quiet-topbar .wordmark>svg{color:#edcc86}
+.quiet-topbar .utility button,.touch-controls button{position:relative;border:1px solid #aa8e5f;background:linear-gradient(#314d5cf5,#182e3ef5);color:#efd09a;box-shadow:0 2px 0 #091a25,inset 0 1px #ffffff26;border-radius:5px}
+.quiet-topbar .utility button:hover{background:#405a62}.utility button kbd{position:absolute;bottom:1px;right:3px;font-size:8px;line-height:1;color:#dec18b}
+.day-chip{border:2px solid #b6955d;border-radius:5px;background:linear-gradient(#304a5af5,#152b3bf5);color:#f7dba0;box-shadow:0 2px #10212e,inset 0 1px #ffffff22}
+.quiet-welcome{width:285px;padding:24px}.quiet-welcome h1{color:#ffe2a1;font-size:41px;margin:9px 0 23px;letter-spacing:1px;text-shadow:0 2px #0c1c28}
+.game-shell .companion-button{border-radius:8px!important;background:radial-gradient(#5b6a60,#1a3444)!important}
+.companion-button img{border-radius:4px;object-fit:contain}
+.farm-dock{gap:13px;padding:9px 12px}
+.farm-dock .seed-slot,.farm-dock .supply-slots button{background:linear-gradient(#243e4c,#102532);border:1px solid #667c80;border-radius:4px;box-shadow:inset 0 0 0 2px #10232f;width:51px;height:56px}
+.farm-dock .seed-slot.active{border:2px solid #f2d08b;box-shadow:inset 0 0 10px #ddbe6922,0 0 0 1px #071622}
+.farm-dock .seed-slot b,.farm-dock .supply-slots b{position:absolute;right:4px;bottom:3px;color:#fff0cd;text-shadow:1px 1px #06131a;font-size:11px}
+.seed-slot kbd{position:absolute;left:4px;top:3px;font-size:9px;color:#adc0c8}
+.farm-dock .seed-slot svg,.farm-dock .supply-slots svg{width:36px;height:36px}
+.tend-slot .bed-selector{color:#a7bac2;font-size:10px;padding-bottom:7px}
+.farm-dock .compact-tend{padding:8px;font-size:12px;gap:5px}.farm-dock .compact-tend kbd{color:#533a24;background:#b8894d33;border:1px solid #a77a46;border-radius:2px;padding:1px 4px}
+.traversal-actions button{color:#e8cc95}.traversal-actions kbd{color:#c9b790}
+.vitals>img{border:1px solid #b1915a;border-radius:4px;background:#536665;object-fit:contain}
+.vitals-bars>div:first-child{color:#ffb2a3}.vitals-bars span{color:#efd18f}
+.health-progress{background:#0a2027!important;border:1px solid #597f70;border-radius:3px!important;height:10px!important}.health-progress [data-slot="progress-indicator"]{background:linear-gradient(#7bea99,#43ad6f)!important}
+.xp-progress{background:#0c2032!important;height:4px!important}.xp-progress [data-slot="progress-indicator"]{background:#c39cff!important}
+.combat-belt{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);display:flex;gap:5px;padding:7px;max-width:calc(100% - 340px)}
+.combat-belt button{width:46px;height:49px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #61747c;border-bottom:2px solid var(--item-color,#b49861);border-radius:3px;background:linear-gradient(#29424e,#112634);color:var(--item-color,#efd59c);padding:4px}
+.combat-belt button:hover{border-color:#f5dba1;background:#3b5662}.combat-belt button>svg{flex-shrink:0}.combat-belt button>span{font-size:7px;letter-spacing:2px;line-height:1}.combat-belt kbd{font-size:9px;color:#deca9f}
+.game-shell .toast{background:#193441f2;border:1px solid #ac8d58;border-radius:5px;color:#f5dfb5}
+.game-dialog .recipe,.game-dialog .hero-option,.game-dialog .destination,.game-dialog .equipped-items>span,.game-dialog .combination>span,.game-dialog .result-loot>div,.game-dialog .upgrade-options button{background:linear-gradient(140deg,#263f4c,#162d3b);color:#eadcbf;border:1px solid #6d756c;border-radius:5px;box-shadow:inset 0 1px #fff1}
+.game-dialog .recipe-icon{background:radial-gradient(#71614666,#172d3b);border:1px solid #847658;border-radius:4px}
+.game-dialog .recipe small,.game-dialog .hero-option>span,.game-dialog .hero-option .choose-label,.game-dialog .equipped-items small,.game-dialog .combination small,.game-dialog .result-stats,.game-dialog .packed-note,.game-dialog .difficulty,.game-dialog .unlock-hint,.game-dialog .bed-state{color:#abbec1}
+.game-dialog .hero-option.chosen,.game-dialog .equipped{border-color:#e1bd76!important;background:linear-gradient(#4b5140,#283c3d)!important}
+.game-dialog .hero-option img{background:radial-gradient(#7c87784d,transparent);border-radius:3px}
+.game-dialog .hero-option .choose-label,.game-dialog .credits,.game-dialog .build-summary,.game-dialog .evolution-book article{border-color:#8b79544d}
+.game-dialog .hero-option.chosen .choose-label{color:#f5d69a}
+.game-dialog .eyebrow,.game-dialog .credits a,.game-dialog .help-content li strong{color:#e9cd99}
+.game-dialog .bramble{background:linear-gradient(140deg,#3b3e57,#232d42);border-color:#8e799e}
+.game-dialog .destination-number{color:#bda477}
+.game-dialog .recipes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.game-dialog .recipe{flex-direction:column;align-items:stretch;padding:17px 14px;gap:13px}
+.game-dialog .recipe-icon{width:65px;height:65px;align-self:center}.game-dialog .recipe h3{font-size:21px}.game-dialog .recipe-actions{margin:0;flex-direction:row;min-width:0;margin-top:auto}.game-dialog .recipe-actions button{flex:1;min-width:0}.game-dialog .dialog-note{grid-column:1/-1;margin-top:2px;font-size:11px}
+.game-dialog .plot-grid .plot-cell{background:#26343a;border-color:#796b50;border-radius:4px;color:#81988e}.game-dialog .plot-grid .plot-cell.selected{border-color:#f0cd84;background:#4f5141;box-shadow:0 0 0 1px #071a24}.game-dialog .plot-grid .plot-cell.ripe{background:#3d5847}
+.game-dialog .evolution-book{display:grid;grid-template-columns:1fr 1fr;gap:12px}.game-dialog .evolution-book>p{grid-column:1/-1}.game-dialog .evolution-book article{padding:14px;background:#162d3b;border:1px solid #4e6269;border-radius:4px}
+.game-dialog .evolution-book article h3{color:#eed6a4}.game-dialog .evolution-book .recipe-evolved{background:#3a483b;border-color:#bca16b}.game-dialog .combination{gap:6px}.game-dialog .combination>span{font-size:10px;padding:6px}.game-dialog .combination>span svg{width:18px}.game-dialog .combination .ingredient-ready{border-color:#92bb86;color:#b5eaa9}
+.game-dialog .equipment-choices button{border-top:3px solid #b69965;box-shadow:inset 0 0 0 2px #102430;padding:18px}
+.game-dialog .equipment-choices button:hover{background:linear-gradient(#40585e,#243d4a);border-color:#f3d58f}
+.game-dialog .equipment-choices h3{color:#ffe1a0}.game-dialog .equipment-choices .choice-level,.game-dialog .equipment-choices .choice-combo{color:#a8bec6}
+.game-dialog .equipment-choices .choice-icon{border:2px solid #efd499;border-radius:5px;box-shadow:0 0 0 2px #101e2a,0 5px 12px #0003}
+.game-dialog .equipment-choices .evolution-choice{background:linear-gradient(#4d4d3b,#27363d);border-color:#efd17a;box-shadow:0 0 22px #d4b56833}
+.game-dialog .equipment-choices .choice-select{color:#f2d599;border-color:#98794c;font-size:12px}
+.game-dialog .result-loot strong{color:#ffdf9a}.game-dialog .result-loot span{color:#afc0c3}
+.game-dialog .build-summary h3 small,.game-dialog .evolution-book h3 small,.game-dialog .credits small{color:#9cb0b7}
+.game-shell .pause-card>svg{color:#e6c585}.game-shell .error-panel p{color:#bbcbcd}
+@media(max-width:1000px){.combat-belt{max-width:calc(100% - 40px)}}
+@media(max-width:850px){.rpg-inventory{grid-template-columns:150px minmax(0,1fr);gap:16px}.item-inspector{grid-column:1/-1;display:grid;grid-template-columns:95px 1fr 155px;column-gap:18px;padding:14px}.inspector-art{grid-column:1;grid-row:1/6;margin:0;align-self:center}.item-category,.game-dialog .item-inspector h3,.game-dialog .item-inspector p{grid-column:2}.game-dialog .item-inspector p{min-height:0;margin:0}.item-quantity{grid-column:3;grid-row:1/3;margin:0 0 10px}.item-inspector>.primary{grid-column:3;grid-row:3}.item-hint{grid-column:3;grid-row:3}.inventory-exit{grid-column:3;grid-row:3/5;padding:0}.game-dialog .evolution-book{grid-template-columns:1fr}.game-dialog .recipe-actions{flex-direction:column}}
+@media(max-width:600px){.game-dialog{padding:18px!important;max-width:calc(100% - 24px)!important;max-height:92dvh;gap:9px!important}.game-dialog.inventory-dialog{width:calc(100% - 24px)}.game-dialog .dialog-title{font-size:25px!important}.menu-kicker{font-size:8px}.game-menu-tabs{gap:4px;padding-bottom:9px}.game-menu-tabs button{min-width:43px;padding:9px 4px;gap:3px;flex-direction:column;font-size:9px}.game-menu-tabs button svg{width:16px;height:16px}.rpg-inventory{grid-template-columns:1fr;gap:14px}.pack-character{display:grid;grid-template-columns:74px 1fr;column-gap:15px;text-align:left}.character-crest{grid-column:1;grid-row:1/4;margin:0 0 4px}.crest-level{font-size:8px;padding:3px 9px;bottom:-9px}.pack-character h2{font-size:23px;margin:0 0 3px}.hero-title{font-size:8px}.pack-stats{grid-column:2;margin:5px 0 0;padding:3px 0;display:flex;gap:13px;border-bottom:0}.pack-stats>span{font-size:9px;gap:4px}.pack-stats b{font-size:9px}.pack-stats svg{width:12px}.packed-meal{grid-column:1/-1;margin-top:13px}.packed-meal .section-label{display:none}.meal-pocket{min-height:40px;padding:3px 7px}.meal-pocket>.loot-art{width:34px;height:34px}.meal-pocket>span{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.meal-pocket small{margin:0}.game-dialog .hero-perk{display:none}.pack-category{margin:0 0 12px}.pack-category button{font-size:10px;padding:7px 0}.inventory-grid{gap:6px;padding:8px}.inventory-slot b{font-size:10px}.pack-footnote{font-size:8px;margin-top:9px}.item-inspector{grid-template-columns:66px 1fr;gap:3px 12px;padding:12px}.inspector-art{grid-column:1;grid-row:1/4}.inspector-art svg{width:66px;height:66px}.item-category{font-size:8px}.game-dialog .item-inspector h3{font-size:20px;margin:4px 0}.game-dialog .item-inspector p{font-size:11px}.item-quantity{grid-column:1/-1;grid-row:auto;margin:9px 0;padding:8px 0}.item-inspector>.primary,.item-hint,.inventory-exit{grid-column:1/-1;grid-row:auto}.inventory-exit{padding-top:7px}.quiet-topbar .utility{gap:5px}.quiet-topbar .utility button{width:31px;height:33px}.farm-dock{gap:7px;padding:7px}.farm-dock .seed-slot,.farm-dock .supply-slots button{width:35px;height:49px}.farm-dock .seed-slot svg,.farm-dock .supply-slots svg{width:29px;height:29px}.farm-dock .seed-slot b,.farm-dock .supply-slots b{font-size:10px;right:3px;bottom:2px}.seed-slot kbd{font-size:8px;top:2px;left:3px}.tend-slot{width:108px}.farm-dock .compact-tend{font-size:11px;padding:8px 5px}.tend-slot .bed-selector{font-size:9px}.combat-belt{bottom:13px;padding:5px;gap:3px;max-width:calc(100% - 24px)}.combat-belt button{width:34px;height:44px;padding:3px}.combat-belt button>svg{width:22px;height:22px}.combat-belt button>span{letter-spacing:1px}.game-dialog .recipes{grid-template-columns:1fr;gap:9px}.game-dialog .recipe{display:grid;grid-template-columns:53px 1fr;gap:9px;padding:12px}.game-dialog .recipe-icon{width:49px;height:49px;grid-row:1/3}.game-dialog .recipe h3{font-size:19px}.game-dialog .recipe-actions{grid-column:2;flex-direction:row}.game-dialog .equipment-choices button{padding:12px}.game-dialog .hero-option h3{font-size:17px}}
+@media(max-width:380px){.inventory-grid{gap:4px;padding:5px}.farm-dock{gap:4px;padding:6px}.farm-dock .seed-slot{width:32px}.farm-dock .supply-slots button{width:29px}.tend-slot{width:100px}.combat-belt button{width:30px}.quiet-topbar .utility{gap:4px}.quiet-topbar .utility button{width:29px}}
+

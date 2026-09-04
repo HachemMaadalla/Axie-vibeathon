@@ -3,7 +3,7 @@ import {registerHooks} from 'node:module';
 import * as T from 'three';
 registerHooks({resolve(specifier,context,next){try{return next(specifier,context);}catch(e){if(specifier.startsWith('.')&&!/\.[a-z]+$/i.test(specifier))return next(specifier+'.ts',context);throw e;}}});
 const {makeLandscape}=await import('../lib/game/landscape.ts');
-const {terrainHeight,dungeonTerrain,terrainRoads,WORLD_RADIUS,BRIDGES,riverX}=await import('../lib/game/terrain.ts');
+const {terrainHeight,dungeonTerrain,terrainRoads,WORLD_RADIUS,DUNGEON_DETAIL_SCALE,BRIDGES,riverX}=await import('../lib/game/terrain.ts');
 const {NaturalTerrainSampler}=await import('../lib/gameblocks/modules/world/environment/TerrainSampler.js');
 const {MovementMotor}=await import('../lib/game/movement.ts');
 const {batchTrees}=await import('../lib/game/environment.ts');
@@ -16,7 +16,7 @@ check('Live terrain uses GameBlocks samplers and smooth cel-shaded meshes',()=>{
  let triangles=0;
  for(const c of chunks){assert.ok(c.geometry.attributes.uv);assert.ok(c.material.isMeshToonMaterial);assert.equal(c.material.map,null);assert.equal(c.material.gradientMap.magFilter,T.NearestFilter);assert.ok(!c.material.flatShading);triangles+=c.geometry.index.count/3;}
  assert.ok(triangles<65000,'Triangle budget: '+triangles);
- assert.ok(parent.getObjectByName('river-water'));assert.ok(parent.getObjectByName('coastal-water'));assert.ok(parent.getObjectByName('gameblocks-rocks').children.length>200);
+ assert.ok(parent.getObjectByName('river-water'));assert.ok(parent.getObjectByName('coastal-water'));assert.ok(parent.getObjectByName('gameblocks-rocks').children.length>Math.round(200*DUNGEON_DETAIL_SCALE));
  console.log('  '+chunks.length+' chunks, '+triangles+' triangles; generation '+Math.round(performance.now()-t)+' ms');
 });
 check('Neighboring chunks share identical heights and upward-facing triangles',()=>{
@@ -34,7 +34,7 @@ check('Neighboring chunks share identical heights and upward-facing triangles',(
 check('Rendered triangles agree with character ground heights across slopes and chunk borders',()=>{
  const ray=new T.Raycaster();
  for(let i=0;i<250;i++){
-  const a=i*2.4,r=5+(i%94)*2,x=Math.cos(a)*r,z=Math.sin(a)*r;
+  const a=i*2.4,r=5+(i%94)/93*(WORLD_RADIUS.dungeon-8),x=Math.cos(a)*r,z=Math.sin(a)*r;
   ray.set(new T.Vector3(x,100,z),new T.Vector3(0,-1,0));const hit=ray.intersectObjects(chunks,false)[0];
   assert.ok(hit);assert.ok(Math.abs(hit.point.y-terrainHeight('dungeon',x,z)-.02)<.00001);
  }

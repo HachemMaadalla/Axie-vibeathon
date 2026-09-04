@@ -5,7 +5,9 @@ export type WorldMode='farm'|'dungeon';
 export type Biome='woodland'|'marsh'|'badlands'|'crystal';
 export const TILE=1.25;
 export const TERRAIN_STEP=2.5;
-export const WORLD_RADIUS={farm:30,dungeon:64*Math.sqrt(10)};
+export const WORLD_RADIUS={farm:30,dungeon:170};
+// Keep the same amount of open space as the arena footprint changes.
+export const DUNGEON_DETAIL_SCALE=(WORLD_RADIUS.dungeon/(64*Math.sqrt(10)))**2;
 export const BRIDGES=[-135,-65,35,115];
 export const riverX=(z:number)=>Math.sin(z*.022)*22+Math.cos(z*.008)*25;
 export function terrainBiome(x:number,z:number):Biome{
@@ -55,7 +57,7 @@ class WildseedTerrainSampler extends NaturalTerrainSampler{
     h=T.MathUtils.lerp(h,deck,(1-smooth(16,24,along))*(1-smooth(3.6,8,across)));
    }
   }
-  // Sandy shoreline around the perimeter; the playable radius stays unchanged.
+  // Sandy shoreline around the perimeter; follows the playable radius.
   h=T.MathUtils.lerp(h,-2.2,smooth(WORLD_RADIUS.dungeon-15,WORLD_RADIUS.dungeon+6,r));
   return h;
  }

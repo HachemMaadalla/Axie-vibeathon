@@ -5,7 +5,7 @@ import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import {createAxieActor} from './model';
 import {FollowCamera} from './camera';
 import {MovementMotor} from './movement';
-import {WORLD_RADIUS,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX,terrainRoads} from './terrain';
+import {WORLD_RADIUS,DUNGEON_DETAIL_SCALE,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX,terrainRoads} from './terrain';
 import {makeLandscape,makeFarmLandscape} from './landscape';
 import {makeEnemy,disposeEnemy,updateEnemy,enemyKindFor,ENEMY_INFO,type EnemyUnit} from './enemies';
 import {EnemyBatch} from './enemy-batch';
@@ -123,7 +123,7 @@ export class WildseedGame {
  }
  private makeArena(){this.terrainChunks=makeLandscape(this.arena);}
  private expandWorld(p:T.Group,mode:'farm'|'dungeon'){
- const radius=WORLD_RADIUS[mode],count=mode==='farm'?14:650;
+ const radius=WORLD_RADIUS[mode],count=mode==='farm'?14:Math.round(650*DUNGEON_DETAIL_SCALE);
  for(let i=0;i<count;i++){
   const a=i*2.39996,r=mode==='farm'?18+(i%9)/9*10:18+Math.sqrt((i+.5)/count)*(radius-25);
   const x=Math.cos(a)*r,z=Math.sin(a)*r;
@@ -134,6 +134,7 @@ export class WildseedGame {
  }
  const points=mode==='farm'?[[-22,-10],[19,20],[-18,21]]:[[35,-28],[-55,-65],[104,-58],[-112,60],[65,125],[-105,-95],[160,25],[-35,155],[-170,-15],[80,-153],[0,-160],[135,110]];
  points.forEach(([x,z],index)=>{
+  if(mode==='dungeon'){const r=Math.hypot(x,z),limit=radius-23;if(r>limit){x*=limit/r;z*=limit/r;}}
   const y=terrainHeight(mode,x,z),group=new T.Group();group.userData.batchable=true;p.add(group);
   const color=['#b3a8df','#76c9d5','#d9b46c','#95c778'][index%4];
   if(index%3===0){
@@ -149,7 +150,8 @@ export class WildseedGame {
  if(mode==='dungeon'){
   for(const z of BRIDGES){const x=riverX(z),group=new T.Group();group.userData.batchable=true;p.add(group);for(let i=-12;i<=12;i+=2)for(const side of [-1,1]){const y=terrainHeight(mode,x+i,z);this.box(group,'#b09b72',x+i,y+.6,z+side*2,.15,1.2,.15);this.box(group,'#ad8e65',x+i+.8,y+1,z+side*2,1.6,.12,.13);}}
   // Stones and low shrubs give the open ground scale without blocking combat lanes.
-  for(let i=0;i<320;i++){const a=i*2.399,r=25+Math.sqrt(i/320)*(radius-34),x=Math.cos(a)*r,z=Math.sin(a)*r;if(isWater(x,z)||isBridge(x,z))continue;const group=new T.Group();group.userData.batchable=true;p.add(group);const y=terrainHeight(mode,x,z);this.blob(group,i%2?'#647e9c':'#349658',x,y+.3,z,.5+i%3*.3,.5,.7);}
+  const shrubCount=Math.round(320*DUNGEON_DETAIL_SCALE);
+  for(let i=0;i<shrubCount;i++){const a=i*2.399,r=25+Math.sqrt(i/shrubCount)*(radius-34),x=Math.cos(a)*r,z=Math.sin(a)*r;if(isWater(x,z)||isBridge(x,z))continue;const group=new T.Group();group.userData.batchable=true;p.add(group);const y=terrainHeight(mode,x,z);this.blob(group,i%2?'#647e9c':'#349658',x,y+.3,z,.5+i%3*.3,.5,.7);}
  }
  }
 

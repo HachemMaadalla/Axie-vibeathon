@@ -2,13 +2,14 @@ import * as T from 'three';
 import {createTerrainMesh} from '../gameblocks/modules/world/environment/TerrainMeshFactory.js';
 import {createGroundRockVisual} from '../gameblocks/modules/world/object/factory/RockVisualFactory.js';
 import {RandomGenerator} from '../gameblocks/modules/math/RandomUtils.js';
-import {TERRAIN_STEP,WORLD_RADIUS,terrainHeight,terrainBiome,isWater,isBridge,riverX,terrainRoads,dungeonTerrain} from './terrain';
+import {TERRAIN_STEP,WORLD_RADIUS,DUNGEON_DETAIL_SCALE,terrainHeight,terrainBiome,isWater,isBridge,riverX,terrainRoads,dungeonTerrain} from './terrain';
 import {toonMaterial} from './environment';
 
 export function makeLandscape(parent:T.Group){
  const chunks:T.Mesh[]=[],radius=WORLD_RADIUS.dungeon,size=25;
  const surface=toonMaterial('#ffffff');surface.vertexColors=true;
- for(let x=-225;x<225;x+=size)for(let f=-225;f<225;f+=size){
+ const extent=Math.ceil((radius+7)/size)*size;
+ for(let x=-extent;x<extent;x+=size)for(let f=-extent;f<extent;f+=size){
   if(Math.hypot(x+size/2,f+size/2)>radius+size)continue;
   const mesh=createTerrainMesh({terrainSampler:dungeonTerrain,size,segments:size/TERRAIN_STEP,centerRight:x+size/2,centerForward:f+size/2,
    includeCell:(r:number,forward:number)=>Math.hypot(r,forward)<radius+7,materialOptions:{flatShading:false,roughness:1}});
@@ -22,8 +23,8 @@ function addWater(parent:T.Group){
  const material=toonMaterial('#12afd2');material.transparent=true;material.opacity=.88;material.depthWrite=false;
  // The river has its own surface over the carved bed, instead of blue-colored dirt.
  const geo=new T.BufferGeometry(),positions:number[]=[],uv:number[]=[],indices:number[]=[];
- for(let z=-195;z<195;z+=2.5){
-  if(Math.abs(z)<28)continue;
+ for(let z=-WORLD_RADIUS.dungeon;z<WORLD_RADIUS.dungeon;z+=2.5){
+  if(Math.abs(z)<28||Math.hypot(riverX(z),z)>WORLD_RADIUS.dungeon)continue;
   const x1=riverX(z),x2=riverX(z+2.5),i=positions.length/3;
   positions.push(x1-5.4,.08,z,x1+5.4,.08,z,x2+5.4,.08,z+2.5,x2-5.4,.08,z+2.5);
   uv.push(0,z/3,3,z/3,3,(z+2.5)/3,0,(z+2.5)/3);indices.push(i,i+2,i+1,i,i+3,i+2);
@@ -35,7 +36,7 @@ function addWater(parent:T.Group){
  const foam=new T.InstancedMesh(new T.BoxGeometry(1,1,1),foamMat,280);foam.userData.cameraIgnore=true;foam.name='river-ripples';
  const matrix=new T.Matrix4(),q=new T.Quaternion();let count=0;
  for(let i=0;i<280;i++){
-  const z=-185+i*1.33,x=riverX(z)+Math.sin(i*2.4)*3.5;if(!isWater(x,z)||terrainHeight('dungeon',x,z)>.05)continue;
+  const z=-WORLD_RADIUS.dungeon+i*(WORLD_RADIUS.dungeon*2/280),x=riverX(z)+Math.sin(i*2.4)*3.5;if(Math.hypot(x,z)>WORLD_RADIUS.dungeon-3||!isWater(x,z)||terrainHeight('dungeon',x,z)>.05)continue;
   matrix.compose(new T.Vector3(x,.11,z),q,new T.Vector3(.45+(i%4)*.3,.015,.07));foam.setMatrixAt(count++,matrix);
  }
  foam.count=count;parent.add(foam);
@@ -44,7 +45,7 @@ const radiusForSea=()=>WORLD_RADIUS.dungeon-2;
 function addGroundDetails(parent:T.Group){
  const rng=new RandomGenerator(71031),rockMaterials=['#5c718c','#b77859','#8064bd'].map(c=>toonMaterial(c));
  const ground=new T.Group();ground.userData.batchable=true;ground.name='gameblocks-rocks';parent.add(ground);
- for(let i=0;i<380;i++){
+ for(let i=0;i<Math.round(380*DUNGEON_DETAIL_SCALE);i++){
   const a=rng.uniform(0,Math.PI*2),r=Math.sqrt(rng.random())*(WORLD_RADIUS.dungeon-14),x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(r<18||isWater(x,z)||isBridge(x,z)||terrainRoads.distanceToRoad(x,-z)<6)continue;
   const rock=createGroundRockVisual({material:rockMaterials[i%3],prng:rng});rock.position.set(x,terrainHeight('dungeon',x,z)-.15,z);
@@ -54,7 +55,7 @@ function addGroundDetails(parent:T.Group){
  const materials=['#288449','#a8d951','#17776e','#f5c366'].map(c=>toonMaterial(c));
  const patch=new T.Group();patch.userData.batchable=true;patch.name='meadow-patches';parent.add(patch);
  const geometry=new T.ConeGeometry(.12,1,5);
- for(let i=0;i<2000;i++){
+ for(let i=0;i<Math.round(2000*DUNGEON_DETAIL_SCALE);i++){
   const a=rng.uniform(0,Math.PI*2),r=Math.sqrt(rng.random())*(WORLD_RADIUS.dungeon-17),x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(r<16||isBridge(x,z)||isWater(x,z)||terrainRoads.distanceToRoad(x,-z)<4)continue;
   const biome=terrainBiome(x,z),mat=materials[biome==='marsh'?2:biome==='badlands'?3:i%2],height=biome==='marsh'?.9:.2+rng.random()*.4;

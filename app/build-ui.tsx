@@ -26,13 +26,11 @@ export function UpgradeCards({choices,build,onChoose}:{choices:Choice[];build:Bu
   const pairOwned=pair?itemLevel(build,pair)>0:false;
   const owned=c.id==='heal'?0:itemLevel(build,c.id),evolution=c.kind==='evolution';
   return <button key={c.id} className={'level-card '+(evolution?'awakening-card ':'')+(selected===c.id?'card-selected':'')} style={{'--skill-color':c.color,'--card-index':index} as CSSProperties} disabled={selected!==null} onClick={()=>select(c.id)} aria-label={c.name+'. '+(evolution?'Evolution. ':c.kind==='heal'?'':owned?'Upgrade to level '+c.level+'. ':'New '+(c.kind==='spell'?'spell':'item')+'. ')+c.text}>
-   <span className="card-topline"><span>{evolution?<Sparkles size={13}/>:c.kind==='spell'?<Zap size={13}/>:c.kind==='heal'?<Heart size={13}/>:<Gem size={13}/>} {evolution?'EVOLUTION':c.kind==='heal'?'RECOVERY':(owned?'UPGRADE':'NEW')+' '+(c.kind==='spell'?'SPELL':'ITEM')}</span><kbd>{index+1}</kbd></span>
-   <span className="level-art"><ItemIcon id={c.id} size={164} evolved={evolution}/>{evolution&&<span className="awakened-seal"><Sparkles size={13}/> AWAKENED</span>}</span>
+   <span className="card-topline"><span>{evolution?'EVOLVE':c.kind==='heal'?'HEAL':owned?'UPGRADE':'NEW'}{!evolution&&c.kind!=='heal'&&<span className="card-level">{owned?owned+' → '+c.level:'Lv. 1'}</span>}</span><kbd>{index+1}</kbd></span>
+   <span className="level-art"><ItemIcon id={c.id} size={128} evolved={evolution}/></span>
    <span className="card-name">{c.name}</span>
-   <span className="level-rank">{c.kind==='heal'?<span>Instant recovery</span>:evolution?<span>Beyond the limit</span>:<><span>{owned?'Level '+owned+' → '+c.level:'Level 1'}</span><span className="rank-pips" aria-hidden="true">{[1,2,3].map(n=><i key={n} className={n<=owned?'filled':n===c.level?'next':''}/>)}</span></>}</span>
    <span className="card-effect">{c.text}</span>
-   <span className={'card-synergy '+(pairOwned?'synergy-owned':'')}>{pair?<><ItemIcon id={pair} size={32}/><span><small>{evolution?'COMBINATION COMPLETE':pairOwned?'PARTNER EQUIPPED':recipe?'EVOLVES WITH':'EVOLVES'}</small><strong>{ITEMS[pair].name}</strong></span>{pairOwned?<Check size={15}/>:<Plus size={15}/>}</>:<><Heart size={25}/><span><small>RESTORES HEALTH</small><strong>+35 HP</strong></span></>}</span>
-   <span className="level-card-action">{selected===c.id?<><Check size={17}/> Claimed</>:<>{evolution?'Awaken':owned?'Upgrade':c.kind==='heal'?'Recover':c.kind==='spell'?'Learn spell':'Take item'}<ArrowRight size={17}/></>}</span>
+   {pair&&<span className={'card-synergy '+(pairOwned?'synergy-owned':'')} title={(evolution?'Evolved with ':'Evolves with ')+ITEMS[pair].name}><Plus size={13}/><ItemIcon id={pair} size={24}/><strong>{ITEMS[pair].name}</strong>{pairOwned&&<Check size={14}/>}</span>}
   </button>;
  })}</div>;
 }

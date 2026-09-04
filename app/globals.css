@@ -246,11 +246,6 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 .island-interact kbd{display:grid;place-items:center;width:27px;height:29px;border:1px solid #d2b47b;background:#162b38;border-radius:4px;color:#ffe0a0;box-shadow:0 2px #081b29}
 .game-dialog.service-dialog{max-width:630px!important;width:calc(100% - 32px);padding:23px!important}
 .service-dialog .dialog-title{font-size:25px!important;text-transform:none}
-.shop-coins{display:flex;align-items:center;justify-content:flex-end;gap:7px;color:#ffdb82;font-weight:bold;margin:-3px 0 10px;font-size:17px}
-.shop-goods{display:flex;flex-direction:column;gap:7px}
-.shop-good{display:flex;align-items:center;gap:10px;background:#132936;border:1px solid #697260;border-radius:5px;padding:8px 10px}
-.shop-good>.loot-art{flex-shrink:0}.shop-good>div{flex:1;min-width:0}.shop-good strong{font-size:13px;color:#e9dcc3;font-weight:normal}.shop-good small{display:block;color:#9fb3bb;font-size:10px;margin-top:4px}
-.shop-good .secondary{min-width:73px;padding:8px 9px;font-size:11px;gap:3px}
 .companion-talk{display:grid;grid-template-columns:110px 1fr;gap:15px;align-items:center}
 .companion-talk img{width:110px;height:110px;object-fit:contain;border:1px solid #a38b58;border-radius:6px;background:radial-gradient(#5d6f63,#152b3b)}
 .game-dialog .companion-talk p{font-family:Georgia,serif;font-size:24px;color:#ffe0a0;margin:0 0 8px}.companion-talk small{font-size:12px;color:#b1c5c9}
@@ -264,7 +259,7 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 .portal-choice .primary,.portal-choice .secondary{font-size:12px;padding:8px 15px;width:100%;margin-top:auto}
 .portal-cost{display:flex;gap:12px}.portal-cost>span{display:flex;align-items:center;gap:5px;font-size:11px;color:#c8badb}
 .farm-dock .tend-slot{width:135px}
-@media(max-width:600px){.game-dialog.service-dialog{padding:18px!important}.shop-good{gap:6px;padding:7px}.shop-good>.loot-art{width:35px;height:35px}.shop-good strong{font-size:11px}.shop-good .secondary{min-width:56px;padding:7px 6px;font-size:10px}.island-portals{gap:9px}.portal-choice{padding:18px 10px;min-height:220px}.portal-choice strong{font-size:19px}.portal-gem{width:59px;height:75px}.companion-talk{grid-template-columns:85px 1fr;gap:12px}.companion-talk img{width:85px;height:85px}.island-interact{bottom:18px;font-size:13px;padding:10px 17px}.farm-dock .tend-slot{width:106px}}
+@media(max-width:600px){.game-dialog.service-dialog{padding:18px!important}.island-portals{gap:9px}.portal-choice{padding:18px 10px;min-height:220px}.portal-choice strong{font-size:19px}.portal-gem{width:59px;height:75px}.companion-talk{grid-template-columns:85px 1fr;gap:12px}.companion-talk img{width:85px;height:85px}.island-interact{bottom:18px;font-size:13px;padding:10px 17px}.farm-dock .tend-slot{width:106px}}
 
 
 /* Brief action feedback replaces success-message clutter. */
@@ -288,3 +283,5 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 @media(max-width:600px){.action-popup{width:70px;height:70px}.action-popup>b{font-size:21px}}
 
 .companion-starter{display:flex;align-items:center;gap:7px;margin-top:10px;color:#f0d7a1;font-size:12px}
+
+.crop-art{object-fit:contain;filter:drop-shadow(0 2px 2px #07192466)}

@@ -24,12 +24,6 @@ check('Missing seeds, distant actions, and paused E never trigger a success icon
  g.farm.seeds.sunroot=3;g.paused=true;g.interact();assert.equal(events.length,0);
  g.paused=false;g.player.position.set(50,0,50);g.interact();assert.equal(events.length,0);
 });
-check('Trading shows signed coin changes while the shop is paused; rejected purchases do not',()=>{
- const {g,events}=fixture();g.player.position.set(-8,0,8.6);g.paused=true;
- g.tradeItem('buy','seeds','sunroot');assert.equal(events[0][0],'coin');assert.equal(events[0][2].amount,-6);assert.equal(events[0][2].anchor,'shop');
- g.tradeItem('sell','seeds','sunroot');assert.equal(events[1][2].amount,2);
- g.farm.coins=0;g.tradeItem('buy','seeds','sunroot');assert.equal(events.length,2);
-});
 check('Soil, fertilizer, cooking, and portal rewards only animate on a real state change',()=>{
  const {g,events}=fixture();g.player.position.copy(plotPosition(0));g.farm.soil=2;g.farm.plots[0].rich=false;g.improvePlot('soil');g.improvePlot('soil');assert.deepEqual(events.map(e=>e[0]),['soil']);
  g.farm.plots[0]={crop:'sunroot',growth:0,watered:false,rich:true,fertilized:false};g.farm.fertilizer=2;g.improvePlot('fertilizer');g.improvePlot('fertilizer');assert.equal(events.length,2);
@@ -56,7 +50,7 @@ check('Feedback stays bounded, expires during menus, and removes detached anchor
  globalThis.document={body,createElement:()=>new Element(),querySelector:()=>anchor};
  globalThis.window={matchMedia:()=>({matches:false}),innerWidth:1000,innerHeight:700};globalThis.Image=class{};
  const fx=new ActionFeedback(container),camera=new T.PerspectiveCamera(60,1,.1,100);camera.position.z=10;camera.updateMatrixWorld();
- fx.spawn('coin',new T.Vector3(),{amount:-6,anchor:'shop'});fx.spawn('coin',new T.Vector3(),{amount:2,anchor:'shop'});assert.equal(fx.popups.length,1);
+ fx.spawn('coin',new T.Vector3(),{amount:-6,anchor:'cook-sunroot'});fx.spawn('coin',new T.Vector3(),{amount:2,anchor:'cook-sunroot'});assert.equal(fx.popups.length,1);
  fx.update(.2,camera);assert.equal(fx.popups[0].node.style.visibility,'visible');assert.equal(fx.popups[0].node.children[1].textContent,'+2');
  anchor.remove();fx.update(.1,camera);assert.equal(fx.popups.length,0);
  for(let i=0;i<20;i++)fx.spawn('plant',new T.Vector3(i*2,0,0));assert.equal(fx.popups.length,8);

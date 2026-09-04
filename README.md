@@ -2,7 +2,7 @@
 A Three.js browser prototype for Axie Vibeathon: cozy farming feeds survival expeditions, and expeditions supply the next harvest.
 
 ## Play
-Use WASD / arrow keys or click/tap terrain to move. Select a garden bed, choose a seed, and press E or the garden action button to plant, water, or harvest. The camp kitchen turns two crops into one meal. Pack a meal before entering a dungeon. Attacks fire automatically; Space dashes. Win by surviving at least 90 seconds and defeating the guardian that arrives at 60 seconds. Offer 4 Sunroot and 2 Moonberry to open Bramble Hollow, which drops Embercorn seeds.
+Use WASD / arrow keys or click/tap terrain to move. Space jumps and double jumps, Shift sprints, and Q dashes. Move beside one of 24 farm beds and press E to plant, water or harvest the nearest bed. Cook two crops into a meal at the campfire. In dungeons, attacks fire automatically: collect dropped XP gems to level up and collect rare seed packets and supplies to bring home. Survive 90 seconds and defeat the guardian, then press E at the green return portal when ready to leave. Offer 4 Sunroot and 2 Moonberry at the farm portal to unlock Bramble Hollow and Embercorn seeds.
 
 Seven playable Axies: Pomodoro, Bing, Kotaro, Kibo, Paladill, Tripp, and Xia, each with its own perk and official equipped weapon. Press E beside an island companion to switch. All ten Sapidae variants populate the island services and paths.
 Fertilizer accelerates a single crop. Rich soil permanently improves a bed's growth speed and yield.
@@ -37,3 +37,5 @@ Progression checks cover the initial harvest-to-meal-to-gate chain, watering, so
 
 Each expedition starts with one character weapon spell at level 1: Pomodoro / Thorn Bolt (staff), Bing / Cannon Shot, Kotaro and Tripp / Sword Slash, Kibo / Hammer Slam, Paladill and Xia / Axe Cleave. There is no opening spell draft. Weapon spells use the same level-up, four-slot, and evolution rules as other spells.
 
+
+Battle drops use an 8% seed chance, 4% fertilizer chance and 2% soil chance per ordinary monster. Guardians drop one seed and one soil. Rewards enter the pack only on pickup; ending a run grants no extra seeds. Cleared runs retain all collected supplies, early returns and defeats retain half. Old 12-bed saves migrate to 24 beds while preserving existing crops and resources. The shop and currency system have been removed.

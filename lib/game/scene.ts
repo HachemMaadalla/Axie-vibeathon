@@ -1,3 +1,4 @@
+import {BattlePickups,rollDrops,type PickupKind} from './pickups';
 import {EQUIPMENT,equipAxie,equippedMotion} from './equipment';
 import {ActionFeedback,type ActionKind} from './action-feedback';
 import * as T from 'three';
@@ -12,7 +13,6 @@ import {EnemyBatch} from './enemy-batch';
 import {HealthBar} from './health-bar';
 import {plotPosition,nearestPlot} from './farming';
 import {nearestService,HERO_SPOTS,RESIDENTS,type IslandService} from './island';
-import {trade,type TradeKind} from './economy';
 import {CombatFX,CombatAudio} from './combat-fx';
 import {freshBuild,STARTER_SPELL,draftChoices,applyChoice,modifiers,xpNeeded,type Build,type Choice,type WeaponId} from './build';
 import {SpellEngine,type SpellTarget} from './spell-engine';
@@ -21,14 +21,15 @@ import {CartoonRenderer,toonify,addCartoonSky} from './toon';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {createTreeVisual,createTreeMaterials} from '../gameblocks/modules/world/object/factory/PlantVisualFactory.js';
 import {RandomGenerator} from '../gameblocks/modules/math/RandomUtils.js';
-import { CROPS, HERO_IDS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, beginExpedition, emptyLoot, rewardKill, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
+import { CROPS, PLOT_COUNT, HERO_IDS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, beginExpedition, emptyLoot, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
 import { registerGameTools } from './webmcp';
 
 export type Result={outcome:'won'|'escaped'|'lost';loot:Loot;kills:number;tier:number};
-export type View={nearby:IslandService|null;build:Build;choices:Choice[];xp:number;xpNext:number;farm:FarmState;mode:'farm'|'dungeon';ready:boolean;error:string;selected:number;inReach:boolean;seed:CropId;hp:number;maxHp:number;time:number;kills:number;level:number;dash:number;loot:Loot;upgrade:boolean;result:Result|null;message:string;paused:boolean;saved:boolean;meal:CropId|null;tier:number};
+export type View={exitReady:boolean;nearExit:boolean;nearby:IslandService|null;build:Build;choices:Choice[];xp:number;xpNext:number;farm:FarmState;mode:'farm'|'dungeon';ready:boolean;error:string;selected:number;inReach:boolean;seed:CropId;hp:number;maxHp:number;time:number;kills:number;level:number;dash:number;loot:Loot;upgrade:boolean;result:Result|null;message:string;paused:boolean;saved:boolean;meal:CropId|null;tier:number};
 type Actor={root:T.Group;mixer:T.AnimationMixer;actions:Map<string,T.AnimationAction>;current:string};
 
 export class WildseedGame {
+ private pickups!:BattlePickups;private returnPortal:T.Group|null=null;private pickupSoundAt=0;
  private actionFx!:ActionFeedback;private weaponAttackUntil=0;nearby:IslandService|null=null;private campFlame:T.Group|null=null;
  farm:FarmState=freshFarm();mode:'farm'|'dungeon'='farm';ready=false;error='';selected=0;inReach=false;seed:CropId='sunroot';hp=100;maxHp=100;time=0;kills=0;level=1;dash=0;loot:Loot=emptyLoot();upgrade=false;result:Result|null=null;message='';paused=false;saved=true;meal:CropId|null=null;tier=1;
  private scene=new T.Scene();private farmWorld=new T.Group();private arena=new T.Group();private camera:T.PerspectiveCamera;private renderer:T.WebGLRenderer;private cartoon:CartoonRenderer;private listener:(s:View)=>void;
@@ -47,7 +48,7 @@ export class WildseedGame {
  this.scene.add(new T.HemisphereLight('#fff6dc','#514277',.85));
  const sun=this.sunlight=new T.DirectionalLight('#fff0cc',2.8);sun.position.set(-12,25,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-25,right:25,top:25,bottom:-25});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.045;sun.shadow.bias=-.0003;this.scene.add(sun,sun.target);
  addCartoonSky(this.scene);this.scene.add(this.farmWorld,this.arena,this.player,this.playerBar);this.arena.visible=false;this.player.position.set(1,0,7);
- this.enemyBatch=new EnemyBatch(this.arena);this.fx=new CombatFX(this.scene,window.matchMedia('(prefers-reduced-motion: reduce)').matches);this.actionFx=new ActionFeedback(container);this.makeFarm();this.makeArena();this.expandWorld(this.farmWorld,'farm');this.expandWorld(this.arena,'dungeon');batchTrees(this.farmWorld);batchTrees(this.arena);this.spells=new SpellEngine(this.scene,{fx:this.fx,audio:this.combatAudio,height:(x,z)=>terrainHeight('dungeon',x,z),cast:(id,point)=>this.weaponCast(id,point)});
+ this.enemyBatch=new EnemyBatch(this.arena);this.fx=new CombatFX(this.scene,window.matchMedia('(prefers-reduced-motion: reduce)').matches);this.actionFx=new ActionFeedback(container);this.makeFarm();this.makeArena();this.expandWorld(this.farmWorld,'farm');this.expandWorld(this.arena,'dungeon');batchTrees(this.farmWorld);batchTrees(this.arena);this.pickups=new BattlePickups(this.arena,(x,z)=>terrainHeight('dungeon',x,z),WORLD_RADIUS.dungeon);this.spells=new SpellEngine(this.scene,{fx:this.fx,audio:this.combatAudio,height:(x,z)=>terrainHeight('dungeon',x,z),cast:(id,point)=>this.weaponCast(id,point)});
  this.followCamera=new FollowCamera(this.camera,this.renderer.domElement,()=>this.started&&!this.paused&&!this.upgrade&&!this.result&&!document.hidden,this.click);
  this.scene.updateMatrixWorld(true);
  for(const world of [this.farmWorld,this.arena])world.traverse(o=>{if(o instanceof T.Mesh&&!o.userData.cameraIgnore){const box=new T.Box3().setFromObject(o);if(box.max.y>1&&box.max.y-box.min.y>.8)this.cameraObstacles.push(o);}});
@@ -65,6 +66,7 @@ export class WildseedGame {
  private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new RoundedBoxGeometry(w,h,d,1,Math.min(w,h,d)*.14),c,x,y,z);}
  private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
  private tree(p:T.Object3D,x:number,z:number,s:number,color='#249359'){
+  if(p===this.farmWorld&&Math.abs(x)<7&&z>-3&&z<16)return;
   if(p===this.farmWorld&&[...Object.values(HERO_SPOTS),...RESIDENTS].some(spot=>Math.hypot(x-spot.x,z-spot.z)<3))return;
   let materials=this.treeMats.get(color);if(!materials){const base=new T.Color(color);materials=createTreeMaterials({trunkColor:0x884b37,barkShadowColor:0x53374e,leafColors:[.8,1,1.15].map(f=>({color:base.clone().multiplyScalar(f).getHex(),roughness:.85}))});this.treeMats.set(color,materials);}
   const tree=createTreeVisual({height:4.3*s,radius:.3*s,materials,prng:new RandomGenerator(Math.abs(Math.round(x*973+z*317))+41)});toonify(tree,this.toonCache);tree.position.set(x,terrainHeight(p===this.arena?'dungeon':'farm',x,z),z);tree.userData.batchable=true;p.add(tree);
@@ -74,7 +76,7 @@ export class WildseedGame {
  const p=this.farmWorld;makeFarmLandscape(p);
  // A winding footpath connects the cottage, beds, and expedition gate.
  for(let i=0;i<24;i++){const x=-8+i*.7,z=-2.5+Math.sin(i*.22)*1.7;const tile=this.box(p,'#d1c38a',Math.round(x*2)/2,.055,Math.round(z*2)/2,1,.07,1);tile.material=this.mat('#d1c38a','tile');}
- for(let i=0;i<12;i++){const pos=plotPosition(i);const b=this.box(p,'#776049',pos.x,.10,pos.z,1.94,.21,1.94);b.userData.plot=i;this.plots.push(b);const plant=new T.Group();plant.position.copy(pos);this.plants.push(plant);p.add(plant);
+ for(let i=0;i<PLOT_COUNT;i++){const pos=plotPosition(i);const b=this.box(p,'#776049',pos.x,.10,pos.z,1.94,.21,1.94);b.userData.plot=i;this.plots.push(b);const plant=new T.Group();plant.position.copy(pos);this.plants.push(plant);p.add(plant);
  for(const dx of [-1,1])this.box(p,'#bca479',pos.x+dx*.97,.22,pos.z,.1,.16,2.04);for(const dz of [-1,1])this.box(p,'#bca479',pos.x,.22,pos.z+dz*.97,2.04,.16,.1);}
  // Cottage and open-air cooking nook.
  const house=new T.Group();house.position.set(-7,0,-5);p.add(house);this.box(house,'#f0dfb4',0,1.45,0,4,2.9,3.5);this.box(house,'#80664a',0,.18,0,4.5,.35,4);
@@ -93,16 +95,9 @@ export class WildseedGame {
  this.box(fire,'#654431',0,1.75,0,1.55,.1,.1);
  const pot=this.shape(fire,new T.SphereGeometry(.46,12,8),'#344c57',0,1.12,0,1,.7,1);
  this.shape(fire,new T.CylinderGeometry(.4,.4,.06,12),'#9cc694',0,1.32,0);
- // A small produce stall, with a clear approach from the garden.
- const stall=new T.Group();stall.position.set(-8,0,6.5);p.add(stall);
- this.box(stall,'#825939',0,.57,0,3.1,1.05,1.3);
- this.box(stall,'#dfaf70',0,1.13,0,3.4,.16,1.5);
- for(const side of [-1,1])this.box(stall,'#63442f',side*1.55,1.43,-.5,.14,2.85,.14);
- for(let i=0;i<8;i++){this.box(stall,i%2?'#fff1c4':'#27b5a3',-1.52+i*.435,2.7,.1,.43,.12,2.15);this.box(stall,i%2?'#fff1c4':'#27b5a3',-1.52+i*.435,2.5,1.15,.43,.4,.08);}
- for(let i=0;i<6;i++)this.blob(stall,i%2?'#ba86e1':'#ffc76d',-.9+(i%3)*.45,1.35,-.25+Math.floor(i/3)*.5,.2,.2,.2);
- this.box(stall,'#c6a274',1,1.34,.2,.54,.44,.55);
+ this.addFarmDetails(p);
  // Wide, uncluttered paths to the island services.
- for(const [tx,tz] of [[-7,1.6],[-8,8.6],[7.5,-4.4],[0,-8.5]]){
+ for(const [tx,tz] of [[-7,1.6],[-11,5.1],[7.5,-4.4],[0,-8.5]]){
   const start=new T.Vector3(tx<0?-4.8:5,0,tz<-7?-4.4:5.7),end=new T.Vector3(tx,0,tz),steps=Math.ceil(start.distanceTo(end)/1.1);
   for(let i=0;i<steps;i++){const pos=start.clone().lerp(end,i/steps);this.shape(p,new T.CylinderGeometry(.48,.5,.06,7),'#d5bf88',pos.x,.025,pos.z);}
  }
@@ -115,12 +110,48 @@ export class WildseedGame {
  this.box(p,'#8c9b87',6,1.5,-6,.8,3,1);this.box(p,'#8c9b87',9,1.5,-6,.8,3,1);this.box(p,'#a4b09a',7.5,3.2,-6,4,.8,1.1);
  const portal=new T.Mesh(new T.CircleGeometry(1.32,48),new T.MeshBasicMaterial({color:'#b8b1ff',transparent:true,opacity:.62,side:T.DoubleSide}));portal.name='portal';portal.position.set(7.5,1.6,-5.8);p.add(portal);const portalRim=new T.Mesh(new T.TorusGeometry(1.4,.095,8,40),this.mat('#84f2d0'));portalRim.position.copy(portal.position);p.add(portalRim);
  for(const dx of [-1.4,1.4])this.box(p,'#d9cdff',7.5+dx,1.6,-5.7,.1,2.9,.1);for(const dy of [.2,3])this.box(p,'#d9cdff',7.5,dy,-5.7,2.9,.1,.1);
- for(let i=0;i<8;i++){const a=i/8*Math.PI*2,x=Math.cos(a)*12.6,z=Math.sin(a)*12.6;if(z>7&&x>-7&&x<8)continue;this.tree(p,x,z,.65+(i%4)*.13);}
- for(let i=0;i<10;i++){const x=-11+i*2.4;this.box(p,'#d4c6a0',x,.65,10.5,.15,1.3,.15);if(i<9){this.box(p,'#d4c6a0',x+1.2,.75,10.5,2.4,.12,.1);this.box(p,'#d4c6a0',x+1.2,.35,10.5,2.4,.12,.1);}}
- const geo=new T.ConeGeometry(.09,.4,5),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<5&&z>-3&&z<6||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
- for(let i=0;i<55;i++){const x=Math.sin(i*51.9)*12,z=Math.cos(i*37.7)*12;if(x*x+z*z>165||Math.abs(x)<5&&z>-3&&z<7)continue;this.blob(p,i%3===0?'#fff0a9':i%3===1?'#e8adbb':'#c2b4e7',x,.22,z,.13,.17,.13);}
+ for(let i=0;i<8;i++){const a=i/8*Math.PI*2,x=Math.cos(a)*12.6,z=Math.sin(a)*12.6;if(z>0&&Math.abs(x)<7)continue;this.tree(p,x,z,.65+(i%4)*.13);}
+ const geo=new T.ConeGeometry(.09,.4,5),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<6&&z>-3&&z<14||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
+ for(let i=0;i<55;i++){const x=Math.sin(i*51.9)*12,z=Math.cos(i*37.7)*12;if(x*x+z*z>165||Math.abs(x)<6&&z>-3&&z<14)continue;this.blob(p,i%3===0?'#fff0a9':i%3===1?'#e8adbb':'#c2b4e7',x,.22,z,.13,.17,.13);}
  for(let i=0;i<9;i++){const a=i*.73;this.blob(p,'#84ad8f',Math.cos(a)*31,-6-i%3,Math.sin(a)*30,6,3,5);}
  }
+ private addFarmDetails(p:T.Group){
+ // Broad tilled fields, a cross path, and fenced lanes make room for 24 working beds.
+ const field=this.box(p,'#927048',0,.025,5.2,9.25,.08,15.8);field.name='cultivated-field';field.userData.cameraIgnore=true;
+ this.box(p,'#dfbf7e',0,.075,5.65,10.8,.06,1.2);
+ for(let i=0;i<PLOT_COUNT;i++){const at=plotPosition(i);for(const dx of [-.6,0,.6])this.box(p,'#644530',at.x+dx,.222,at.z,.07,.015,1.6);}
+ for(const x of [-5.6,5.6])for(let z=-2.4;z<=13.6;z+=2){
+  if(z>3.5&&z<7)continue;
+  this.box(p,'#a77848',x,.65,z,.17,1.3,.17);
+  if(z<13){this.box(p,'#e0ba7c',x,.9,z+.85,.12,.15,1.7);this.box(p,'#bd9059',x,.43,z+.85,.12,.13,1.7);}
+ }
+ for(const x of [-4.6,-2.6,2.6,4.6]){this.box(p,'#a77848',x,.65,13.7,.17,1.3,.17);this.box(p,'#e0ba7c',x,.82,13.7,1.7,.16,.12);}
+ // A farm shed, with hay, water barrels and a compost corner.
+ const barn=new T.Group();barn.name='farm-shed';barn.position.set(-11.7,0,8.7);p.add(barn);
+ this.box(barn,'#bd5b43',0,1.4,0,4.2,2.8,3.3);this.box(barn,'#eee0af',0,.2,0,4.4,.25,3.5);
+ const roof=this.shape(barn,new T.ConeGeometry(3.5,1.7,4),'#465f78',0,3.45,0);roof.rotation.y=Math.PI/4;
+ for(const x of [-1.85,1.85])this.box(barn,'#f2d7a1',x,1.5,1.7,.14,2.7,.12);
+ this.box(barn,'#684737',0,1.05,1.72,1.65,2.05,.12);
+ for(const a of [-.65,.65]){const brace=this.box(barn,'#e5c490',0,1.05,1.82,.12,2.4,.08);brace.rotation.z=a;}
+ this.box(barn,'#f1d29a',0,2.8,1.75,4.2,.16,.12);
+ for(const [x,z] of [[-9.3,11.8],[-10.6,12],[-10,11.1]]){
+  this.box(p,'#ebbb51',x,.45,z,1.15,.85,.85);
+  for(const dx of [-.33,.33])this.box(p,'#906136',x+dx,.48,z,.075,.9,.89);
+ }
+ for(const z of [4.3,5.5]){
+  this.shape(p,new T.CylinderGeometry(.48,.43,.9,10),'#855b40',-13,.45,z);
+  for(const y of [.17,.7])this.shape(p,new T.TorusGeometry(.46,.04,5,10),'#536775',-13,y,z).rotation.x=Math.PI/2;
+  this.shape(p,new T.CircleGeometry(.39,12),'#53cce1',-13,.91,z).rotation.x=-Math.PI/2;
+ }
+ for(const x of [-8,-6.9]){this.box(p,'#815835',x,.35,10.1,.95,.65,1);this.box(p,'#4d3a2d',x,.7,10.1,.8,.07,.85);}
+ const scarecrow=new T.Group();scarecrow.name='scarecrow';scarecrow.position.set(4.8,0,8.8);p.add(scarecrow);
+ this.box(scarecrow,'#795135',0,1,0,.15,2,.15);this.box(scarecrow,'#e7ad56',0,1.75,0,1.3,.15,.15);
+ this.box(scarecrow,'#3e9e91',0,1.5,0,.55,.65,.32);this.blob(scarecrow,'#e9c586',0,2.12,0,.29);
+ this.shape(scarecrow,new T.ConeGeometry(.44,.33,8),'#c8974d',0,2.48,0);
+ this.shape(scarecrow,new T.CylinderGeometry(.57,.57,.08,10),'#efc96b',0,2.32,0);
+ for(const x of [-.1,.1])this.blob(scarecrow,'#283941',x,2.17,.26,.035);
+ }
+
  private makeArena(){this.terrainChunks=makeLandscape(this.arena);}
  private expandWorld(p:T.Group,mode:'farm'|'dungeon'){
  const radius=WORLD_RADIUS[mode],count=mode==='farm'?14:Math.round(650*DUNGEON_DETAIL_SCALE);
@@ -194,25 +225,19 @@ export class WildseedGame {
  }
  }
  interact(){
+ if(this.mode==='dungeon'){this.returnHome();return;}
  if(this.mode!=='farm'||!this.started||this.paused||this.upgrade||this.result)return;
  this.syncNearbyPlot();
  if(this.nearby){this.setPaused(true);this.onInteract?.(this.nearby);return;}
  this.tendPlot();
  }
- tradeItem(side:'buy'|'sell',kind:TradeKind,id:CropId){
- if(this.mode!=='farm'||nearestService(this.player.position,this.farm.hero).service?.kind!=='shop')return;
- const before=this.farm.coins,msg=trade(this.farm,side,kind,id),delta=this.farm.coins-before;
- if(!delta){this.toast(msg);return;}
- this.sound(side==='sell'?880:560);
- this.actionDone('coin',new T.Vector3(-8,2.7,6.5),delta,'shop',(side==='sell'?'Sold ':'Bought ')+CROPS[id].name+', '+Math.abs(delta)+' coins '+(delta>0?'earned':'spent'));
- }
  private animate(a:Actor,name:string){if(a.current===name)return;const next=a.actions.get(name)||a.actions.get('Idle');if(!next)return;a.actions.get(a.current)?.fadeOut(.18);next.reset().fadeIn(.18).play();a.current=name;}
- private refreshPlants(){for(let i=0;i<12;i++){const group=this.plants[i],p=this.farm.plots[i];while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b','soil');if(!p.crop)continue;
+ private refreshPlants(){for(let i=0;i<this.farm.plots.length;i++){const group=this.plants[i],p=this.farm.plots[i];while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b','soil');if(!p.crop)continue;
  const stage=Math.floor(p.growth*3),size=.3+stage*.2;for(let j=0;j<4;j++){const x=(j%2)*.75-.38,z=Math.floor(j/2)*.75-.38;this.blob(group,'#4b8648',x,.15+size*.28,z,.18,size,.12);this.blob(group,'#80b84f',x+.17,.22+size*.3,z,.26,.09,.12);this.blob(group,'#5f9e43',x-.16,.29+size*.3,z,.25,.09,.12);if(stage>=1){const color=CROPS[p.crop].color;this.blob(group,color,x,.15+size*.8,z,size*.32,p.crop==='embercorn'?size*.55:size*.3,size*.32);if(p.crop==='moonberry')this.blob(group,color,x+.17,.25+size*.7,z+.05,size*.2);}}
  }
  }
  private save(){try{localStorage.setItem('wildseed-v1',JSON.stringify(this.farm));this.saved=true;}catch{this.saved=false;}}
- private emit(){this.listener({nearby:this.mode==='farm'?this.nearby:null,build:structuredClone(this.build),choices:structuredClone(this.choices),xp:this.xp,xpNext:xpNeeded(this.level),farm:structuredClone(this.farm),mode:this.mode,ready:this.ready,error:this.error,selected:this.selected,inReach:this.inReach,seed:this.seed,hp:this.hp,maxHp:this.maxHp,time:this.time,kills:this.kills,level:this.level,dash:this.dash,loot:{...this.loot},upgrade:this.upgrade,result:this.result?structuredClone(this.result):null,message:this.message,paused:this.paused,saved:this.saved,meal:this.meal,tier:this.tier});}
+ private emit(){this.listener({exitReady:!!this.returnPortal,nearExit:this.mode==='dungeon'&&this.nearReturnPortal,nearby:this.mode==='farm'?this.nearby:null,build:structuredClone(this.build),choices:structuredClone(this.choices),xp:this.xp,xpNext:xpNeeded(this.level),farm:structuredClone(this.farm),mode:this.mode,ready:this.ready,error:this.error,selected:this.selected,inReach:this.inReach,seed:this.seed,hp:this.hp,maxHp:this.maxHp,time:this.time,kills:this.kills,level:this.level,dash:this.dash,loot:{...this.loot},upgrade:this.upgrade,result:this.result?structuredClone(this.result):null,message:this.message,paused:this.paused,saved:this.saved,meal:this.meal,tier:this.tier});}
  private toast(s:string){this.message=s;this.messageUntil=this.elapsed+2.5;this.emit();return s;}
  private changed(s:string){this.save();this.refreshPlants();return this.toast(s);}
  start(){if(!this.ready)return;this.started=true;this.toast('Space jump · Shift sprint · Q dash');}
@@ -259,9 +284,9 @@ export class WildseedGame {
  if(before===this.farm.unlocked){this.toast(msg);return;}
  this.sound(920);this.actionDone('unlock',new T.Vector3(7.5,2,-5.8),undefined,'portal','Bramble Hollow unlocked');
  }
- expedition(tier:number){if(!this.ready||!this.started||this.mode!=='farm')return;let stats;try{stats=beginExpedition(this.farm,tier);}catch(e){this.toast((e as Error).message);return;}this.actionFx.clear();this.mode='dungeon';this.tier=tier;this.time=0;this.kills=0;this.level=1;this.xp=0;this.build=freshBuild(this.farm.hero);this.weaponAttackUntil=0;this.spells.clear();this.fx.clear();this.clearHostiles();this.spawnIndex=0;this.choices=[];this.upgrade=false;this.loot=emptyLoot();this.hp=this.maxHp=this.baseMaxHp=stats.hp;this.damage=stats.damage;this.speed=stats.speed*1.5;this.meal=stats.meal;this.bossDead=false;this.bossSpawned=false;this.spawnTimer=0;this.invuln=1;this.dash=0;this.motor.reset();this.target=null;this.paused=false;this.player.position.set(0,terrainHeight('dungeon',0,0),0);this.followCamera.snap(this.player.position);this.farmWorld.visible=false;this.arena.visible=true;this.scene.background=new T.Color(tier===1?'#8fd9f5':'#b6b3ed');this.scene.fog=new T.Fog(tier===1?'#8fd9f5':'#b6b3ed',100,235);this.save();this.toast('Survive & defeat the guardian.');}
+ expedition(tier:number){if(!this.ready||!this.started||this.mode!=='farm')return;let stats;try{stats=beginExpedition(this.farm,tier);}catch(e){this.toast((e as Error).message);return;}this.actionFx.clear();this.pickups.clear();this.clearReturnPortal();this.mode='dungeon';this.tier=tier;this.time=0;this.kills=0;this.level=1;this.xp=0;this.build=freshBuild(this.farm.hero);this.weaponAttackUntil=0;this.spells.clear();this.fx.clear();this.clearHostiles();this.spawnIndex=0;this.choices=[];this.upgrade=false;this.loot=emptyLoot();this.hp=this.maxHp=this.baseMaxHp=stats.hp;this.damage=stats.damage;this.speed=stats.speed*1.5;this.meal=stats.meal;this.bossDead=false;this.bossSpawned=false;this.spawnTimer=0;this.invuln=1;this.dash=0;this.motor.reset();this.target=null;this.paused=false;this.player.position.set(0,terrainHeight('dungeon',0,0),0);this.followCamera.snap(this.player.position);this.farmWorld.visible=false;this.arena.visible=true;this.scene.background=new T.Color(tier===1?'#8fd9f5':'#b6b3ed');this.scene.fog=new T.Fog(tier===1?'#8fd9f5':'#b6b3ed',100,235);this.save();this.toast('Survive & defeat the guardian.');}
  escape(){if(this.mode==='dungeon')this.finish('escaped');}
- private finish(outcome:'won'|'escaped'|'lost'){if(this.mode!=='dungeon')return;const loot=settleExpedition(this.farm,this.loot,outcome,this.tier);this.result={outcome,loot,kills:this.kills,tier:this.tier};this.mode='farm';this.hp=this.maxHp;this.upgrade=false;this.paused=false;this.farmWorld.visible=true;this.arena.visible=false;this.player.position.set(5,0,-3);this.motor.reset();this.dash=0;this.followCamera.snap(this.player.position);this.target=null;this.keys.clear();for(const e of this.enemies)this.removeEnemy(e);this.enemies=[];this.spells.clear();this.fx.clear();this.clearHostiles();this.choices=[];this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);this.refreshPlants();this.save();this.emit();}
+ private finish(outcome:'won'|'escaped'|'lost'){if(this.mode!=='dungeon')return;const loot=settleExpedition(this.farm,this.loot,outcome,this.tier);this.pickups.clear();this.clearReturnPortal();this.result={outcome,loot,kills:this.kills,tier:this.tier};this.mode='farm';this.hp=this.maxHp;this.upgrade=false;this.paused=false;this.farmWorld.visible=true;this.arena.visible=false;this.player.position.set(5,0,-3);this.motor.reset();this.dash=0;this.followCamera.snap(this.player.position);this.target=null;this.keys.clear();for(const e of this.enemies)this.removeEnemy(e);this.enemies=[];this.spells.clear();this.fx.clear();this.clearHostiles();this.choices=[];this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);this.refreshPlants();this.save();this.emit();}
  dismissResult(){this.result=null;this.emit();}
  private weaponCast(id:WeaponId,point:T.Vector3){
  if(id!==STARTER_SPELL[this.farm.hero])return;
@@ -294,8 +319,26 @@ export class WildseedGame {
  const away=e.mesh.position.clone().sub(this.player.position);away.y=0;if(away.lengthSq())e.push.addScaledVector(away.normalize(),e.boss?1:3.5);
  this.fx.impact(e.mesh.position.clone().add(new T.Vector3(0,e.aimHeight,0)),damage,ENEMY_INFO[e.kind].color,e.hp<=0,e.boss);
  this.combatAudio.play(e.hp<=0?'kill':'hit');
- if(e.hp<=0){this.kills++;this.xp+=e.xpValue;rewardKill(this.loot,this.kills,this.tier);if(e.boss)this.bossDead=true;this.removeEnemy(e);this.enemies=this.enemies.filter(x=>x!==e);}
+ if(e.hp<=0){this.kills++;const point=e.mesh.position.clone();this.pickups.spawn('xp',e.xpValue,point);for(const drop of rollDrops(this.tier,e.boss))this.pickups.spawn(drop.kind,drop.amount,point);if(e.boss)this.bossDead=true;this.removeEnemy(e);this.enemies=this.enemies.filter(x=>x!==e);}
  }
+ private collectDrop(kind:PickupKind,amount:number,point:T.Vector3){
+  if(kind==='xp'){this.xp+=amount;this.fx.burst(point,'#83f6d3',3,2);}
+  else{this.loot[kind]+=amount;this.fx.burst(point,kind in CROPS?CROPS[kind as CropId].color:'#ffe299',10,3);this.fx.ring(this.player.position,.9,'#ffe299',.25);}
+  if(this.elapsed-this.pickupSoundAt>.09){this.sound(kind==='xp'?740:990);this.pickupSoundAt=this.elapsed;}
+ }
+ private openReturnPortal(){
+  if(this.returnPortal)return;
+  const p=this.player.position.clone().add(new T.Vector3(4,0,0)),limit=WORLD_RADIUS.dungeon-6,r=Math.hypot(p.x,p.z);
+  if(r>limit){p.x*=limit/r;p.z*=limit/r;}p.y=Math.max(.1,terrainHeight('dungeon',p.x,p.z));
+  const group=new T.Group();group.name='return-portal';group.position.copy(p);
+  const rim=new T.Mesh(new T.TorusGeometry(1.35,.12,8,40),new T.MeshBasicMaterial({color:'#b7ffda'}));rim.position.y=1.6;group.add(rim);
+  const glow=new T.Mesh(new T.CircleGeometry(1.23,40),new T.MeshBasicMaterial({color:'#4dd0b3',transparent:true,opacity:.6,side:T.DoubleSide}));glow.position.y=1.6;group.add(glow);
+  this.returnPortal=group;this.arena.add(group);this.toast('Return portal open');
+ }
+ private clearReturnPortal(){if(!this.returnPortal)return;this.returnPortal.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();(o.material as T.Material).dispose();}});this.returnPortal.removeFromParent();this.returnPortal=null;}
+ private get nearReturnPortal(){return !!this.returnPortal&&this.player.position.distanceTo(this.returnPortal.position)<3;}
+ returnHome(){if(this.started&&!this.result&&this.mode==='dungeon'&&this.returnPortal&&this.nearReturnPortal&&!this.paused&&!this.upgrade)this.finish('won');}
+
  private damagePlayer(amount:number,origin:T.Vector3){
  if(this.invuln>0||this.mode!=='dungeon')return;
  this.hp=Math.max(0,this.hp-amount);this.invuln=.65;this.fx.hurt(this.player.position.clone().add(new T.Vector3(0,1,0)));this.combatAudio.play('hurt');
@@ -314,8 +357,8 @@ export class WildseedGame {
  }
  private clearHostiles(){for(const h of this.hostiles){this.scene.remove(h.mesh);h.mesh.geometry.dispose();(h.mesh.material as T.Material).dispose();}this.hostiles=[];}
  private combat(dt:number){
- this.time+=dt;this.invuln=Math.max(0,this.invuln-dt);this.spawnTimer-=dt;this.hp=Math.min(this.maxHp,this.hp+dt*(modifiers(this.build).regen+this.spells.healingAt(this.player.position)));
- if(this.spawnTimer<=0&&this.enemies.length<60){this.spawn(false);if(this.time>25&&this.enemies.length<59&&this.spawnIndex%3===0)this.spawn(false);this.spawnTimer=Math.max(.28,.85-this.time*.006);}
+ if(!this.returnPortal)this.time+=dt;this.invuln=Math.max(0,this.invuln-dt);this.spawnTimer-=dt;this.hp=Math.min(this.maxHp,this.hp+dt*(modifiers(this.build).regen+this.spells.healingAt(this.player.position)));
+ if(!this.returnPortal&&this.spawnTimer<=0&&this.enemies.length<60){this.spawn(false);if(this.time>25&&this.enemies.length<59&&this.spawnIndex%3===0)this.spawn(false);this.spawnTimer=Math.max(.28,.85-this.time*.006);}
  if(this.time>=60&&!this.bossSpawned){this.spawn(true);this.bossSpawned=true;this.toast('Elder Thornwarden awakened');}
  const player=this.player.position;
  for(const e of this.enemies){
@@ -337,7 +380,8 @@ export class WildseedGame {
  }
  if(this.hp<=0){this.finish('lost');return;}
  this.spells.update(dt,player,this.build,this.damage,this.enemies,(target:SpellTarget,damage:number)=>this.hurtEnemy(target as EnemyUnit,damage));
- this.queueUpgrade();if(this.time>=90&&this.bossDead)this.finish('won');
+ this.pickups.update(dt,player,(kind,amount,point)=>this.collectDrop(kind,amount,point));
+ this.queueUpgrade();if(this.time>=90&&this.bossDead)this.openReturnPortal();
  }
 
  private tick=(t:number)=>{if(this.stopped)return;this.frame=requestAnimationFrame(this.tick);const realDt=this.last?Math.min((t-this.last)/1000,.05):0;const dt=realDt*(this.fx.freeze>0?.35:1);this.last=t;this.elapsed+=realDt;
@@ -367,7 +411,7 @@ export class WildseedGame {
  private click=(e:PointerEvent)=>{if(!this.started||this.paused||this.upgrade||this.result)return;const rect=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);
  const terrain=this.farmWorld.getObjectByName('terrain-surface');const surface=this.mode==='dungeon'?this.ray.intersectObjects(this.terrainChunks,false)[0]:terrain?this.ray.intersectObject(terrain,false)[0]:null;const point=surface?surface.point.clone():new T.Vector3();if(surface||this.ray.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0),0),point)){point.y=0;const bound=WORLD_RADIUS[this.mode]-3;const flat=Math.hypot(point.x,point.z);if(flat>bound){point.x*=bound/flat;point.z*=bound/flat;}point.y=terrainHeight(this.mode,point.x,point.z);this.target=point;}};
  moveKey(key:string,down:boolean){if(down)this.keys.add(key);else this.keys.delete(key);}
- dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.actionFx.dispose();this.spells.dispose();this.enemyBatch.dispose();this.fx.dispose();this.combatAudio.dispose();this.clearHostiles();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.cartoon.dispose();this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
+ dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.pickups.dispose();this.clearReturnPortal();this.actionFx.dispose();this.spells.dispose();this.enemyBatch.dispose();this.fx.dispose();this.combatAudio.dispose();this.clearHostiles();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.cartoon.dispose();this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
 }
 
 

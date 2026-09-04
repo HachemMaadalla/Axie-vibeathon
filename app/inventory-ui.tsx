@@ -8,6 +8,7 @@ import {ItemIcon} from './build-ui';
 type Category='All'|'Seeds'|'Crops'|'Supplies'|'Meals';
 type PackItem={key:string;name:string;category:Exclude<Category,'All'>;count:number;color:string;description:string;crop?:CropId;art:string};
 export function LootArt({kind,crop,size=48}:{kind:string;crop?:CropId;size?:number}){
+ if(crop&&(kind==='seed'||kind==='crop'))return <img src={'/assets/crops/'+crop+'-'+kind+'.png'} width={size} height={size} alt="" aria-hidden="true" draggable={false} className="loot-art crop-art" style={{width:size,height:size}}/>;
  const color=crop?CROPS[crop].color:'#7de3c4';
  return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true" className="loot-art">
  <ellipse cx="32" cy="55" rx="20" ry="4" fill="#09151e" opacity=".35"/>
@@ -39,7 +40,7 @@ export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:
  return <div className="simple-inventory">
   <div className="inventory-grid" aria-label="Inventory items">
    {items.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+i.count} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><b>{i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.seed===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
-   {Array.from({length:12-items.length},(_,i)=><div key={'empty-'+i} className="inventory-slot empty-slot" aria-hidden="true"/>)}
+   {Array.from({length:Math.max(0,12-items.length)},(_,i)=><div key={'empty-'+i} className="inventory-slot empty-slot" aria-hidden="true"/>)}
   </div>
   {item?<div className="pack-selection" aria-live="polite">
    <LootArt kind={item.art} crop={item.crop} size={48}/>

@@ -9,7 +9,7 @@ const {EQUIPMENT,equipAxie}=await import('../lib/game/equipment.ts');
 const {SpellVisuals}=await import('../lib/game/spell-visuals.ts');
 function fixture(hero){
  const farm=freshFarm();farm.hero=hero;
- return Object.assign(Object.create(WildseedGame.prototype),{farm,ready:true,started:true,mode:'farm',actionFx:{clear(){}},spells:{clear(){}},fx:{clear(){}},clearHostiles(){},motor:{reset(){}},player:new T.Group(),followCamera:{snap(){}},farmWorld:new T.Group(),arena:new T.Group(),scene:new T.Scene(),save(){},toast(){}});
+ return Object.assign(Object.create(WildseedGame.prototype),{farm,ready:true,started:true,mode:'farm',pickups:{clear(){}},actionFx:{clear(){}},spells:{clear(){}},fx:{clear(){}},clearHostiles(){},motor:{reset(){}},player:new T.Group(),followCamera:{snap(){}},farmWorld:new T.Group(),arena:new T.Group(),scene:new T.Scene(),save(){},toast(){}});
 }
 for(const hero of HERO_IDS){
  const game=fixture(hero);game.build={items:{thorn:3,ember:3},evolved:['thorn']};game.expedition(1);

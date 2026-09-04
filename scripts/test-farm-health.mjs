@@ -15,7 +15,7 @@ function fixture(){return Object.assign(Object.create(WildseedGame.prototype),{
 const pressE=g=>g.tendPlot();
 check('Walking between beds only changes the highlighted target; E performs each action',()=>{
  const g=fixture(),before=JSON.stringify(g.farm);
- for(let i=0;i<12;i++){g.player.position.copy(plotPosition(i));g.syncNearbyPlot();assert.equal(g.selected,i);}
+ for(let i=0;i<g.farm.plots.length;i++){g.player.position.copy(plotPosition(i));g.syncNearbyPlot();assert.equal(g.selected,i);}
  assert.equal(JSON.stringify(g.farm),before,'Proximity must never tend automatically');
  const index=g.farm.plots.findIndex(p=>!p.crop);assert.ok(index>=0);g.player.position.copy(plotPosition(index));
  const seeds=g.farm.seeds.sunroot;pressE(g);assert.equal(g.farm.plots[index].crop,'sunroot');assert.equal(g.farm.plots[index].watered,false);assert.equal(g.farm.seeds.sunroot,seeds-1);

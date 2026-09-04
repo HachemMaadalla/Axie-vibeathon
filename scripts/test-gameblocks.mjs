@@ -9,12 +9,12 @@ const {MovementMotor}=await import('../lib/game/movement.ts');
 const {batchTrees}=await import('../lib/game/environment.ts');
 const parent=new T.Group();const t=performance.now(),chunks=makeLandscape(parent);parent.updateMatrixWorld(true);
 let passed=0;const check=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
-check('Live terrain uses GameBlocks samplers and world-aligned textured meshes',()=>{
+check('Live terrain uses GameBlocks samplers and smooth cel-shaded meshes',()=>{
  assert.ok(dungeonTerrain instanceof NaturalTerrainSampler);
  assert.equal(terrainRoads.distanceToRoad(0,0),0);
  assert.ok(chunks.length>100&&chunks.length<300);
  let triangles=0;
- for(const c of chunks){assert.ok(c.geometry.attributes.uv);assert.equal(c.material.map.magFilter,T.NearestFilter);assert.ok(c.material.flatShading);triangles+=c.geometry.index.count/3;}
+ for(const c of chunks){assert.ok(c.geometry.attributes.uv);assert.ok(c.material.isMeshToonMaterial);assert.equal(c.material.map,null);assert.equal(c.material.gradientMap.magFilter,T.NearestFilter);assert.ok(!c.material.flatShading);triangles+=c.geometry.index.count/3;}
  assert.ok(triangles<65000,'Triangle budget: '+triangles);
  assert.ok(parent.getObjectByName('river-water'));assert.ok(parent.getObjectByName('coastal-water'));assert.ok(parent.getObjectByName('gameblocks-rocks').children.length>200);
  console.log('  '+chunks.length+' chunks, '+triangles+' triangles; generation '+Math.round(performance.now()-t)+' ms');
@@ -47,8 +47,8 @@ check('The movement motor can sprint and dash across every river bridge',()=>{
  }
 });
 check('GameBlocks rocks and vegetation batch without losing geometry',()=>{
- let before=0;parent.traverse(o=>{if(o instanceof T.Mesh)before+=o.geometry.attributes.position.count;});
- batchTrees(parent);let after=0;parent.traverse(o=>{if(o instanceof T.Mesh)after+=o.geometry.attributes.position.count;});
+ let before=0;parent.traverse(o=>{if(o instanceof T.Mesh)before+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;});
+ batchTrees(parent);let after=0;parent.traverse(o=>{if(o instanceof T.Mesh)after+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;});
  assert.equal(after,before);assert.equal(parent.getObjectByName('gameblocks-rocks'),undefined);
 });
 parent.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();o.material.map?.dispose();o.material.dispose();}});

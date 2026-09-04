@@ -4,13 +4,17 @@ import {createAxieActor} from './model';
 import {FollowCamera} from './camera';
 import {MovementMotor} from './movement';
 import {WORLD_RADIUS,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX,terrainRoads} from './terrain';
-import {makeLandscape} from './landscape';
+import {makeLandscape,makeFarmLandscape} from './landscape';
 import {makeEnemy,disposeEnemy,updateEnemy,enemyKindFor,ENEMY_INFO,type EnemyUnit} from './enemies';
 import {EnemyBatch} from './enemy-batch';
 import {CombatFX,CombatAudio} from './combat-fx';
 import {freshBuild,draftChoices,eligibleChoices,applyChoice,modifiers,xpNeeded,type Build,type Choice} from './build';
 import {SpellEngine,type SpellTarget} from './spell-engine';
-import {pixelMaterial,voxelIsland,batchTrees,type PixelSurface} from './environment';
+import {toonMaterial,batchTrees,type Surface} from './environment';
+import {CartoonRenderer,toonify,addCartoonSky} from './toon';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
+import {createTreeVisual,createTreeMaterials} from '../gameblocks/modules/world/object/factory/PlantVisualFactory.js';
+import {RandomGenerator} from '../gameblocks/modules/math/RandomUtils.js';
 import { CROPS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, beginExpedition, emptyLoot, rewardKill, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
 import { registerGameTools } from './webmcp';
 
@@ -21,22 +25,22 @@ const plotPosition=(i:number)=>new T.Vector3((i%4)*2.15-3.25,.2,Math.floor(i/4)*
 
 export class WildseedGame {
  farm:FarmState=freshFarm();mode:'farm'|'dungeon'='farm';ready=false;error='';selected=0;seed:CropId='sunroot';hp=100;maxHp=100;time=0;kills=0;level=1;dash=0;loot:Loot=emptyLoot();upgrade=false;result:Result|null=null;message='';paused=false;saved=true;meal:CropId|null=null;tier=1;
- private scene=new T.Scene();private farmWorld=new T.Group();private arena=new T.Group();private camera:T.PerspectiveCamera;private renderer:T.WebGLRenderer;private listener:(s:View)=>void;
+ private scene=new T.Scene();private farmWorld=new T.Group();private arena=new T.Group();private camera:T.PerspectiveCamera;private renderer:T.WebGLRenderer;private cartoon:CartoonRenderer;private listener:(s:View)=>void;
  private actors=new Map<HeroId,Actor>();private npc:Actor|null=null;private player=new T.Group();private keys=new Set<string>();private target:T.Vector3|null=null;private pointer=new T.Vector2();private ray=new T.Raycaster();private plots:T.Mesh[]=[];private plants:T.Group[]=[];private ring:T.Mesh;private portal:T.Mesh;private enemies:EnemyUnit[]=[];private enemyBatch:EnemyBatch;private spawnIndex=0;private terrainChunks:T.Mesh[]=[];private fx:CombatFX;private combatAudio=new CombatAudio();private hostiles:{mesh:T.Mesh;velocity:T.Vector3;life:number;radius:number;max:number;hit:boolean}[]=[];private effects:{mesh:T.Mesh;life:number}[]=[];private frame=0;private last=0;private elapsed=0;private emitAt=0;private saveAt=0;private messageUntil=0;private stopped=false;private started=false;private spawnTimer=0;private invuln=0;private motor=new MovementMotor();private sunlight:T.DirectionalLight;private damage=18;private speed=6;private bossSpawned=false;private bossDead=false;private muted=true;private audio:AudioContext|null=null;private abortTools:()=>void;private resizeObserver:ResizeObserver;
  build:Build=freshBuild();choices:Choice[]=[];xp=0;private baseMaxHp=100;private spells:SpellEngine;
  private followCamera:FollowCamera;private cameraObstacles:T.Object3D[]=[];
- private materialCache=new Map<string,T.MeshStandardMaterial>();private sharedSphere=new T.IcosahedronGeometry(1,1);
+ private materialCache=new Map<string,T.MeshToonMaterial>();private sharedSphere=new T.SphereGeometry(1,16,10);private treeMats=new Map<string,ReturnType<typeof createTreeMaterials>>();private toonCache=new Map<T.Material,T.MeshToonMaterial>();
  constructor(private container:HTMLElement,onChange:(s:View)=>void){
  this.listener=onChange;
  try{const raw=localStorage.getItem('wildseed-v1');if(raw)this.farm=hydrateFarm(JSON.parse(raw));}catch{this.saved=false;}
- this.scene.background=new T.Color('#a9d8dd');this.scene.fog=new T.Fog('#a9d8dd',60,150);
+ this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);
  this.camera=new T.PerspectiveCamera(62,container.clientWidth/container.clientHeight,.1,250);
  this.camera.position.set(18,24,29);this.camera.lookAt(0,0,0);
  this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));this.renderer.setSize(container.clientWidth,container.clientHeight);
- this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;container.appendChild(this.renderer.domElement);
- this.scene.add(new T.HemisphereLight('#ffffe5','#55768b',2.5));
- const sun=this.sunlight=new T.DirectionalLight('#fff2ce',3.1);sun.position.set(-12,25,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-25,right:25,top:25,bottom:-25});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.045;sun.shadow.bias=-.0003;this.scene.add(sun,sun.target);
- this.scene.add(this.farmWorld,this.arena,this.player);this.arena.visible=false;this.player.position.set(1,0,7);
+ this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;this.renderer.toneMapping=T.NeutralToneMapping;this.renderer.toneMappingExposure=1;this.cartoon=new CartoonRenderer(this.renderer);this.cartoon.resize(container.clientWidth,container.clientHeight);container.appendChild(this.renderer.domElement);
+ this.scene.add(new T.HemisphereLight('#fff6dc','#514277',.85));
+ const sun=this.sunlight=new T.DirectionalLight('#fff0cc',2.8);sun.position.set(-12,25,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-25,right:25,top:25,bottom:-25});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.045;sun.shadow.bias=-.0003;this.scene.add(sun,sun.target);
+ addCartoonSky(this.scene);this.scene.add(this.farmWorld,this.arena,this.player);this.arena.visible=false;this.player.position.set(1,0,7);
  this.enemyBatch=new EnemyBatch(this.arena);this.fx=new CombatFX(this.scene,window.matchMedia('(prefers-reduced-motion: reduce)').matches);this.makeFarm();this.makeArena();this.expandWorld(this.farmWorld,'farm');this.expandWorld(this.arena,'dungeon');batchTrees(this.farmWorld);batchTrees(this.arena);this.spells=new SpellEngine(this.scene,{fx:this.fx,audio:this.combatAudio});
  this.followCamera=new FollowCamera(this.camera,this.renderer.domElement,()=>this.started&&!this.paused&&!this.upgrade&&!this.result&&!document.hidden,this.click);
  this.scene.updateMatrixWorld(true);
@@ -45,40 +49,36 @@ export class WildseedGame {
  this.ring=new T.Mesh(new T.RingGeometry(.8,1,48),new T.MeshBasicMaterial({color:'#ffedac',side:T.DoubleSide,transparent:true,opacity:.85}));this.ring.rotation.x=-Math.PI/2;this.ring.position.y=.22;this.farmWorld.add(this.ring);
  this.portal=this.farmWorld.getObjectByName('portal') as T.Mesh;
  this.refreshPlants();
- this.resizeObserver=new ResizeObserver(()=>{if(this.stopped)return;this.camera.aspect=container.clientWidth/container.clientHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(container.clientWidth,container.clientHeight);});this.resizeObserver.observe(container);
+ this.resizeObserver=new ResizeObserver(()=>{if(this.stopped)return;this.camera.aspect=container.clientWidth/container.clientHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(container.clientWidth,container.clientHeight);this.cartoon.resize(container.clientWidth,container.clientHeight);});this.resizeObserver.observe(container);
  window.addEventListener('keydown',this.keyDown);window.addEventListener('keyup',this.keyUp);window.addEventListener('blur',this.blur);document.addEventListener('visibilitychange',this.visibility);this.renderer.domElement.addEventListener('webglcontextlost',this.contextLost);
  this.abortTools=registerGameTools(()=>this.farm,(i,seed)=>{if(this.mode!=='farm'||!this.started)throw Error('Enter the garden before tending plots');this.seed=seed;this.selectPlot(i);return this.tendPlot();});
  this.loadActors();this.emit();this.frame=requestAnimationFrame(this.tick);
  }
- private mat(color:string,surface:PixelSurface='stone'){const key=color+surface;let m=this.materialCache.get(key);if(!m){m=pixelMaterial(color,surface);this.materialCache.set(key,m);}return m;}
+ private mat(color:string,surface:Surface='stone'){const key=color+surface;let m=this.materialCache.get(key);if(!m){m=toonMaterial(color);this.materialCache.set(key,m);}return m;}
  private shape(parent:T.Object3D,geo:T.BufferGeometry,color:string,x:number,y:number,z:number,sx=1,sy=1,sz=1){const m=new T.Mesh(geo,this.mat(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
- private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new T.BoxGeometry(w,h,d),c,x,y,z);}
- private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){if(p===this.farmWorld||p===this.arena||this.plants.some(group=>group===p))return this.box(p,c,x,y,z,sx*1.65,sy*1.65,sz*1.65);return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
- private tree(p:T.Object3D,x:number,z:number,s:number,color='#5a974f'){
- const raised=new T.Group();raised.userData.voxelTree=true;raised.position.y=terrainHeight(p===this.arena?'dungeon':'farm',x,z);p.add(raised);p=raised;
- const trunk=this.box(p,'#785844',x,1.25*s,z,.5*s,2.5*s,.5*s);trunk.material=this.mat('#785844','wood');
- const tiers=[{y:2.5,w:2.5,h:1.05},{y:3.35,w:2.05,h:.9},{y:4.05,w:1.2,h:.65}];
- tiers.forEach((t,i)=>{const crown=this.box(p,i===1?(color==='#5a974f'?'#83b45b':'#659889'):color,x,t.y*s,z,t.w*s,t.h*s,t.w*s);crown.material=this.mat(i===1?(color==='#5a974f'?'#83b45b':'#659889'):color,'leaves');});
- this.box(p,color,x+.95*s,2.75*s,z+.6*s,.85*s,.7*s,.9*s);this.box(p,color,x-.8*s,3.05*s,z-.45*s,.85*s,.65*s,.8*s);
+ private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new RoundedBoxGeometry(w,h,d,1,Math.min(w,h,d)*.14),c,x,y,z);}
+ private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
+ private tree(p:T.Object3D,x:number,z:number,s:number,color='#249359'){
+  let materials=this.treeMats.get(color);if(!materials){const base=new T.Color(color);materials=createTreeMaterials({trunkColor:0x884b37,barkShadowColor:0x53374e,leafColors:[.8,1,1.15].map(f=>({color:base.clone().multiplyScalar(f).getHex(),roughness:.85}))});this.treeMats.set(color,materials);}
+  const tree=createTreeVisual({height:4.3*s,radius:.3*s,materials,prng:new RandomGenerator(Math.abs(Math.round(x*973+z*317))+41)});toonify(tree,this.toonCache);tree.position.set(x,terrainHeight(p===this.arena?'dungeon':'farm',x,z),z);tree.userData.batchable=true;p.add(tree);
  }
 
-
  private makeFarm(){
- const p=this.farmWorld;voxelIsland(p,WORLD_RADIUS.farm,this.mat('#8ac563','grass'),this.mat('#997050','soil'),this.mat('#686d79','stone'),(x,z)=>terrainHeight('farm',x,z));
+ const p=this.farmWorld;makeFarmLandscape(p);
  // A winding footpath connects the cottage, beds, and expedition gate.
  for(let i=0;i<24;i++){const x=-8+i*.7,z=-2.5+Math.sin(i*.22)*1.7;const tile=this.box(p,'#d1c38a',Math.round(x*2)/2,.055,Math.round(z*2)/2,1,.07,1);tile.material=this.mat('#d1c38a','tile');}
  for(let i=0;i<12;i++){const pos=plotPosition(i);const b=this.box(p,'#776049',pos.x,.10,pos.z,1.94,.21,1.94);b.userData.plot=i;this.plots.push(b);const plant=new T.Group();plant.position.copy(pos);this.plants.push(plant);p.add(plant);
  for(const dx of [-1,1])this.box(p,'#bca479',pos.x+dx*.97,.22,pos.z,.1,.16,2.04);for(const dz of [-1,1])this.box(p,'#bca479',pos.x,.22,pos.z+dz*.97,2.04,.16,.1);}
  // Cottage and open-air cooking nook.
  const house=new T.Group();house.position.set(-7,0,-5);p.add(house);this.box(house,'#f0dfb4',0,1.45,0,4,2.9,3.5);this.box(house,'#80664a',0,.18,0,4.5,.35,4);
- for(let i=0;i<6;i++){const roof=this.box(house,i%2?'#bf6548':'#db8255',0,3+i*.28,0,4.9-i*.65,.3,4.35-i*.52);roof.material=this.mat(i%2?'#bf6548':'#db8255','tile');}
+ const roof=this.shape(house,new T.ConeGeometry(3.55,1.9,4),'#e86643',0,3.5,0);roof.rotation.y=Math.PI/4;roof.scale.z=.95;
  this.box(house,'#547569',0,.85,1.78,.9,1.65,.14);this.box(house,'#fbd890',-1.15,1.6,1.79,.7,.8,.1);this.box(house,'#fbd890',1.15,1.6,1.79,.7,.8,.1);this.box(house,'#eee3bd',1.1,3.6,-.65,.55,1.6,.55);
  for(const x of [-1.15,1.15]){this.box(house,'#7e654c',x,1.6,1.9,.05,.85,.06);this.box(house,'#7e654c',x,1.6,1.9,.8,.05,.06);}
  
  this.box(p,'#555952',-7,.6,.5,1.2,.7,1.2);this.blob(p,'#faaf55',-7,.2,.5,.42,.15,.42);for(let i=0;i<5;i++){const a=i*1.256;this.blob(p,'#9ba196',-7+Math.cos(a)*.62,.15,.5+Math.sin(a)*.62,.25);}
  
  // Pond, lily pads and stepping stones.
- for(let row=-2;row<=2;row++){const water=this.box(p,'#69c9d3',8,.045,5+row,Math.abs(row)===2?3:5,.07,1);water.material=this.mat('#69c9d3','water');}for(let i=0;i<9;i++)this.box(p,'#bbefdc',6.4+i%3*1.3,.089,3.7+Math.floor(i/3)*1.1,.6,.012,.1);
+ const pond=this.shape(p,new T.CircleGeometry(1,48),'#12b8d8',8,.065,5,2.6,2.9,1);pond.rotation.x=-Math.PI/2;for(let i=0;i<9;i++)this.box(p,'#c5ffeb',6.4+i%3*1.3,.089,3.7+Math.floor(i/3)*1.1,.6,.012,.1);
  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;this.blob(p,'#bec5a0',8+Math.cos(a)*2.8,.1,5+Math.sin(a)*3.15,.4,.25,.38);}
  for(let i=0;i<4;i++)this.box(p,'#6c9b5d',7.2+i*.55,.13,4.5+Math.sin(i)*1.1,.55,.04,.55);
  // The ancient gate is part of the world, rather than a separate menu page.
@@ -87,24 +87,24 @@ export class WildseedGame {
  for(const dx of [-1.4,1.4])this.box(p,'#d9cdff',7.5+dx,1.6,-5.7,.1,2.9,.1);for(const dy of [.2,3])this.box(p,'#d9cdff',7.5,dy,-5.7,2.9,.1,.1);
  for(let i=0;i<20;i++){const a=i/20*Math.PI*2,x=Math.cos(a)*12.6,z=Math.sin(a)*12.6;if(z>7&&x>-7&&x<8)continue;this.tree(p,x,z,.65+(i%4)*.13);}
  for(let i=0;i<10;i++){const x=-11+i*2.4;this.box(p,'#d4c6a0',x,.65,10.5,.15,1.3,.15);if(i<9){this.box(p,'#d4c6a0',x+1.2,.75,10.5,2.4,.12,.1);this.box(p,'#d4c6a0',x+1.2,.35,10.5,2.4,.12,.1);}}
- const geo=new T.BoxGeometry(.13,.32,.13),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<5&&z>-3&&z<6||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
+ const geo=new T.ConeGeometry(.09,.4,5),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<5&&z>-3&&z<6||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
  for(let i=0;i<55;i++){const x=Math.sin(i*51.9)*12,z=Math.cos(i*37.7)*12;if(x*x+z*z>165||Math.abs(x)<5&&z>-3&&z<7)continue;this.blob(p,i%3===0?'#fff0a9':i%3===1?'#e8adbb':'#c2b4e7',x,.22,z,.13,.17,.13);}
  for(let i=0;i<9;i++){const a=i*.73;this.blob(p,'#84ad8f',Math.cos(a)*31,-6-i%3,Math.sin(a)*30,6,3,5);}
  }
  private makeArena(){this.terrainChunks=makeLandscape(this.arena);}
  private expandWorld(p:T.Group,mode:'farm'|'dungeon'){
- const radius=WORLD_RADIUS[mode],count=mode==='farm'?55:850;
+ const radius=WORLD_RADIUS[mode],count=mode==='farm'?55:650;
  for(let i=0;i<count;i++){
   const a=i*2.39996,r=mode==='farm'?18+(i%9)/9*10:18+Math.sqrt((i+.5)/count)*(radius-25);
   const x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(mode==='dungeon'&&(isWater(x,z)||isBridge(x,z)||terrainRoads.distanceToRoad(x,-z)<5))continue;
   const biome=mode==='farm'?'woodland':terrainBiome(x,z);
-  const color=biome==='crystal'?'#9393b6':biome==='marsh'?'#528982':biome==='badlands'?'#b3905c':'#5a974f';
+  const color=biome==='crystal'?'#8354c5':biome==='marsh'?'#087d79':biome==='badlands'?'#d35b3d':'#249359';
   this.tree(p,x,z,(biome==='marsh'?1.1:.8)+(i%4)*.18,color);
  }
  const points=mode==='farm'?[[-22,-10],[19,20],[-18,21]]:[[35,-28],[-55,-65],[104,-58],[-112,60],[65,125],[-105,-95],[160,25],[-35,155],[-170,-15],[80,-153],[0,-160],[135,110]];
  points.forEach(([x,z],index)=>{
-  const y=terrainHeight(mode,x,z),group=new T.Group();group.userData.voxelTree=true;p.add(group);
+  const y=terrainHeight(mode,x,z),group=new T.Group();group.userData.batchable=true;p.add(group);
   const color=['#b3a8df','#76c9d5','#d9b46c','#95c778'][index%4];
   if(index%3===0){
    for(const side of [-1,1]){this.box(group,'#7e8c85',x+side*3,y+3,z,1.6,6,1.6);for(let tier=0;tier<3;tier++)this.box(group,'#adb8a6',x+side*3,y+6+tier*.3,z,2-tier*.3,.3,2-tier*.3);}
@@ -112,18 +112,18 @@ export class WildseedGame {
   }else if(index%3===1){
    for(let j=0;j<7;j++){const a=j*2.4,r=j===0?0:3;const crystal=this.shape(group,new T.ConeGeometry(j===0?1.3:.55,j===0?10:4,5),color,x+Math.cos(a)*r,y+(j===0?5:2),z+Math.sin(a)*r);crystal.rotation.z=(j%3-1)*.15;}
   }else{
-   for(let j=0;j<6;j++){const px=x+Math.cos(j*2.4)*4,pz=z+Math.sin(j*2.4)*4,py=terrainHeight(mode,px,pz);this.box(group,'#bead8b',px,py+2,pz,.65,4,.65);this.box(group,index%2?'#bf8bc5':'#d2916a',px,py+4,pz,3.8,.8,3.8);this.box(group,'#e3c796',px,py+4.5,pz,2.6,.3,2.6);}
+   for(let j=0;j<6;j++){const px=x+Math.cos(j*2.4)*4,pz=z+Math.sin(j*2.4)*4,py=terrainHeight(mode,px,pz);this.shape(group,new T.CylinderGeometry(.3,.5,4,10),'#ffe3ad',px,py+2,pz);this.shape(group,new T.SphereGeometry(2,16,10),index%2?'#b645be':'#ee6943',px,py+4,pz,1,.4,1);}
   }
   const beacon=new T.Mesh(new T.BoxGeometry(.2,15,.2),new T.MeshBasicMaterial({color,transparent:true,opacity:.32}));beacon.position.set(x,y+10,z);p.add(beacon);
  });
  if(mode==='dungeon'){
-  for(const z of BRIDGES){const x=riverX(z),group=new T.Group();group.userData.voxelTree=true;p.add(group);for(let i=-12;i<=12;i+=2)for(const side of [-1,1]){const y=terrainHeight(mode,x+i,z);this.box(group,'#b09b72',x+i,y+.6,z+side*2,.15,1.2,.15);this.box(group,'#ad8e65',x+i+.8,y+1,z+side*2,1.6,.12,.13);}}
+  for(const z of BRIDGES){const x=riverX(z),group=new T.Group();group.userData.batchable=true;p.add(group);for(let i=-12;i<=12;i+=2)for(const side of [-1,1]){const y=terrainHeight(mode,x+i,z);this.box(group,'#b09b72',x+i,y+.6,z+side*2,.15,1.2,.15);this.box(group,'#ad8e65',x+i+.8,y+1,z+side*2,1.6,.12,.13);}}
   // Stones and low shrubs give the open ground scale without blocking combat lanes.
-  for(let i=0;i<320;i++){const a=i*2.399,r=25+Math.sqrt(i/320)*(radius-34),x=Math.cos(a)*r,z=Math.sin(a)*r;if(isWater(x,z)||isBridge(x,z))continue;const group=new T.Group();group.userData.voxelTree=true;p.add(group);const y=terrainHeight(mode,x,z);this.box(group,i%2?'#93917d':'#648e64',x,y+.25,z,.5+i%3*.3,.5,1);}
+  for(let i=0;i<320;i++){const a=i*2.399,r=25+Math.sqrt(i/320)*(radius-34),x=Math.cos(a)*r,z=Math.sin(a)*r;if(isWater(x,z)||isBridge(x,z))continue;const group=new T.Group();group.userData.batchable=true;p.add(group);const y=terrainHeight(mode,x,z);this.blob(group,i%2?'#647e9c':'#349658',x,y+.3,z,.5+i%3*.3,.5,.7);}
  }
  }
 
- private actor(g:GLTF,height:number):Actor{return createAxieActor(g,height);}
+ private actor(g:GLTF,height:number):Actor{const actor=createAxieActor(g,height);toonify(actor.root);return actor;}
  private async loadActors(){const loader=new GLTFLoader();try{
  for(const id of ['pomodoro','bing','kotaro'] as HeroId[]){const g=await loader.loadAsync('/assets/axie/'+id+'.glb');if(this.stopped)return;const a=this.actor(g,1.9);this.actors.set(id,a);a.root.visible=id===this.farm.hero;this.player.add(a.root);}
  const g=await loader.loadAsync('/assets/axie/sapidae.glb');if(this.stopped)return;this.npc=this.actor(g,1.9);this.npc.root.position.set(-5,0,-3);this.npc.root.rotation.y=.7;this.farmWorld.add(this.npc.root);
@@ -235,7 +235,7 @@ export class WildseedGame {
  this.followCamera.update(dt,this.player.position,this.cameraObstacles.filter(o=>{let p:T.Object3D|null=o;while(p){if(!p.visible)return false;p=p.parent;}return true;}),(x,z)=>terrainHeight(this.mode,x,z));
  const desiredFov=this.motor.dashing?70:this.keys.has('shift')?67:62;this.camera.fov=T.MathUtils.lerp(this.camera.fov,desiredFov,1-Math.exp(-dt*6));this.camera.updateProjectionMatrix();this.sunlight.position.copy(this.player.position).add(new T.Vector3(-12,25,14));this.sunlight.target.position.copy(this.player.position);
  this.player.visible=this.mode!=='dungeon'||this.invuln<=0||Math.floor(this.invuln*18)%2===0;this.enemyBatch.update(this.enemies);
- this.fx.update(active?realDt:0,active?this.camera:undefined);const water=this.arena.getObjectByName('river-water') as T.Mesh|undefined;if(water){const map=(water.material as T.MeshStandardMaterial).map;if(map)map.offset.y=this.elapsed*.025;}this.renderer.render(this.scene,this.camera);
+ this.fx.update(active?realDt:0,active?this.camera:undefined);const ripples=this.arena.getObjectByName('river-ripples');if(ripples)ripples.position.z=Math.sin(this.elapsed*.7)*.25;this.cartoon.render(this.scene,this.camera);
  if(this.elapsed-this.emitAt>.2){this.emitAt=this.elapsed;if(this.message&&this.elapsed>this.messageUntil)this.message='';this.emit();}
  if(this.elapsed-this.saveAt>3){this.saveAt=this.elapsed;if(active){this.refreshPlants();this.save();}}
  };
@@ -247,7 +247,7 @@ export class WildseedGame {
  private click=(e:PointerEvent)=>{if(!this.started||this.paused||this.upgrade||this.result)return;const rect=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);if(this.mode==='farm'){const hit=this.ray.intersectObjects(this.plots)[0];if(hit){this.selectPlot(hit.object.userData.plot);return;}}
  const terrain=this.farmWorld.getObjectByName('terrain-surface');const surface=this.mode==='dungeon'?this.ray.intersectObjects(this.terrainChunks,false)[0]:terrain?this.ray.intersectObject(terrain,false)[0]:null;const point=surface?surface.point.clone():new T.Vector3();if(surface||this.ray.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0),0),point)){point.y=0;const bound=WORLD_RADIUS[this.mode]-3;const flat=Math.hypot(point.x,point.z);if(flat>bound){point.x*=bound/flat;point.z*=bound/flat;}point.y=terrainHeight(this.mode,point.x,point.z);this.target=point;}};
  moveKey(key:string,down:boolean){if(down)this.keys.add(key);else this.keys.delete(key);}
- dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.spells.dispose();this.enemyBatch.dispose();this.fx.dispose();this.combatAudio.dispose();this.clearHostiles();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
+ dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.spells.dispose();this.enemyBatch.dispose();this.fx.dispose();this.combatAudio.dispose();this.clearHostiles();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.cartoon.dispose();this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
 }
 
 

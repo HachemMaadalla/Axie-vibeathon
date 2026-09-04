@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {toonMaterial} from './toon';
 export type EnemyKind='beetle'|'stalker'|'shaman'|'moth'|'guardian';
 export const ENEMY_INFO={
  beetle:{name:'Bramble Scarab',color:'#df9963',hp:40,speed:3.5,radius:.95,aim:.85,xp:1},
@@ -10,7 +11,7 @@ export const ENEMY_INFO={
 export type EnemyUnit={
  mesh:T.Group;visual:T.Group;kind:EnemyKind;hp:number;max:number;speed:number;boss:boolean;bar:T.Mesh;
  phase:number;state:'seek'|'windup'|'attack'|'recover';timer:number;cooldown:number;heading:T.Vector3;push:T.Vector3;
- flash:number;rig:{legs:T.Group[];arms:T.Group[];wings:T.Group[];head:T.Group;body:T.Group;materials:T.MeshStandardMaterial[]};
+ flash:number;rig:{legs:T.Group[];arms:T.Group[];wings:T.Group[];head:T.Group;body:T.Group;materials:T.MeshToonMaterial[]};
  radius:number;aimHeight:number;xpValue:number;spawnAge:number;
 };
 export type EnemyEvents={
@@ -25,8 +26,8 @@ export function enemyKindFor(time:number,index:number):EnemyKind{
 }
 export function makeEnemy(kind:EnemyKind,tier=1,phase=0):EnemyUnit{
  const info=ENEMY_INFO[kind],mesh=new T.Group(),visual=new T.Group();mesh.name=info.name;mesh.add(visual);
- const materials=new Map<string,T.MeshStandardMaterial>(),geometry=new T.BoxGeometry(1,1,1);
- const mat=(color:string,glow=false)=>{const key=color+glow;let m=materials.get(key);if(!m){m=new T.MeshStandardMaterial({color,roughness:.75,flatShading:true,emissive:glow?color:'#000000',emissiveIntensity:glow?.65:0});m.userData.glow=glow;materials.set(key,m);}return m;};
+ const materials=new Map<string,T.MeshToonMaterial>(),geometry=new T.BoxGeometry(1,1,1);
+ const mat=(color:string,glow=false)=>{const key=color+glow;let m=materials.get(key);if(!m){m=toonMaterial(color);m.emissive.set(glow?color:'#000000');m.emissiveIntensity=glow?.65:0;m.userData.glow=glow;materials.set(key,m);}return m;};
  const box=(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number,glow=false)=>{const o=new T.Mesh(geometry,mat(c,glow));o.position.set(x,y,z);o.scale.set(w,h,d);o.castShadow=true;o.receiveShadow=true;p.add(o);return o;};
  const pivot=(p:T.Object3D,x:number,y:number,z:number)=>{const g=new T.Group();g.position.set(x,y,z);p.add(g);return g;};
  const body=pivot(visual,0,0,0),head=pivot(body,0,0,0),legs:T.Group[]=[],arms:T.Group[]=[],wings:T.Group[]=[];
@@ -70,7 +71,7 @@ export function makeEnemy(kind:EnemyKind,tier=1,phase=0):EnemyUnit{
    box(head,'#525e66',side*.18,1.55,.03,.07,.48,.07).rotation.z=side*-.3;
    const wing=pivot(body,side*.16,.92,0);
    const shape=new T.Shape();shape.moveTo(0,0);shape.lineTo(side*1.8,.45);shape.lineTo(side*1.5,-.7);shape.lineTo(side*.65,-1.05);shape.lineTo(0,-.2);
-   const wm=new T.Mesh(new T.ShapeGeometry(shape),mat('#76bbca'));(wm.material as T.MeshStandardMaterial).side=T.DoubleSide;wm.castShadow=true;wing.add(wm);
+   const wm=new T.Mesh(new T.ShapeGeometry(shape),mat('#76bbca'));(wm.material as T.MeshToonMaterial).side=T.DoubleSide;wm.castShadow=true;wing.add(wm);
    box(wing,'#efcf79',side*.95,-.16,.04,.45,.38,.09);box(wing,'#405b74',side*1.35,-.27,.04,.24,.55,.08);wings.push(wing);
   }
  }

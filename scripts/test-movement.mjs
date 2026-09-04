@@ -48,7 +48,7 @@ check('Terrain visuals match collision heights across the expanded map',()=>{
  const g=new T.Group(),chunks=makeLandscape(g);g.updateMatrixWorld(true);const ray=new T.Raycaster();let highest=0;
  for(let i=0;i<80;i++){const a=i*2.4,r=20+i*2,x=Math.cos(a)*r,z=Math.sin(a)*r;ray.set(new T.Vector3(x,100,z),new T.Vector3(0,-1,0));const hit=ray.intersectObjects(chunks,false)[0];assert.ok(hit);const y=terrainHeight('dungeon',x,z);assert.ok(Math.abs(hit.point.y-y-.02)<.00001);highest=Math.max(highest,y);}
  assert.ok(highest>=15);assert.ok(Math.abs((WORLD_RADIUS.dungeon/64)**2-10)<1e-10);
- for(const c of chunks)c.geometry.dispose();chunks[0].material.map.dispose();chunks[0].material.dispose();
+ for(const c of chunks)c.geometry.dispose();chunks[0].material.map?.dispose();chunks[0].material.dispose();
  assert.equal(terrainHeight('farm',0,0),0);assert.equal(terrainHeight('farm',-7,-5),0);
 });
 check('Spore and meteor effects work at elevated ground heights',()=>{

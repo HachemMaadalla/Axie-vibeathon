@@ -3,23 +3,23 @@ import {createTerrainMesh} from '../gameblocks/modules/world/environment/Terrain
 import {createGroundRockVisual} from '../gameblocks/modules/world/object/factory/RockVisualFactory.js';
 import {RandomGenerator} from '../gameblocks/modules/math/RandomUtils.js';
 import {TERRAIN_STEP,WORLD_RADIUS,terrainHeight,terrainBiome,isWater,isBridge,riverX,terrainRoads,dungeonTerrain} from './terrain';
-import {pixelMaterial} from './environment';
+import {toonMaterial} from './environment';
 
 export function makeLandscape(parent:T.Group){
  const chunks:T.Mesh[]=[],radius=WORLD_RADIUS.dungeon,size=25;
- const surface=pixelMaterial('#ffffff','grass');surface.vertexColors=true;
+ const surface=toonMaterial('#ffffff');surface.vertexColors=true;
  for(let x=-225;x<225;x+=size)for(let f=-225;f<225;f+=size){
   if(Math.hypot(x+size/2,f+size/2)>radius+size)continue;
   const mesh=createTerrainMesh({terrainSampler:dungeonTerrain,size,segments:size/TERRAIN_STEP,centerRight:x+size/2,centerForward:f+size/2,
-   includeCell:(r:number,forward:number)=>Math.hypot(r,forward)<radius+7,materialOptions:{flatShading:true,roughness:1}});
+   includeCell:(r:number,forward:number)=>Math.hypot(r,forward)<radius+7,materialOptions:{flatShading:false,roughness:1}});
   if(!mesh.geometry.index?.count){mesh.geometry.dispose();mesh.material.dispose();continue;}
-  mesh.material.dispose();mesh.material=surface;mesh.name='terrain-chunk';mesh.userData.cameraIgnore=true;mesh.userData.terrainSurface=true;mesh.geometry.computeBoundingSphere();parent.add(mesh);chunks.push(mesh);
+  mesh.material.dispose();mesh.material=surface;const pos=mesh.geometry.attributes.position,normal=mesh.geometry.attributes.normal;for(let i=0;i<pos.count;i++){const n=dungeonTerrain.normalAt(pos.getX(i),-pos.getZ(i));normal.setXYZ(i,n.x,n.y,n.z);}mesh.name='terrain-chunk';mesh.userData.cameraIgnore=true;mesh.userData.terrainSurface=true;mesh.geometry.computeBoundingSphere();parent.add(mesh);chunks.push(mesh);
  }
  addWater(parent);addGroundDetails(parent);
  return chunks;
 }
 function addWater(parent:T.Group){
- const material=pixelMaterial('#70b7ba','water');material.transparent=true;material.opacity=.78;material.depthWrite=false;material.roughness=.35;
+ const material=toonMaterial('#12afd2');material.transparent=true;material.opacity=.88;material.depthWrite=false;
  // The river has its own surface over the carved bed, instead of blue-colored dirt.
  const geo=new T.BufferGeometry(),positions:number[]=[],uv:number[]=[],indices:number[]=[];
  for(let z=-195;z<195;z+=2.5){
@@ -42,8 +42,8 @@ function addWater(parent:T.Group){
 }
 const radiusForSea=()=>WORLD_RADIUS.dungeon-2;
 function addGroundDetails(parent:T.Group){
- const rng=new RandomGenerator(71031),rockMaterials=['#7b847c','#afa087','#9293ac'].map(c=>pixelMaterial(c,'stone'));
- const ground=new T.Group();ground.userData.voxelTree=true;ground.name='gameblocks-rocks';parent.add(ground);
+ const rng=new RandomGenerator(71031),rockMaterials=['#5c718c','#b77859','#8064bd'].map(c=>toonMaterial(c));
+ const ground=new T.Group();ground.userData.batchable=true;ground.name='gameblocks-rocks';parent.add(ground);
  for(let i=0;i<380;i++){
   const a=rng.uniform(0,Math.PI*2),r=Math.sqrt(rng.random())*(WORLD_RADIUS.dungeon-14),x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(r<18||isWater(x,z)||isBridge(x,z)||terrainRoads.distanceToRoad(x,-z)<6)continue;
@@ -51,9 +51,9 @@ function addGroundDetails(parent:T.Group){
   if(i%7===0){rock.scale.multiplyScalar(2.7);rock.position.y-=.35;}
   ground.add(rock);
  }
- const materials=['#628f4f','#91b775','#559582','#d8b87c'].map(c=>pixelMaterial(c,'leaves'));
- const patch=new T.Group();patch.userData.voxelTree=true;patch.name='meadow-patches';parent.add(patch);
- const geometry=new T.BoxGeometry(.16,1,.16);
+ const materials=['#288449','#a8d951','#17776e','#f5c366'].map(c=>toonMaterial(c));
+ const patch=new T.Group();patch.userData.batchable=true;patch.name='meadow-patches';parent.add(patch);
+ const geometry=new T.ConeGeometry(.12,1,5);
  for(let i=0;i<2000;i++){
   const a=rng.uniform(0,Math.PI*2),r=Math.sqrt(rng.random())*(WORLD_RADIUS.dungeon-17),x=Math.cos(a)*r,z=Math.sin(a)*r;
   if(r<16||isBridge(x,z)||isWater(x,z)||terrainRoads.distanceToRoad(x,-z)<4)continue;
@@ -63,3 +63,9 @@ function addGroundDetails(parent:T.Group){
  geometry.dispose();
 }
 
+
+export function makeFarmLandscape(parent:T.Group){
+ const mesh=createTerrainMesh({terrainSampler:{basis:dungeonTerrain.basis,sample:(x:number,f:number)=>({height:terrainHeight("farm",x,-f)+.02,color:new T.Color("#78c850")})},size:60,segments:48,includeCell:(x:number,f:number)=>Math.hypot(x,f)<30});
+ mesh.material.dispose();const surface=toonMaterial("#ffffff");surface.vertexColors=true;mesh.material=surface;mesh.name="terrain-surface";mesh.userData.cameraIgnore=true;parent.add(mesh);
+ const base=new T.Mesh(new T.CylinderGeometry(30,28,4,96),toonMaterial("#74577c"));base.position.y=-2.04;base.userData.cameraIgnore=true;parent.add(base);return mesh;
+}

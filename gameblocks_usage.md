@@ -12,12 +12,16 @@ The selected modules are copied into lib/gameblocks/modules with their upstream 
 | math/RandomUtils.js | Unchanged | Seeded rock and grass placement. |
 | world/environment/PlanarUtils.js | Unchanged | Terrain basis lookup for the mesh factory. |
 | world/environment/TerrainSampler.js | Runtime unchanged; added JSDoc for road-segment types | NaturalTerrainSampler is the terrain base class. ArchipelagoTerrainSampler supplies layered fBm detail; RoadTerrainSampler supplies path distance and flattening masks. |
-| world/environment/TerrainMeshFactory.js | Adapted | Added chunk center offsets, a circular cell mask, world-aligned pixel texture UVs, and trimmed masked indices. Original indexed triangle topology and basis conversion retained. |
-| world/object/factory/RockVisualFactory.js | Unchanged | Seeded, varied ground rocks, then spatially merged for rendering. |
+| world/environment/TerrainMeshFactory.js | Adapted | Added chunk center offsets, a circular cell mask, world-aligned UVs, and trimmed masked indices. Original indexed triangle topology and basis conversion retained. |
+| world/object/factory/RockVisualFactory.js | Runtime unchanged; JSDoc permits toon materials | Seeded, varied ground rocks, then spatially merged for rendering. |
 
-Wildseed's terrain subclass combines the samplers with biome colors, mountains, shelves, a river valley, bridge ramps, and a shoreline. The existing 10x dungeon area and farm terrain remain intact. Collision samples interpolate the same a-b-d / a-d-c triangle split as the mesh, so dashes and jumps follow the rendered slopes.
+| world/object/factory/PlantVisualFactory.js | Adapted | GameBlocks trunks and canopy layout; broadleaf crowns use rounded spheres and conifer layers are closed with 12 sides. Materials are converted to the shared toon palette. |
+
+Wildseed's terrain subclass combines the samplers with biome colors, mountains, shelves, a river valley, bridge ramps, and a shoreline. The existing 10x dungeon area remains intact; the farm now also uses a smooth GameBlocks mesh with matching triangular collision sampling. Collision samples interpolate the same a-b-d / a-d-c triangle split as the mesh, so dashes and jumps follow the rendered slopes.
 
 The game keeps its existing movement motor, combat, equipment, saves, and Axie models. No Rapier dependency is needed: GameBlocks' optional Rapier collider export is unused. NaturalEnvironment was reviewed; its monolithic world and physics setup are not instantiated because this game already has a chunked scene and movement system.
 
 Validation: scripts/test-gameblocks.mjs checks chunk seams, exact collision sampling, bridge traversal, material/mesh bounds, and actual module integration. Existing movement, combat, camera, equipment, and farming checks cover integration regressions. Browser visual QA was not performed.
 
+
+Cartoon presentation uses three-band MeshToonMaterial lighting and a depth-based navy outline pass, including animated Axies and instanced enemies. Character textures and skinning are preserved. Environment pixel textures and voxel terrain have been removed. scripts/test-cartoon.mjs checks full scenery assembly, texture preservation, farm collision alignment, and outline target resizing/restoration. Browser visual QA remains outstanding.

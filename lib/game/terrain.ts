@@ -28,7 +28,7 @@ const paths:number[][][]=[
 const segments=paths.flatMap(path=>path.slice(1).map((p,i)=>({start:{right:path[i][0],forward:-path[i][1]},end:{right:p[0],forward:-p[1]}})));
 export const terrainRoads=new RoadTerrainSampler({seed:71031,roadSegments:segments,roadHalfWidth:3.4,roadFlatnessAtHalfWidth:.5});
 const detail=new ArchipelagoTerrainSampler({seed:71031});
-const palettes={woodland:'#8ca768',marsh:'#779b83',badlands:'#c8a27a',crystal:'#a7a5ba'};
+const palettes={woodland:'#75c746',marsh:'#209985',badlands:'#e8914e',crystal:'#947bd5'};
 class WildseedTerrainSampler extends NaturalTerrainSampler{
  constructor(){super({baseHeight:5,undulation:5.5,hillFrequency:.65,normalStep:TERRAIN_STEP,basis:DEFAULT_WORLD_BASIS});}
  heightAt(right:number,forward:number):number{
@@ -43,7 +43,7 @@ class WildseedTerrainSampler extends NaturalTerrainSampler{
   h-=detail.fbm(x*.06,forward*.06,3,2,.5,32)*1.4*(1-road);
   // Low rock shelves soften into runnable ramps along the path network.
   const terrace=Math.floor(h/2.2)*2.2+smooth(0,.65,(h/2.2)%1)*2.2;
-  h=T.MathUtils.lerp(h,terrace,(terrainBiome(x,z)==='badlands'?.65:.2)*(1-road));
+  h=T.MathUtils.lerp(h,terrace,(terrainBiome(x,z)==='badlands'?.16:0)*(1-road));
   h*=start;
   const channel=Math.abs(x-riverX(z)),valley=smooth(4,24,channel);
   h=T.MathUtils.lerp(-.75*start,h,valley);
@@ -63,10 +63,10 @@ class WildseedTerrainSampler extends NaturalTerrainSampler{
   const z=-forward,h=vertexHeight(right,forward),road=terrainRoads.distanceToRoad(right,forward);
   const normal=this.normalAt(right,forward,TERRAIN_STEP),slope=1-normal.y;
   const color=new T.Color(palettes[terrainBiome(right,z)]);
-  color.lerp(new T.Color('#737a79'),smooth(.13,.38,slope)*.85);
-  color.lerp(new T.Color('#d8c29b'),(1-smooth(.5,3,h))*.85);
-  color.lerp(new T.Color('#c5b38c'),(1-smooth(2,5.5,road))*.78);
-  if(isBridge(right,z))color.set('#a08a69');
+  color.lerp(new T.Color('#586787'),smooth(.13,.38,slope)*.85);
+  color.lerp(new T.Color('#f6d790'),(1-smooth(.5,3,h))*.85);
+  color.lerp(new T.Color('#e7ba78'),(1-smooth(2,5.5,road))*.78);
+  if(isBridge(right,z))color.set('#9e593e');
   color.multiplyScalar(.93+detail.noise2D(right*.14,forward*.14,7)*.075);
   return color;
  }
@@ -83,8 +83,9 @@ export function vertexHeight(right:number,forward:number){
 }
 export function terrainHeight(mode:WorldMode,x:number,z:number):number{
  if(mode==='farm'){
-  const radius=WORLD_RADIUS.farm;x=-radius+Math.round((x+radius)/TILE)*TILE;z=-radius+Math.round((z+radius)/TILE)*TILE;
-  let h=0;for(const [hx,hz,r,peak] of [[-22,-10,7,2.5],[19,20,8,3],[-18,21,6,2]])h=Math.max(h,Math.floor(Math.max(0,Math.min(1,(r-Math.hypot(x-hx,z-hz))/(r*.8)))*peak*4)/4);return h;
+  const rx=Math.floor(x/TILE)*TILE,rf=Math.floor(-z/TILE)*TILE,u=(x-rx)/TILE,v=(-z-rf)/TILE;
+  const a=farmHeight(rx,-rf),b=farmHeight(rx+TILE,-rf),c=farmHeight(rx,-rf-TILE),d=farmHeight(rx+TILE,-rf-TILE);
+  return u>=v?a+(b-a)*u+(d-b)*v:a+(d-c)*u+(c-a)*v;
  }
  // Match GameBlocks' a-b-d / a-d-c triangle split exactly, including -Z forward.
  const f=-z,rx=Math.floor(x/TERRAIN_STEP)*TERRAIN_STEP,rf=Math.floor(f/TERRAIN_STEP)*TERRAIN_STEP;
@@ -93,3 +94,5 @@ export function terrainHeight(mode:WorldMode,x:number,z:number):number{
  return u>=v?a+(b-a)*u+(d-b)*v:a+(d-c)*u+(c-a)*v;
 }
 
+
+function farmHeight(x:number,z:number){let h=0;for(const [hx,hz,r,peak] of [[-22,-10,7,2.5],[19,20,8,3],[-18,21,6,2]])h=Math.max(h,(1-smooth(0,r,Math.hypot(x-hx,z-hz)))*peak);return h*(1-smooth(27,30,Math.hypot(x,z)));}

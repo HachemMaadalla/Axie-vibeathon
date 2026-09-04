@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {toonMaterial} from './toon';
 import type {EnemyUnit} from './enemies';
 // Animated cube parts share one draw call; non-cube robes and wings keep their geometry.
 export class EnemyBatch{
@@ -6,7 +7,7 @@ export class EnemyBatch{
  private parts=new WeakMap<EnemyUnit,T.Mesh[]>();
  private color=new T.Color();
  constructor(parent:T.Group){
-  this.mesh=new T.InstancedMesh(new T.BoxGeometry(1,1,1),new T.MeshStandardMaterial({color:'#ffffff',roughness:.75,flatShading:true,emissive:'#ffffff',emissiveIntensity:.06}),4000);
+  this.mesh=new T.InstancedMesh(new T.BoxGeometry(1,1,1),toonMaterial('#ffffff'),4000);
   this.mesh.name='enemy-parts';this.mesh.count=0;this.mesh.castShadow=true;this.mesh.receiveShadow=true;this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);parent.add(this.mesh);
  }
  update(enemies:EnemyUnit[]){
@@ -18,7 +19,7 @@ export class EnemyBatch{
    for(const part of parts){
     if(index>=4000)break;
     this.mesh.setMatrixAt(index,part.matrixWorld);
-    const material=part.material as T.MeshStandardMaterial;this.color.copy(material.color);
+    const material=part.material as T.MeshToonMaterial;this.color.copy(material.color);
     if(e.flash>0)this.color.lerp(new T.Color('#fff9df'),.85);
     this.mesh.setColorAt(index,this.color);index++;
    }

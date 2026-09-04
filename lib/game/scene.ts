@@ -3,7 +3,7 @@ import { GLTFLoader, type GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import {createAxieActor} from './model';
 import {FollowCamera} from './camera';
 import {MovementMotor} from './movement';
-import {WORLD_RADIUS,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX} from './terrain';
+import {WORLD_RADIUS,terrainHeight,terrainBiome,isWater,isBridge,BRIDGES,riverX,terrainRoads} from './terrain';
 import {makeLandscape} from './landscape';
 import {makeEnemy,disposeEnemy,updateEnemy,enemyKindFor,ENEMY_INFO,type EnemyUnit} from './enemies';
 import {EnemyBatch} from './enemy-batch';
@@ -97,7 +97,7 @@ export class WildseedGame {
  for(let i=0;i<count;i++){
   const a=i*2.39996,r=mode==='farm'?18+(i%9)/9*10:18+Math.sqrt((i+.5)/count)*(radius-25);
   const x=Math.cos(a)*r,z=Math.sin(a)*r;
-  if(mode==='dungeon'&&(isWater(x,z)||isBridge(x,z)||Math.abs(x)<3))continue;
+  if(mode==='dungeon'&&(isWater(x,z)||isBridge(x,z)||terrainRoads.distanceToRoad(x,-z)<5))continue;
   const biome=mode==='farm'?'woodland':terrainBiome(x,z);
   const color=biome==='crystal'?'#9393b6':biome==='marsh'?'#528982':biome==='badlands'?'#b3905c':'#5a974f';
   this.tree(p,x,z,(biome==='marsh'?1.1:.8)+(i%4)*.18,color);
@@ -235,7 +235,7 @@ export class WildseedGame {
  this.followCamera.update(dt,this.player.position,this.cameraObstacles.filter(o=>{let p:T.Object3D|null=o;while(p){if(!p.visible)return false;p=p.parent;}return true;}),(x,z)=>terrainHeight(this.mode,x,z));
  const desiredFov=this.motor.dashing?70:this.keys.has('shift')?67:62;this.camera.fov=T.MathUtils.lerp(this.camera.fov,desiredFov,1-Math.exp(-dt*6));this.camera.updateProjectionMatrix();this.sunlight.position.copy(this.player.position).add(new T.Vector3(-12,25,14));this.sunlight.target.position.copy(this.player.position);
  this.player.visible=this.mode!=='dungeon'||this.invuln<=0||Math.floor(this.invuln*18)%2===0;this.enemyBatch.update(this.enemies);
- this.fx.update(active?realDt:0,active?this.camera:undefined);this.renderer.render(this.scene,this.camera);
+ this.fx.update(active?realDt:0,active?this.camera:undefined);const water=this.arena.getObjectByName('river-water') as T.Mesh|undefined;if(water){const map=(water.material as T.MeshStandardMaterial).map;if(map)map.offset.y=this.elapsed*.025;}this.renderer.render(this.scene,this.camera);
  if(this.elapsed-this.emitAt>.2){this.emitAt=this.elapsed;if(this.message&&this.elapsed>this.messageUntil)this.message='';this.emit();}
  if(this.elapsed-this.saveAt>3){this.saveAt=this.elapsed;if(active){this.refreshPlants();this.save();}}
  };

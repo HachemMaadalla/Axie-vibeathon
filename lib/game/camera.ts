@@ -1,8 +1,9 @@
 import * as T from 'three';
+import {DEFAULT_WORLD_BASIS} from '../gameblocks/modules/math/WorldBasis.js';
 
 // Ground-plane movement stays aligned with the view, including after a full orbit.
 export function cameraMovement(x:number,z:number,yaw:number){
- return new T.Vector3(x*Math.cos(yaw)+z*Math.sin(yaw),0,z*Math.cos(yaw)-x*Math.sin(yaw)).normalize();
+ return DEFAULT_WORLD_BASIS.fromBasisComponents(x*Math.cos(yaw)+z*Math.sin(yaw),0,-z*Math.cos(yaw)+x*Math.sin(yaw)).normalize();
 }
 
 export class FollowCamera {

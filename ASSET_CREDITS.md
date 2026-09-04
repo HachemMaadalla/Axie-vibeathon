@@ -14,3 +14,5 @@ Three.js: MIT. Lucide icons: ISC. Other dependencies retain their individual lic
 Original procedural game environment, crops, blightling enemies, UI, synthesized sound effects, and game logic: created for this prototype with Codex assistance.
 No Stardew Valley or Vampire Survivors artwork, audio, code, or characters are included.
 
+
+GameBlocks terrain and rock modules: https://github.com/xt4d/GameBlocks, revision 668b7d8a558e23c800e619b33a72c5f8844c4b75. Copyright (c) 2026 Weihao Cheng, MIT. See gameblocks_usage.md and public/licenses/GameBlocks-LICENSE.txt.

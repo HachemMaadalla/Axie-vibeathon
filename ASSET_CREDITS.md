@@ -27,3 +27,5 @@ Pinned revision: 069a59b772e54633d04a3d9d12ecde73b3e4be5d
 Sky Mavis retains the rights. Used under the asset kit's limited permission for Axie Vibeathon; this is not a general open-source audio license. Preserve public/licenses/axie-origins-audio-LICENSE.md. Source WAVs are unmodified; playback normalizes volume, trims leading silence, varies pitch slightly, and fades capped voices in the browser.
 
 Meal sprites (Sunroot broth, Moonberry tea, Embercorn roast) and fertilizer flask sprite in public/assets/meals and public/assets/items are original AI-generated prototype illustrations. See meal-art-prompts.md for prompts and provenance.
+
+Cloudmelon, Glowcap, Starpepper, Dewleaf and Crystalbean seed/crop sprites in public/assets/crops are original AI-generated prototype illustrations created with the built-in image generation tool. See new-crop-art-prompts.md.

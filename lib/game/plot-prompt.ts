@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {CROPS,type FarmState,type CropId} from './state';
-import {farmAction,isSeed,FARM_SLOTS,type FarmItem} from './farm-tools';
+import {farmAction,isSeed,FARM_SLOTS,FARM_SLOT_KEYS,type FarmItem} from './farm-tools';
 import {itemSprite} from './item-art';
 import {plotPosition} from './farming';
 import {projectPopup} from './action-feedback';
@@ -11,7 +11,7 @@ export function plotPromptData(farm:FarmState,index:number,held:FarmItem,seed:Cr
  let key=use.ready?'E':'',label=use.label;
  if(!use.ready){
   const needed=!plot.crop?seed:plot.growth>=1?'sickle':!plot.watered?'water':null;
-  if(needed&&held!==needed){key=String(FARM_SLOTS.indexOf(needed)+1);label=needed==='water'?'Equip can':needed==='sickle'?'Equip sickle':'Equip seeds';}
+  if(needed&&held!==needed){key=FARM_SLOT_KEYS[FARM_SLOTS.indexOf(needed)];label=needed==='water'?'Equip can':needed==='sickle'?'Equip sickle':'Equip seeds';}
  }
  return {name:plot.crop||isSeed(held)?CROPS[crop].name:'Empty bed',status,key,label,ready:use.ready,action:use.action,src:itemSprite(plot.crop?'crop':'seed',crop)!};
 }

@@ -1,5 +1,5 @@
 import {PlotPrompt} from './plot-prompt';
-import {FARM_SLOTS,farmAction,isSeed,type FarmItem} from './farm-tools';
+import {FARM_SLOTS,FARM_SLOT_KEYS,farmAction,isSeed,type FarmItem} from './farm-tools';
 import {setFarmEquipment,useFarmEquipment,updateFarmEquipment} from './farm-equipment';
 import {PlayerFeel} from './player-feel';
 import {GardenArt,createGardenTree,createGardenCottage,createGardenCrop,gardenStreamNear} from './garden-art';
@@ -27,7 +27,7 @@ import {CartoonRenderer,toonify,addCartoonSky} from './toon';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {createTreeVisual,createTreeMaterials} from '../gameblocks/modules/world/object/factory/PlantVisualFactory.js';
 import {RandomGenerator} from '../gameblocks/modules/math/RandomUtils.js';
-import { CROPS, PLOT_COUNT, HERO_IDS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, beginExpedition, emptyLoot, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
+import { CROPS, PLOT_COUNT, HERO_IDS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, craftKey, beginExpedition, emptyLoot, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
 import { registerGameTools } from './webmcp';
 
 export type Result={outcome:'won'|'escaped'|'lost';loot:Loot;kills:number;tier:number};
@@ -292,6 +292,9 @@ export class WildseedGame {
  this.sound(660);this.actionDone('meal',new T.Vector3(-7,2,.5),1,'cook-'+id,'Meal cooked',id);
  }
  equipMeal(id:CropId){if(this.mode!=='farm')return;if(this.farm.meals[id]<1){this.toast('Cook a meal first');return;}this.farm.meal=this.farm.meal===id?null:id;this.save();this.emit();}
+ craftDungeonKey(tier:1|2){
+ if(this.mode!=='farm')return;const key=tier===1?'grove':'hollow',before=this.farm.keys[key],msg=craftKey(this.farm,tier);if(this.farm.keys[key]===before){this.toast(msg);return;}this.sound(920);this.actionDone('unlock',new T.Vector3(7.5,2,-5.8),1,'portal',msg);
+ }
  unlock(){
  if(this.mode!=='farm')return;const before=this.farm.unlocked,msg=offerHarvest(this.farm);
  if(before===this.farm.unlocked){this.toast(msg);return;}
@@ -438,7 +441,7 @@ export class WildseedGame {
  if(this.elapsed-this.emitAt>.2){this.emitAt=this.elapsed;if(this.message&&this.elapsed>this.messageUntil)this.message='';this.emit();}
  if(this.elapsed-this.saveAt>3){this.saveAt=this.elapsed;if(active){if(this.mode==='farm')this.refreshPlants();this.save();}}
  };
- private keyDown=(e:KeyboardEvent)=>{const tag=(e.target as HTMLElement)?.tagName;if(['INPUT','TEXTAREA','SELECT'].includes(tag)||!this.started||this.paused||this.result||this.upgrade)return;const key=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift','q'].includes(key))e.preventDefault();this.keys.add(key);if(e.repeat)return;if(key==='v')this.followCamera.reset((this.actors.get(this.farm.hero)?.root.rotation.y??Math.PI)+Math.PI);if(key==='e')this.interact();if(key===' ')this.jumpNow();if(key==='q')this.dashNow();if(this.mode==='farm'&&/^[1-7]$/.test(key)){e.preventDefault();this.selectFarmItem(FARM_SLOTS[Number(key)-1]);}};
+ private keyDown=(e:KeyboardEvent)=>{const tag=(e.target as HTMLElement)?.tagName;if(['INPUT','TEXTAREA','SELECT'].includes(tag)||!this.started||this.paused||this.result||this.upgrade)return;const key=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift','q'].includes(key))e.preventDefault();this.keys.add(key);if(e.repeat)return;if(key==='v')this.followCamera.reset((this.actors.get(this.farm.hero)?.root.rotation.y??Math.PI)+Math.PI);if(key==='e')this.interact();if(key===' ')this.jumpNow();if(key==='q')this.dashNow();if(this.mode==='farm'){const slot=FARM_SLOT_KEYS.indexOf(key as typeof FARM_SLOT_KEYS[number]);if(slot>=0){e.preventDefault();this.selectFarmItem(FARM_SLOTS[slot]);}}};
  private keyUp=(e:KeyboardEvent)=>{this.keys.delete(e.key.toLowerCase());};
  private blur=()=>{this.keys.clear();};
  private visibility=()=>{this.keys.clear();this.save();};

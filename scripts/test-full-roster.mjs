@@ -22,7 +22,7 @@ for(const id of HERO_IDS){
   }
  }
  assert.ok(fs.existsSync('public/assets/axie/'+id+'.png'));actors.set(id,a);count++;console.log('PASS '+id+' equipped idle/run bounds and hand attachment');
- const farm=freshFarm();farm.hero=id;assert.equal(hydrateFarm(farm).hero,id);
+ const farm=freshFarm();farm.hero=id;farm.keys.grove=1;assert.equal(hydrateFarm(farm).hero,id);
  const stats=beginExpedition(farm,1);assert.equal(stats.hp,100+HEROES[id].health);assert.equal(stats.damage,18*HEROES[id].damage);assert.equal(stats.speed,6*HEROES[id].speed);
  const spot=HERO_SPOTS[id];assert.equal(nearestService({...spot,y:0},id==='pomodoro'?'bing':'pomodoro').service.hero,id);
 }

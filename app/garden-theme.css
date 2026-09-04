@@ -182,3 +182,5 @@
 .plot-prompt-action kbd[hidden]{display:none}
 .plot-prompt:disabled .plot-prompt-action{color:#b5c8b7;font-size:12px}
 @media(max-width:600px){.plot-prompt{width:184px;padding:10px;gap:4px 8px;grid-template-columns:32px 1fr}.plot-prompt-art{width:32px;height:38px}.plot-prompt-copy strong{font-size:14px}.plot-prompt-action{font-size:13px}}
+
+.portal-key{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;min-height:34px}.portal-key>b{padding:5px 9px;border-radius:8px;background:#183a38;color:#ffe09a;font-size:14px}.portal-key>span{display:flex;align-items:center;gap:2px;font-size:12px;font-weight:800;color:#fff2d0}.portal-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}.portal-actions button{padding:9px 7px!important;font-size:12px}.farm-hotbar{max-width:calc(100vw - 20px);scrollbar-width:thin}.farm-hotbar .farm-slot{flex-shrink:0}@media(max-width:600px){.farm-hotbar .farm-slot{flex:1 1 0;min-width:27px}.farm-hotbar .farm-slot>.loot-art{width:28px!important;height:28px!important}.farm-slot kbd{font-size:8px}.farm-slot b{font-size:9px}}

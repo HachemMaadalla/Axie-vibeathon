@@ -64,6 +64,11 @@ export function createGardenCrop(crop:CropId,stage:number){
   if(crop==='sunroot'){const carrot=mesh(plant,new T.ConeGeometry(.23,.62,9),'#ffb449',0,.13,0);carrot.rotation.z=Math.PI+.18;for(let j=0;j<3;j++)box(plant,'#db792d',.04,.11+j*.11,.22,.18,.032,.025);}
   if(crop==='moonberry')for(let j=0;j<6;j++){const a=j*2.4;puff(plant,j%2?'#8371cf':'#5b4e9e',Math.cos(a)*.19,.43+(j%3)*.13,Math.sin(a)*.19,.17,.17,.17,.025);}
   if(crop==='embercorn'){mesh(plant,new T.CylinderGeometry(.15,.18,.8,8),'#ed9a2f',0,.51,0);for(let row=0;row<5;row++)for(let j=0;j<4;j++){const a=j*Math.PI/2;puff(plant,(row+j)%2?'#ffd05e':'#efa13b',Math.cos(a)*.16,.23+row*.145,Math.sin(a)*.16,.105,.11,.1);}for(const side of [-1,1]){const husk=puff(plant,'#509b43',side*.2,.35,0,.13,.45,.18,.03);husk.rotation.z=-side*.35;}}
+  if(crop==='cloudmelon'){const fruit=puff(plant,'#70d9d6',0,.29,0,.34,.28,.34,.02);for(let j=0;j<5;j++){const stripe=mesh(plant,new T.TorusGeometry(.28,.025,5,12),'#e5f1a2',0,.29,0);stripe.rotation.x=j*Math.PI/5;stripe.scale.y=.82;}puff(plant,'#448a56',0,.58,0,.12,.09,.12,.025);}
+  if(crop==='glowcap')for(let j=0;j<3;j++){const x=(j-1)*.28;mesh(plant,new T.CylinderGeometry(.06,.09,.38+j*.08,7),'#f4dbbc',x,.28,0);const cap=mesh(plant,new T.SphereGeometry(.24+j*.035,10,6,0,Math.PI*2,0,Math.PI/2),j===1?'#ef72c0':'#bc6fe0',x,.5+j*.08,0,1,.55,1);cap.material=windMaterial(j===1?'#ef72c0':'#bc6fe0',.025);}
+  if(crop==='starpepper')for(let j=0;j<3;j++){const a=j*2.1,pep=mesh(plant,new T.ConeGeometry(.2,.52,5),'#ff665b',Math.cos(a)*.21,.42+j*.08,Math.sin(a)*.21);pep.rotation.z=Math.PI+.35*Math.cos(a);puff(plant,'#4f9c4b',Math.cos(a)*.17,.7+j*.07,Math.sin(a)*.17,.12,.08,.12,.025);}
+  if(crop==='dewleaf')for(let j=0;j<6;j++){const a=j*1.047,leaf=puff(plant,j%2?'#53c7a0':'#79ded0',Math.cos(a)*.2,.4+(j%2)*.15,Math.sin(a)*.2,.1,.48,.16,.045);leaf.rotation.z=-Math.cos(a)*.45;leaf.rotation.x=Math.sin(a)*.45;if(j%2===0)puff(plant,'#baf9ff',Math.cos(a)*.26,.67,Math.sin(a)*.26,.055);}
+  if(crop==='crystalbean')for(let j=0;j<3;j++){const a=j*2.1;const pod=mesh(plant,new T.OctahedronGeometry(.27),'#6ba8ff',Math.cos(a)*.2,.43+j*.12,Math.sin(a)*.2,1,.6,1);pod.material=windMaterial(j%2?'#72a7ff':'#8f7cff',.025);box(plant,'#3c8756',Math.cos(a)*.1,.28,Math.sin(a)*.1,.04,.58,.04);}
  }
  return root;
 }

@@ -32,6 +32,6 @@ for(const id of HERO_IDS){
   assert.ok(Math.abs(held.rotation.y)<1e-6);
  }
  setFarmEquipment(actor,null);assert.ok(weapon.visible);assert.equal(actor.root.getObjectByName('farm-tools').visible,false);
- setFarmEquipment(actor,'water');assert.equal(actor.root.getObjectByName('farm-tools').children.length,7);
+ setFarmEquipment(actor,'water');assert.equal(actor.root.getObjectByName('farm-tools').children.length,12);
  console.log('PASS '+id+' hand tools stay scaled in motion and restore the combat weapon');
 }

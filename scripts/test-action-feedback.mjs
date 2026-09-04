@@ -20,15 +20,15 @@ check('E emits the correct art above the acted-on soil, with exact harvested qua
  g.farm.plots[index].growth=1;g.farm.plots[index].rich=true;g.selectFarmItem('sickle');g.interact();assert.equal(events[2][0],'harvest');assert.equal(events[2][2].amount,3);
 });
 check('Missing seeds, distant actions, and paused E never trigger a success icon',()=>{
- const {g,events}=fixture();const index=g.farm.plots.findIndex(p=>!p.crop);g.player.position.copy(plotPosition(index));g.farm.seeds.sunroot=0;g.interact();assert.equal(events.length,0);
- g.farm.seeds.sunroot=3;g.paused=true;g.interact();assert.equal(events.length,0);
+ const {g,events}=fixture();const index=g.farm.plots.findIndex(p=>!p.crop);g.player.position.copy(plotPosition(index));g.selectFarmItem('moonberry');g.farm.seeds.moonberry=0;g.interact();assert.equal(events.length,0);
+ g.farm.seeds.moonberry=3;g.paused=true;g.interact();assert.equal(events.length,0);
  g.paused=false;g.player.position.set(50,0,50);g.interact();assert.equal(events.length,0);
 });
 check('Soil, fertilizer, cooking, and portal rewards only animate on a real state change',()=>{
  const {g,events}=fixture();g.player.position.copy(plotPosition(0));g.farm.soil=2;g.farm.plots[0].rich=false;g.selectFarmItem('soil');g.improvePlot('soil');g.improvePlot('soil');assert.deepEqual(events.map(e=>e[0]),['soil']);
  g.farm.plots[0]={crop:'sunroot',growth:0,watered:false,rich:true,fertilized:false};g.farm.fertilizer=2;g.selectFarmItem('fertilizer');g.improvePlot('fertilizer');g.improvePlot('fertilizer');assert.equal(events.length,2);
  g.farm.crops.sunroot=2;g.cookMeal('sunroot');g.cookMeal('sunroot');assert.equal(events.length,3);assert.equal(events[2][2].anchor,'cook-sunroot');assert.equal(events[2][2].amount,1);assert.equal(events[2][2].crop,'sunroot');
- g.farm.crops.sunroot=4;g.farm.crops.moonberry=2;g.unlock();g.unlock();assert.equal(events.length,4);assert.equal(events[3][0],'unlock');
+ g.farm.crops.sunroot=24;g.craftDungeonKey(1);g.craftDungeonKey(1);assert.equal(events.length,4);assert.equal(events[3][0],'unlock');
 });
 check('World anchors follow the camera and hide points behind it; reduced motion has no bounce',()=>{
  const camera=new T.PerspectiveCamera(60,2,.1,100);camera.position.set(0,0,10);camera.lookAt(0,0,0);camera.updateMatrixWorld();

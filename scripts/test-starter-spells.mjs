@@ -8,7 +8,7 @@ const {createAxieActor}=await import('../lib/game/model.ts');
 const {EQUIPMENT,equipAxie}=await import('../lib/game/equipment.ts');
 const {SpellVisuals}=await import('../lib/game/spell-visuals.ts');
 function fixture(hero){
- const farm=freshFarm();farm.hero=hero;
+ const farm=freshFarm();farm.hero=hero;farm.keys.grove=2;
  return Object.assign(Object.create(WildseedGame.prototype),{farm,ready:true,started:true,mode:'farm',pickups:{clear(){}},actionFx:{clear(){}},spells:{clear(){}},fx:{clear(){}},clearHostiles(){},motor:{reset(){}},player:new T.Group(),followCamera:{snap(){}},farmWorld:new T.Group(),arena:new T.Group(),scene:new T.Scene(),save(){},toast(){}});
 }
 for(const hero of HERO_IDS){

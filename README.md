@@ -47,3 +47,5 @@ The farm uses a floating-island art direction: faceted stone cliffs, hanging vin
 Farm hotbar: 1–3 equip seeds, 4 the watering can, 5 the sickle, 6 fertilizer, and 7 rich soil. E uses the held item on the nearest reachable bed. Tools remain selected after use; watering and harvesting require their matching tool. Farm tools appear in the Axie hand and the character weapon returns in dungeons.
 
 The garden has shader-driven wind on tree crowns, vines, flowers, bushes and crops. The stream and waterfall ribbons ripple continuously; waterfall foam falls, chimney smoke rises, clouds drift, and lightweight windborne leaves cross the island. Reduced-motion preferences freeze ambient movement.
+
+Dungeon access uses consumable crafted keys. A Grove Key costs 24 Sunroot; a Hollow Key costs 12 Moonberry and 6 Glowcap. The portal crafts and displays each key, and entering consumes one. Sunroot seeds are unlimited and Sunroot takes 30 active seconds to grow after watering. The eight crops are Sunroot, Moonberry, Embercorn, Cloudmelon, Glowcap, Starpepper, Dewleaf and Crystalbean. Tier 1 and Tier 2 expeditions drop different seed pools.

@@ -3,7 +3,7 @@ import {registerHooks} from 'node:module';
 import * as T from 'three';
 registerHooks({resolve(s,c,next){try{return next(s,c)}catch(e){if(s.startsWith('.')&&!/\.[a-z]+$/i.test(s))return next(s+'.ts',c);throw e}}});
 const {BattlePickups,rollDrops}=await import('../lib/game/pickups.ts');
-const {freshFarm,hydrateFarm,PLOT_COUNT,emptyLoot,tend,settleExpedition}=await import('../lib/game/state.ts');
+const {freshFarm,hydrateFarm,PLOT_COUNT,CROP_IDS,emptyLoot,tend,settleExpedition}=await import('../lib/game/state.ts');
 const {plotPosition,nearestPlot}=await import('../lib/game/farming.ts');
 const {WildseedGame}=await import('../lib/game/scene.ts');
 const {makeEnemy}=await import('../lib/game/enemies.ts');
@@ -21,9 +21,9 @@ check('Every legacy bed and resource survives expansion; all new beds work with 
 check('Seed rarity is 8%, deeper seeds stay gated, and boss supplies also become drops',()=>{
  for(const tier of [1,2]){
   const counts=emptyLoot();for(let i=0;i<10000;i++)for(const drop of rollDrops(tier,false,()=> (i+.5)/10000))counts[drop.kind]+=drop.amount;
-  assert.equal(counts.sunroot+counts.moonberry+counts.embercorn,800);assert.equal(counts.fertilizer,400);assert.equal(counts.soil,200);
-  assert.equal(counts.embercorn,tier===1?0:200);
-  assert.deepEqual(rollDrops(tier,true),[{kind:tier===1?'moonberry':'embercorn',amount:1},{kind:'soil',amount:1}]);
+  assert.equal(CROP_IDS.reduce((n,id)=>n+counts[id],0),800);assert.equal(counts.fertilizer,400);assert.equal(counts.soil,200);
+  assert.equal(counts.sunroot,0);assert.equal(counts.embercorn,tier===1?0:200);
+  assert.deepEqual(rollDrops(tier,true),[{kind:tier===1?'glowcap':'crystalbean',amount:1},{kind:'soil',amount:1}]);
  }
 });
 check('Killing an actual guardian gives no remote XP or seeds; nearby pickups award exactly once',()=>{
@@ -33,11 +33,11 @@ check('Killing an actual guardian gives no remote XP or seeds; nearby pickups aw
  g.hurtEnemy(enemy,2);assert.equal(g.kills,1);assert.equal(g.xp,0);assert.deepEqual(g.loot,emptyLoot());assert.equal(g.enemies.length,0);assert.equal(pickups.items.length,3);
  const collect=(...args)=>g.collectDrop(...args);
  for(let i=0;i<120;i++)pickups.update(1/60,g.player.position,collect);
- g.queueUpgrade();assert.equal(g.xp,0);assert.equal(g.level,1);assert.equal(g.loot.moonberry,0);
+ g.queueUpgrade();assert.equal(g.xp,0);assert.equal(g.level,1);assert.equal(g.loot.glowcap,0);
  g.player.position.set(12,0,0);
  for(let i=0;i<60;i++)pickups.update(1/60,g.player.position,collect);
- assert.equal(g.xp,xp);assert.equal(g.loot.moonberry,1);assert.equal(g.loot.soil,1);assert.equal(pickups.items.length,0);
- pickups.update(1,g.player.position,collect);assert.equal(g.xp,xp);assert.equal(g.loot.moonberry,1);
+ assert.equal(g.xp,xp);assert.equal(g.loot.glowcap,1);assert.equal(g.loot.soil,1);assert.equal(pickups.items.length,0);
+ pickups.update(1,g.player.position,collect);assert.equal(g.xp,xp);assert.equal(g.loot.glowcap,1);
  g.xp=6;g.queueUpgrade();assert.equal(g.level,2);assert.ok(g.upgrade);pickups.dispose();
 });
 check('Drops rest above terrain, freeze with combat, attract during jumps and clear between runs',()=>{

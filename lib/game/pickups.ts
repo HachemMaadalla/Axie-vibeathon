@@ -7,10 +7,9 @@ export type Pickup={kind:PickupKind;amount:number;position:T.Vector3;ground:numb
 export type Drop={kind:PickupKind;amount:number};
 // One roll per monster: seeds 8%, fertilizer 4%, rich soil 2%.
 export function rollDrops(tier:number,boss=false,random:()=>number=Math.random):Drop[]{
- if(boss)return [{kind:tier===2?'embercorn':'moonberry',amount:1},{kind:'soil',amount:1}];
+ if(boss)return [{kind:tier===2?'crystalbean':'glowcap',amount:1},{kind:'soil',amount:1}];
  const r=random();
- if(r<.05)return [{kind:tier===2&&r<.02?'embercorn':'sunroot',amount:1}];
- if(r<.08)return [{kind:'moonberry',amount:1}];
+ if(r<.08){const pool:CropId[]=tier===2?['embercorn','starpepper','crystalbean','cloudmelon']:['moonberry','cloudmelon','glowcap','dewleaf'];return [{kind:pool[Math.min(pool.length-1,Math.floor(r/.08*pool.length))],amount:1}];}
  if(r<.12)return [{kind:'fertilizer',amount:1}];
  if(r<.14)return [{kind:'soil',amount:1}];
  return [];

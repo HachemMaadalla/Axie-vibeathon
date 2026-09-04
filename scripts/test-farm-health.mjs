@@ -18,7 +18,7 @@ check('Walking between beds only changes the highlighted target; E performs each
  for(let i=0;i<g.farm.plots.length;i++){g.player.position.copy(plotPosition(i));g.syncNearbyPlot();assert.equal(g.selected,i);}
  assert.equal(JSON.stringify(g.farm),before,'Proximity must never tend automatically');
  const index=g.farm.plots.findIndex(p=>!p.crop);assert.ok(index>=0);g.player.position.copy(plotPosition(index));
- const seeds=g.farm.seeds.sunroot;pressE(g);assert.equal(g.farm.plots[index].crop,'sunroot');assert.equal(g.farm.plots[index].watered,false);assert.equal(g.farm.seeds.sunroot,seeds-1);
+ const seeds=g.farm.seeds.sunroot;pressE(g);assert.equal(g.farm.plots[index].crop,'sunroot');assert.equal(g.farm.plots[index].watered,false);assert.equal(g.farm.seeds.sunroot,seeds,'Sunroot seeds are free');
  g.syncNearbyPlot();assert.equal(g.farm.plots[index].watered,false);pressE(g);assert.equal(g.farm.plots[index].watered,false,'Seeds cannot water');g.selectFarmItem('water');pressE(g);assert.equal(g.farm.plots[index].watered,true);
  g.farm.plots[index].growth=1;const crops=g.farm.crops.sunroot;g.syncNearbyPlot();assert.equal(g.farm.crops.sunroot,crops);
  pressE(g);assert.equal(g.farm.plots[index].crop,'sunroot','Can cannot harvest');g.selectFarmItem('sickle');pressE(g);assert.equal(g.farm.plots[index].crop,null);assert.ok(g.farm.crops.sunroot>crops);

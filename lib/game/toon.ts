@@ -1,5 +1,5 @@
 import * as T from 'three';
-const gradient=new T.DataTexture(new Uint8Array([52,136,255]),3,1,T.RedFormat);
+const gradient=new T.DataTexture(new Uint8Array([75,169,255]),3,1,T.RedFormat);
 gradient.minFilter=gradient.magFilter=T.NearestFilter;gradient.generateMipmaps=false;gradient.needsUpdate=true;
 export function toonMaterial(color:T.ColorRepresentation){
  return new T.MeshToonMaterial({color,gradientMap:gradient});
@@ -45,7 +45,7 @@ export class CartoonRenderer{
     ' float curvature=max(abs(l+r-2.0*center),abs(t+b-2.0*center));',
     ' float threshold=max(0.045,center*0.006);',
     ' float edge=smoothstep(threshold,threshold*2.8,curvature)*(1.0-smoothstep(95.0,160.0,center));',
-    ' gl_FragColor=vec4(mix(color.rgb,ink,edge*0.85),color.a);',
+    ' gl_FragColor=vec4(mix(color.rgb,ink,edge*0.58),color.a);',
     '#include <tonemapping_fragment>','#include <colorspace_fragment>','}'
    ].join('\n'),depthTest:false,depthWrite:false
   });
@@ -53,7 +53,7 @@ export class CartoonRenderer{
  }
  resize(width:number,height:number){
   const ratio=this.renderer.getPixelRatio();this.target.setSize(Math.max(1,Math.round(width*ratio)),Math.max(1,Math.round(height*ratio)));
-  this.material.uniforms.texel.value.set(1.2/width,1.2/height);
+  this.material.uniforms.texel.value.set(.9/width,.9/height);
  }
  render(scene:T.Scene,camera:T.PerspectiveCamera){
   this.material.uniforms.near.value=camera.near;this.material.uniforms.far.value=camera.far;

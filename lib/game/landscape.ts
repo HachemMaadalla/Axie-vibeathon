@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {cliffGeometry} from './garden-art';
 import {createTerrainMesh} from '../gameblocks/modules/world/environment/TerrainMeshFactory.js';
 import {createGroundRockVisual} from '../gameblocks/modules/world/object/factory/RockVisualFactory.js';
 import {RandomGenerator} from '../gameblocks/modules/math/RandomUtils.js';
@@ -66,7 +67,7 @@ function addGroundDetails(parent:T.Group){
 
 
 export function makeFarmLandscape(parent:T.Group){
- const mesh=createTerrainMesh({terrainSampler:{basis:dungeonTerrain.basis,sample:(x:number,f:number)=>({height:terrainHeight("farm",x,-f)+.02,color:new T.Color("#78c850")})},size:60,segments:48,includeCell:(x:number,f:number)=>Math.hypot(x,f)<30});
+ const mesh=createTerrainMesh({terrainSampler:{basis:dungeonTerrain.basis,sample:(x:number,f:number)=>({height:terrainHeight("farm",x,-f)+.02,color:new T.Color("#80bd52").lerp(new T.Color("#b5ce66"),.18+.17*Math.sin(x*.65)*Math.cos(f*.49))})},size:60,segments:48,includeCell:(x:number,f:number)=>Math.hypot(x,f)<30});
  mesh.material.dispose();const surface=toonMaterial("#ffffff");surface.vertexColors=true;mesh.material=surface;mesh.name="terrain-surface";mesh.userData.cameraIgnore=true;parent.add(mesh);
- const base=new T.Mesh(new T.CylinderGeometry(30,28,4,96),toonMaterial("#74577c"));base.position.y=-2.04;base.userData.cameraIgnore=true;parent.add(base);return mesh;
+ const cliffMat=toonMaterial("#ffffff");cliffMat.vertexColors=true;const base=new T.Mesh(cliffGeometry(),cliffMat);base.name="floating-island-cliffs";base.userData.cameraIgnore=true;parent.add(base);return mesh;
 }

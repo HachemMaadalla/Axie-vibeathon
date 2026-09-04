@@ -27,7 +27,7 @@ export class FollowCamera {
   this.yaw=T.MathUtils.euclideanModulo(this.yaw-dx*.005,Math.PI*2);
   this.pitch=T.MathUtils.clamp(this.pitch+dy*.004,.16,1.22);
  }
- zoom(delta:number){this.distance=T.MathUtils.clamp(this.distance*Math.exp(delta*.001),4.5,22);}
+ zoom(delta:number){this.distance=T.MathUtils.clamp(this.distance*Math.exp(delta*.001),4.5,42);}
  snap(player:T.Vector3){this.focus.copy(player).y+=1.1;this.zoomDistance=this.distance;this.place([]);}
  reset(yaw=0){this.yaw=yaw;this.pitch=.48;this.distance=10;}
  movement(x:number,z:number){return cameraMovement(x,z,this.yaw);}

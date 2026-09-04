@@ -34,7 +34,7 @@ export default function Home(){
 
   <header className="topbar quiet-topbar">
    <div className="wordmark"><Sprout/><strong>Wildseed</strong></div>
-   <div className="day-chip" aria-label={isFarm?'Day '+v.farm.day:'Expedition time'}>{isFarm?<Sun size={18}/>:<Moon size={18}/>} {isFarm?v.farm.day:v.exitReady?'Cleared':countTime(v.time)+' / 1:30'}</div>
+   <div className="day-chip" aria-label={isFarm?'Day '+v.farm.day:'Expedition time'}>{isFarm?<Sun size={18}/>:<Moon size={18}/>} {isFarm?'Day '+v.farm.day:v.exitReady?'Cleared':countTime(v.time)+' / 1:30'}</div>
    <nav className="utility" aria-label="Game controls">
     {started&&<button title="Inventory · I" aria-label="Inventory · I" onClick={()=>open('inventory')}><Package size={20}/><kbd>I</kbd></button>}
     {started&&<button title="Spells & combinations · B" aria-label="Spells & combinations" onClick={()=>open('build')}><Sparkles size={20}/><kbd>B</kbd></button>}
@@ -45,12 +45,12 @@ export default function Home(){
   </header>
   {!started&&<section className="quiet-welcome panel"><span className="menu-kicker">LUNACIA</span><h1>Wildseed</h1><button className="primary" disabled={!v.ready||!!v.error} onClick={()=>{setStarted(true);game.current?.setMuted(muted);game.current?.start();}}>{v.ready?'Enter Lunacia':'Loading...'}<Play size={18}/></button></section>}
   {started&&isFarm&&<>
-   {v.inReach&&!v.nearby&&<div className="farm-dock panel" aria-label="Garden actions">
+   {v.inReach&&!v.nearby&&<div className="farm-dock panel" data-action={!p.crop?"plant":p.growth>=1?"harvest":!p.watered?"water":"grow"} aria-label="Garden actions">
     <div className="seed-slots" aria-label="Select a seed">{cropIds.map((id,i)=><button key={id} className={'seed-slot '+id+(v.seed===id?' active':'')} title={CROPS[id].name+' · '+v.farm.seeds[id]+' seeds · '+(i+1)} aria-label={CROPS[id].name+' · '+v.farm.seeds[id]+' seeds'} aria-pressed={v.seed===id} onClick={()=>game.current?.selectSeed(id)}><LootArt kind="seed" crop={id} size={36}/><kbd>{i+1}</kbd><b>{v.farm.seeds[id]}</b></button>)}</div>
     <div className="tend-slot"><button className="primary compact-tend" disabled={!v.inReach||!!p.crop&&p.watered&&p.growth<1||!p.crop&&v.farm.seeds[v.seed]<1} onClick={()=>game.current?.tendPlot()}>{p.crop&&!p.watered&&p.growth<1?<Droplets size={17}/>:<Sprout size={17}/>} {actLabel}<kbd>E</kbd></button></div>
     <div className="supply-slots"><button title="Fertilizer · Speed up this crop" aria-label={'Fertilize nearest bed · '+v.farm.fertilizer+' available'} disabled={!v.inReach||!p.crop||p.growth>=1||p.fertilized||v.farm.fertilizer<1} onClick={()=>game.current?.improvePlot('fertilizer')}><LootArt kind="fertilizer" size={34}/><b>{v.farm.fertilizer}</b></button><button title="Rich soil · Improve growth and yield" aria-label={'Improve nearest bed soil · '+v.farm.soil+' available'} disabled={!v.inReach||p.rich||v.farm.soil<1} onClick={()=>game.current?.improvePlot('soil')}><LootArt kind="soil" size={34}/><b>{v.farm.soil}</b></button></div>
    </div>}
-   {v.nearby&&!modal&&!userPaused&&<button className="island-interact panel" onClick={()=>game.current?.interact()}><kbd>E</kbd>{v.nearby.hero?'Talk to '+HEROES[v.nearby.hero].name:v.nearby.label}</button>}
+   {v.nearby&&!modal&&!userPaused&&<button className="island-interact panel" onClick={()=>game.current?.interact()}><kbd>E</kbd>{v.nearby.hero?HEROES[v.nearby.hero].name:v.nearby.label}</button>}
   </>}
   {started&&!isFarm&&<>
    <aside className="vitals panel" aria-label="Expedition status"><img src={'/assets/axie/'+v.farm.hero+'.png'} alt={hero.name}/><div className="vitals-bars"><div><Heart size={14}/><b>{Math.ceil(v.hp)} / {v.maxHp}</b><span title="Level"><Star size={14}/>{v.level}</span></div><Progress value={v.hp/v.maxHp*100} className="health-progress" aria-label="Health"/><Progress value={v.xp/v.xpNext*100} className="xp-progress" aria-label={'Experience: '+v.xp+' / '+v.xpNext}/></div></aside><CombatBelt view={v} onOpen={()=>open('build')}/>
@@ -81,7 +81,7 @@ export default function Home(){
    <DialogDescription className="sr-only">Choose one upgrade.</DialogDescription>
    {v.upgrade&&<UpgradeCards key={v.level} choices={v.choices} build={v.build} onChoose={id=>game.current?.chooseUpgrade(id)}/>}
   </DialogContent></Dialog>
-  <Dialog open={v.result!==null} onOpenChange={value=>{if(!value)game.current?.dismissResult();}}><DialogContent className="game-dialog result-dialog"><DialogTitle className="dialog-title">{v.result?.outcome==='won'?'A pocketful of possibilities.':v.result?.outcome==='lost'?'Home is always here.':'A safe journey home.'}</DialogTitle><DialogDescription>{v.result?.outcome==='won'?'Guardian defeated. Your next harvest starts here.':'You kept half your collected finds.'}</DialogDescription>{v.result&&<><div className="result-stats"><span><Swords size={18}/>{v.result.kills} creatures defeated</span><span><Sun size={18}/>Day {v.farm.day}</span></div><div className="result-loot">{cropIds.map(id=><div key={id}><LootArt kind="seed" crop={id} size={32}/><strong>+{v.result!.loot[id]}</strong><span>{CROPS[id].name} seeds</span></div>)}<div><LootArt kind="fertilizer" size={32}/><strong>+{v.result.loot.fertilizer}</strong><span>Fertilizer</span></div><div><Mountain size={24}/><strong>+{v.result.loot.soil}</strong><span>Rich soil</span></div></div><button className="primary" onClick={()=>game.current?.dismissResult()}>Back to my garden <Sprout size={18}/></button></>}</DialogContent></Dialog>
+  <Dialog open={v.result!==null} onOpenChange={value=>{if(!value)game.current?.dismissResult();}}><DialogContent className="game-dialog result-dialog"><DialogTitle className="dialog-title">{v.result?.outcome==='won'?'Your haul':'Home again'}</DialogTitle><DialogDescription>{v.result?.outcome==='won'?'All finds kept.':'Half your finds kept.'}</DialogDescription>{v.result&&<><div className="result-stats"><span><Swords size={18}/>{v.result.kills}</span><span><Sun size={18}/>Day {v.farm.day}</span></div><div className="result-loot">{cropIds.map(id=><div key={id}><LootArt kind="seed" crop={id} size={32}/><strong>+{v.result!.loot[id]}</strong><span>{CROPS[id].name} seeds</span></div>)}<div><LootArt kind="fertilizer" size={32}/><strong>+{v.result.loot.fertilizer}</strong><span>Fertilizer</span></div><div><Mountain size={24}/><strong>+{v.result.loot.soil}</strong><span>Rich soil</span></div></div><button className="primary" onClick={()=>game.current?.dismissResult()}>Back to my garden <Sprout size={18}/></button></>}</DialogContent></Dialog>
  </main>;
 }
 

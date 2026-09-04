@@ -20,7 +20,7 @@ rig.snap(player);
 const focus=player.clone().add(new T.Vector3(0,1.1,0));
 assert.ok(Math.abs(camera.position.distanceTo(focus)-10)<1e-6);
 rig.zoom(-100000);assert.equal(rig.distance,4.5);
-rig.zoom(100000);assert.equal(rig.distance,22);
+rig.zoom(100000);assert.equal(rig.distance,42);
 rig.rotate(0,100000);assert.equal(rig.pitch,1.22);
 rig.rotate(0,-100000);assert.equal(rig.pitch,.16);
 rig.reset();rig.snap(player);

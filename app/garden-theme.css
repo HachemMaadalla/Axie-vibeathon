@@ -1,0 +1,142 @@
+/* Sky garden: cream rims, tactile buttons and compact illustrated equipment. */
+:root{--game-ink:#163b3e;--game-panel:#20494a;--game-gold:#ffe3a2;--game-brass:#d3b777;--game-text:#fff8e5;--game-muted:#c3d6cc}
+.game-shell, .game-dialog{font-family:"Trebuchet MS",var(--font-geist-sans),sans-serif}
+.game-shell .panel{background:#fff8e9f2;border:3px solid #fffef2;border-radius:17px;color:#244b48;box-shadow:0 4px 0 #2d6268,0 7px 18px #22485830}
+.game-shell .quiet-topbar{padding:18px 22px;background:none;gap:16px;pointer-events:none}
+.quiet-topbar>*{pointer-events:auto}
+.quiet-topbar .wordmark{height:48px;gap:7px;color:#fff7df;filter:drop-shadow(0 3px 0 #285667)}
+.quiet-topbar .wordmark>svg{display:block;width:40px;height:40px;color:#ffdf95;stroke-width:2.3}
+.quiet-topbar .wordmark strong{font-family:Georgia,serif;font-size:37px;letter-spacing:-1.3px;-webkit-text-stroke:1px #345b68;paint-order:stroke fill}
+.game-shell .day-chip{top:20px;padding:11px 16px;gap:8px;background:#fdf4df;border:3px solid #fffff3;border-radius:15px;box-shadow:0 4px #376970,0 5px 15px #21475224;color:#345950;font-size:14px}
+.day-chip svg{color:#e5a534;fill:#ffe4a0}
+.quiet-topbar .utility{gap:8px}
+.quiet-topbar .utility button{position:relative;width:44px;height:43px;border:3px solid #fffef4!important;border-radius:13px!important;background:linear-gradient(#fffdf2,#eee5cd)!important;color:#34625b!important;box-shadow:0 4px #35696a,0 5px 10px #183d4520}
+.quiet-topbar .utility button:hover{background:#fff5c7!important;transform:translateY(-1px)}
+.quiet-topbar .utility kbd{font:800 9px "Trebuchet MS",sans-serif;position:absolute;right:3px;bottom:2px;line-height:1;color:#4e7569}
+.game-shell button:focus-visible,.game-dialog button:focus-visible{outline:3px solid #ffe290;outline-offset:4px}
+.game-shell .primary,.game-dialog .primary{background:linear-gradient(#46d2b4,#23b49a)!important;border:2px solid #8bf1d4!important;border-bottom-color:#168d82!important;border-radius:13px!important;box-shadow:0 4px 0 #0e817a,inset 0 2px #ffffff55!important;color:#fffced!important;font-family:"Trebuchet MS",sans-serif;font-weight:900;text-shadow:0 2px #147f7480}
+.game-shell .secondary,.game-dialog .secondary{background:linear-gradient(#fff6db,#ead6ad)!important;color:#4f594a!important;border:2px solid #fff7e2!important;border-radius:11px!important;box-shadow:0 3px 0 #ae9571!important;font-family:"Trebuchet MS",sans-serif;font-weight:800}
+.game-shell button:active:not(:disabled),.game-dialog button:active:not(:disabled){translate:0 2px}
+.game-shell button:disabled,.game-dialog button:disabled{opacity:.48;filter:saturate(.5)}
+.game-shell .quiet-welcome{width:285px;padding:22px 24px 25px;bottom:10%;border:4px solid #fff8dc;background:#20494aec;color:#fff2d3;border-radius:22px;box-shadow:0 7px #133a43,0 18px 50px #123d4340}
+.quiet-welcome .menu-kicker{font-size:10px;color:#aaddc6;letter-spacing:.22em}
+.quiet-welcome h1{font:700 39px Georgia,serif;color:#ffe8b0;margin:4px 0 18px}
+.quiet-welcome .primary{font-size:18px;padding:14px 20px}
+.game-shell .farm-dock{bottom:23px;padding:9px 12px;gap:13px;border:4px solid #fffdf0;border-radius:21px;background:#fff6e7f5;box-shadow:0 5px #326963,0 10px 30px #284b4030}
+.farm-dock .seed-slots,.farm-dock .supply-slots{gap:6px}
+.farm-dock .seed-slot,.farm-dock .supply-slots button{width:55px;height:58px;border:2px solid #d8d1b7;border-radius:12px;background:linear-gradient(#e9edcb,#c4d1ac);box-shadow:inset 0 2px #ffffff80;color:#315546}
+.farm-dock .seed-slot.active{background:linear-gradient(#70dbc0,#34bca1);border:2px solid #eaffbf;box-shadow:0 0 0 2px #228e7b,inset 0 2px #bffff0}
+.farm-dock .seed-slot>.loot-art{width:43px!important;height:43px!important}
+.farm-dock .supply-slots .loot-art{width:41px!important;height:41px!important}
+.farm-dock .seed-slot b,.farm-dock .supply-slots b{position:absolute;bottom:3px;right:4px;min-width:16px;padding:1px 3px;border-radius:5px;background:#23534d;color:#fff8df;font-size:11px;line-height:1.2;text-shadow:none}
+.seed-slot kbd{font-size:9px;color:#245b4f;top:3px;left:4px}
+.farm-dock .tend-slot{width:161px}
+.farm-dock .compact-tend{height:57px;gap:8px;font-size:18px!important;padding:10px 13px!important;border-radius:13px!important}
+.farm-dock .compact-tend>svg{width:23px;height:23px}
+.farm-dock .compact-tend kbd{display:grid;place-items:center;margin-left:auto;width:23px;height:25px;border-radius:6px;background:#0d8e80;color:#dfffee;border:1px solid #a3f1d8;font-size:11px;text-shadow:none}
+.farm-dock[data-action="harvest"] .compact-tend{background:linear-gradient(#ffd16b,#ffae40)!important;border-color:#ffe7a1!important;border-bottom-color:#d68731!important;box-shadow:0 4px #c47a2f,inset 0 2px #fff3c3!important;text-shadow:0 2px #bc713c80}
+.farm-dock[data-action="harvest"] .compact-tend kbd{background:#d89139;border-color:#ffedbb;color:#fff8e3}
+.farm-dock[data-action="water"] .compact-tend{background:linear-gradient(#7bdbe9,#35b5d1)!important;border-color:#b4f5f7!important;box-shadow:0 4px #2584a3,inset 0 2px #dbffff!important}
+.game-shell .island-interact{font-size:16px;font-weight:800;gap:10px;padding:11px 20px;border-radius:16px}
+.game-shell .island-interact kbd{border:2px solid #f9ebc7;background:#2eb69d;border-radius:7px;box-shadow:0 2px #19756e;color:#fff9e6;font-weight:900}
+.game-shell .traversal-actions{right:22px;bottom:24px;gap:10px}
+.game-shell .traversal-actions button{width:54px;height:60px;border-radius:16px;color:#356158}
+.game-shell .traversal-actions kbd{font-size:9px;color:#567265;font-weight:bold}
+.game-shell .touch-controls button{border:3px solid #fffcf0;border-radius:13px;background:#fff7e4de;box-shadow:0 3px #386f6b;color:#35645e}
+.game-shell .vitals{top:84px;left:22px;padding:7px 11px 7px 7px;width:254px;border-width:3px}
+.vitals>img{width:49px;height:49px;background:#aecf9c;border:2px solid #e1edbd;border-radius:12px}
+.game-shell .vitals-bars>div:first-child{color:#39524d;font-weight:800}
+.game-shell .vitals-bars span{color:#487f71}
+.game-shell .health-progress{height:10px!important;background:#d4d8bd!important;border:1px solid #496f5a;border-radius:6px}
+.game-shell .health-progress [data-slot="progress-indicator"]{background:linear-gradient(#95e486,#4abc79)!important}
+.game-shell .xp-progress{height:6px!important;margin-top:5px;background:#d1d9d3!important;border-radius:4px}
+.game-shell .xp-progress [data-slot="progress-indicator"]{background:#5bbace!important}
+.game-shell .combat-belt{border:3px solid #fff7db;background:#254d4ced;border-radius:17px;padding:7px;gap:6px;box-shadow:0 4px #153f44}
+.combat-belt button{width:46px;height:53px;background:linear-gradient(#496e59,#2f594e);border:2px solid #a9b389;border-radius:10px!important;box-shadow:inset 0 1px #c4d29b44;color:#ffe6a0}
+.combat-belt .skill-art-icon{width:32px!important;height:32px!important}
+.game-shell .toast{background:#fff7e8ed;color:#355c50;border:2px solid #fffef4;border-radius:13px;box-shadow:0 3px #4c7b6b;font-size:12px}
+.game-dialog{background:linear-gradient(150deg,#2e5b56,#173c40)!important;color:#fff4d7!important;border:4px solid #fff1cb!important;border-radius:23px!important;box-shadow:0 7px 0 #173f45,0 24px 80px #072e4270!important;outline:1px solid #a8bb99;padding:23px!important}
+.game-dialog:before,.game-dialog:after{display:none!important}
+.game-dialog .dialog-title{font:700 29px/1.1 Georgia,serif!important;color:#ffe6ac!important;text-transform:none!important;letter-spacing:-.4px!important;padding-bottom:4px}
+.game-dialog>[data-slot="dialog-close"]{background:#fff0ce!important;color:#466257!important;border:2px solid #fffbed!important;border-radius:10px!important;box-shadow:0 3px #b2a180;right:13px;top:13px;width:29px;height:29px}
+.game-dialog.inventory-dialog{max-width:620px!important;border-radius:24px!important}
+.simple-inventory .inventory-grid{border:2px solid #bbbe95;border-radius:17px;background:#102e32;padding:12px;gap:9px}
+.simple-inventory .inventory-slot{border:2px solid #9ba78b;border-radius:13px;background:linear-gradient(145deg,color-mix(in srgb,var(--item-color,#b7c1ac) 22%,#456250),#284b44);box-shadow:inset 0 2px 0 #e9e1b330,0 3px 0 #0c282c;aspect-ratio:1}
+.simple-inventory .inventory-slot.inspected{border:3px solid #ffda7c;background:linear-gradient(#648962,#386659);box-shadow:0 0 0 2px #b37b37,inset 0 2px #deefb350}
+.simple-inventory .inventory-slot>.loot-art{width:57px!important;height:57px!important;max-width:88%}
+.simple-inventory .inventory-slot b{color:#fff9df;font-size:14px;right:6px;bottom:4px;-webkit-text-stroke:3px #203e38;paint-order:stroke fill;text-shadow:none}
+.simple-inventory .inventory-slot i{background:#42c49c;border:1px solid #caffd4;color:#fff;left:5px;top:5px;border-radius:4px}
+.simple-inventory .empty-slot{opacity:.35;background:#365950}
+.simple-inventory .empty-slot:after{color:#a0b89c}
+.game-dialog .pack-selection{border-top:2px solid #668b75;gap:13px;padding-top:14px}
+.game-dialog .pack-selection h3{font:700 22px Georgia,serif;color:#ffe7ac}
+.game-dialog .pack-selection p{color:#cfe2ce;font-size:12px}
+.game-dialog .pack-selection .primary{padding:11px 15px;min-width:96px;font-size:14px}
+.game-dialog .recipes{gap:12px}
+.game-dialog .recipe{background:linear-gradient(#3d695b,#285247);border:2px solid #93a884;border-radius:16px;padding:15px;gap:13px}
+.game-dialog .recipe-icon{width:70px;height:70px;background:#b6c58b;border:2px solid #e6e0ad;border-radius:16px;box-shadow:inset 0 2px #f6efd0}
+.game-dialog .recipe-icon .loot-art{width:65px!important;height:65px!important}
+.game-dialog .recipe h3{font:700 23px Georgia,serif;color:#ffe9bc}
+.game-dialog .recipe p,.game-dialog .recipe small{color:#d0e0c1}
+.game-dialog .recipe-actions{gap:9px}
+.game-dialog .recipe-actions .secondary{font-size:13px;padding:8px 13px}
+.game-dialog .portal-choice{border:2px solid #afc69d;border-radius:17px;background:radial-gradient(ellipse at 50% 10%,#619f77,#26554f 75%);color:#fff0cf;min-height:230px}
+.game-dialog .hollow-choice{background:radial-gradient(ellipse at top,#9182b3,#3b4c64);border-color:#ccbed5}
+.game-dialog .portal-choice strong{font-size:23px;font-weight:bold}
+.game-dialog .portal-gem{border-radius:45% 45% 40% 40%;border-width:6px}
+.game-dialog .companion-talk img{width:110px;height:110px;border:3px solid #d5d6a3;border-radius:21px;background:radial-gradient(#89b981,#3c7766)}
+.game-dialog .companion-talk p{font-size:23px;color:#ffe8b5}
+.companion-talk small,.companion-starter{color:#d5e6c5}
+.game-dialog.power-dialog{background:linear-gradient(#2f5c56,#15393e)!important;border:4px solid #fff1cb!important;border-radius:24px!important}
+.power-level{background:#f6c365;border:2px solid #ffedb0;border-radius:11px;color:#6b532f;box-shadow:0 3px #aa7a39}
+.level-card{background:radial-gradient(ellipse at 50% 20%,color-mix(in srgb,var(--skill-color) 28%,#426d5c),#284e47 75%)!important;border:3px solid #c3c49b;border-top-color:var(--skill-color);border-radius:19px;padding:15px;box-shadow:0 5px #102f32,inset 0 2px #e6edc438}
+.level-card:before{display:none}
+.level-card:hover:not(:disabled),.level-card:focus-visible{border-color:#ffdc89;box-shadow:0 5px #102f32,0 0 0 2px #c29554;transform:translateY(-3px)}
+.card-topline{font-size:11px;font-weight:900}
+.card-topline kbd{background:#f9edd3;color:#587157;border:1px solid #fff9e4;border-radius:6px;font-weight:900}
+.card-level{color:#d0e2cf}
+.level-art:before{border-color:#dce7ac55;background:#7ea78822}
+.level-art .skill-art-icon{mix-blend-mode:normal;box-shadow:0 5px 0 #173e3e55;border:2px solid #cadab566;border-radius:20px}
+.card-name{font-size:25px;font-weight:bold;color:#ffedc5}
+.card-effect{color:#e0ead1}
+.card-synergy{border-color:#78987c66}.card-synergy strong{color:#d9e6cd}
+.game-dialog .result-loot{gap:9px}
+.game-dialog .result-loot>div{background:#47755f;border:2px solid #9ab28e;border-radius:13px;padding:12px;color:#fff0c4}
+.game-dialog .result-loot strong{font:900 20px "Trebuchet MS",sans-serif;color:#ffedbb}
+.game-dialog .result-stats{color:#d4e4c8}
+.game-dialog .help-content,.game-dialog .help-content p,.game-dialog .help-content li{color:#d2e1cf}
+.game-dialog .credits{border-color:#829e8066}.game-dialog .credits a{color:#ffdda0}
+@media(max-width:900px){
+ .quiet-topbar .wordmark strong{font-size:30px}.quiet-topbar .wordmark>svg{width:32px;height:32px}
+ .game-shell .day-chip{top:77px;padding:7px 12px;font-size:12px}
+ .quiet-topbar .utility{gap:6px}.quiet-topbar .utility button{width:39px;height:39px}
+ .game-shell .vitals{top:80px}
+}
+@media(max-width:600px){
+ .game-shell .quiet-topbar{padding:12px;gap:9px}.quiet-topbar .wordmark{height:36px;gap:4px}.quiet-topbar .wordmark strong{font-size:25px}.quiet-topbar .wordmark>svg{width:26px;height:26px}
+ .quiet-topbar .utility{gap:5px}.quiet-topbar .utility button{width:33px;height:34px;border-width:2px!important;border-radius:10px!important}
+ .quiet-topbar .utility kbd{font-size:8px}
+ .game-shell .day-chip{top:61px;font-size:11px;padding:6px 10px;border-width:2px}
+ .game-shell .farm-dock{bottom:13px;width:calc(100% - 20px);gap:8px;padding:7px;border-width:3px;border-radius:17px}
+ .farm-dock .seed-slots,.farm-dock .supply-slots{gap:4px}.farm-dock .seed-slot,.farm-dock .supply-slots button{width:38px;height:49px;border-radius:10px}
+ .farm-dock .seed-slot>.loot-art,.farm-dock .supply-slots .loot-art{width:34px!important;height:34px!important}.farm-dock .tend-slot{width:116px}
+ .farm-dock .compact-tend{height:48px;font-size:13px!important;padding:8px!important;gap:5px}.farm-dock .compact-tend>svg{width:17px;height:17px}.farm-dock .compact-tend kbd{width:18px;height:20px;font-size:9px}
+ .game-shell .traversal-actions{right:14px;bottom:99px;gap:7px}.game-shell .traversal-actions button{width:45px;height:53px;border-radius:13px}
+ .game-shell .touch-controls{bottom:99px;left:14px}.game-shell .vitals{top:101px;left:12px;width:214px}.vitals>img{width:39px;height:39px}
+ .game-dialog{padding:17px!important;border-width:3px!important;border-radius:19px!important}
+ .game-dialog .dialog-title{font-size:25px!important}
+ .simple-inventory .inventory-grid{gap:6px;padding:8px;border-radius:13px}
+ .simple-inventory .inventory-slot>.loot-art{width:43px!important;height:43px!important}
+ .game-dialog .pack-selection .primary{min-width:74px;font-size:12px;padding:10px}
+ .game-dialog .pack-selection h3{font-size:18px}.game-dialog .pack-selection p{font-size:10px}
+ .game-dialog .recipe{grid-template-columns:58px 1fr;gap:10px;padding:12px}.game-dialog .recipe-icon{width:56px;height:56px;border-radius:13px}.game-dialog .recipe-icon .loot-art{width:52px!important;height:52px!important}
+ .game-dialog .recipe h3{font-size:19px}.game-dialog .recipe-actions .secondary{font-size:11px;padding:7px 10px}
+ .level-card{padding:10px;border-radius:14px}.card-name{font-size:21px}.card-effect{font-size:12px}
+ .game-shell .combat-belt{bottom:13px;gap:4px;padding:5px;border-radius:13px}.combat-belt button{width:35px;height:45px;border-radius:8px!important}
+}
+@media(max-width:380px){
+ .quiet-topbar .wordmark strong{font-size:22px}.quiet-topbar .wordmark>svg{display:none}
+ .quiet-topbar .utility{gap:4px}.quiet-topbar .utility button{width:31px}
+ .game-shell .farm-dock{gap:5px;padding:6px}.farm-dock .seed-slot,.farm-dock .supply-slots button{width:32px}.farm-dock .tend-slot{width:107px}.farm-dock .compact-tend{font-size:12px!important}
+}
+@media(prefers-reduced-motion:reduce){.game-shell button,.game-dialog button{transition:none!important}.game-shell button:active,.game-dialog button:active{translate:none}}

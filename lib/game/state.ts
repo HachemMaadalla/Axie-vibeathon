@@ -7,15 +7,15 @@ moonberry:{name:'Moonberry',color:'#b79cfa',seconds:75,description:'Sweet twilig
 embercorn:{name:'Embercorn',color:'#ff8562',seconds:95,description:'A rare crop found beyond the Bramble Gate.',meal:'Embercorn roast',effect:'+40% attack damage'}
 } as const;
 export const HEROES={pomodoro:{name:'Pomodoro',role:'The gentle gardener',perk:'Harvests have a 25% chance to return a seed.',color:'#f68d83'},bing:{name:'Bing',role:'The curious explorer',perk:'Starts each expedition with 20 extra health.',color:'#92d7ed'},kotaro:{name:'Kotaro',role:'The brave wayfarer',perk:'Deals 15% more damage in the wilds.',color:'#f3c382'}} as const;
-export type FarmState={version:1;hero:HeroId;seeds:Record<CropId,number>;crops:Record<CropId,number>;plots:Plot[];fertilizer:number;soil:number;meals:Record<CropId,number>;meal:CropId|null;unlocked:boolean;runs:number;harvests:number;clears:number;day:number};
-export const freshFarm=():FarmState=>({version:1,hero:'pomodoro',seeds:{sunroot:7,moonberry:3,embercorn:0},crops:{sunroot:0,moonberry:0,embercorn:0},plots:Array.from({length:12},(_,i)=>({crop:i<3?'sunroot':i===3?'moonberry':null,growth:i<4?1:0,watered:i<4,rich:false,fertilized:false})),fertilizer:2,soil:1,meals:{sunroot:0,moonberry:0,embercorn:0},meal:null,unlocked:false,runs:0,harvests:0,clears:0,day:1});
+export type FarmState={version:1;coins:number;hero:HeroId;seeds:Record<CropId,number>;crops:Record<CropId,number>;plots:Plot[];fertilizer:number;soil:number;meals:Record<CropId,number>;meal:CropId|null;unlocked:boolean;runs:number;harvests:number;clears:number;day:number};
+export const freshFarm=():FarmState=>({version:1,coins:30,hero:'pomodoro',seeds:{sunroot:7,moonberry:3,embercorn:0},crops:{sunroot:0,moonberry:0,embercorn:0},plots:Array.from({length:12},(_,i)=>({crop:i<3?'sunroot':i===3?'moonberry':null,growth:i<4?1:0,watered:i<4,rich:false,fertilized:false})),fertilizer:2,soil:1,meals:{sunroot:0,moonberry:0,embercorn:0},meal:null,unlocked:false,runs:0,harvests:0,clears:0,day:1});
 export function hydrateFarm(value:unknown):FarmState{
 const fresh=freshFarm();if(!value||typeof value!=='object')return fresh;const v=value as FarmState;if(v.version!==1||!Array.isArray(v.plots)||v.plots.length!==12)return fresh;
 const count=(n:unknown)=>typeof n==='number'&&Number.isFinite(n)?Math.max(0,Math.min(99999,Math.floor(n))):0;
 for(const key of ['seeds','crops','meals'] as const)for(const id of Object.keys(CROPS) as CropId[])fresh[key][id]=count(v[key]?.[id]);
 fresh.plots=v.plots.map(p=>({crop:p&&p.crop&&Object.hasOwn(CROPS,p.crop)?p.crop:null,growth:typeof p?.growth==='number'&&Number.isFinite(p.growth)?Math.max(0,Math.min(1,p.growth)):0,watered:p?.watered===true,rich:p?.rich===true,fertilized:p?.fertilized===true}));
 fresh.hero=Object.hasOwn(HEROES,v.hero)?v.hero:'pomodoro';fresh.meal=v.meal&&Object.hasOwn(CROPS,v.meal)?v.meal:null;fresh.unlocked=v.unlocked===true;
-for(const k of ['fertilizer','soil','runs','harvests','clears','day'] as const)fresh[k]=count(v[k]);fresh.day=Math.max(1,fresh.day);return fresh;}
+for(const k of ['fertilizer','soil','runs','harvests','clears','day'] as const)fresh[k]=count(v[k]);fresh.day=Math.max(1,fresh.day);fresh.coins=v.coins===undefined?30:count(v.coins);return fresh;}
 export function grow(farm:FarmState,seconds:number){for(const p of farm.plots)if(p.crop&&p.watered&&p.growth<1)p.growth=Math.min(1,p.growth+Math.max(0,seconds)/CROPS[p.crop].seconds*(p.rich?1.4:1)*(p.fertilized?1.8:1));}
 export function tend(farm:FarmState,index:number,seed:CropId,random=Math.random):string{
 if(!Number.isInteger(index)||index<0||index>=12||!(Object.hasOwn(CROPS,seed)))return 'Choose a garden bed.';const p=farm.plots[index];

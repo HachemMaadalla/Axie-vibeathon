@@ -59,9 +59,9 @@ export class SpellEngine{
    if(this.timers[id]!>0)continue;
    const candidates=near(player),origin=player.clone().add(new T.Vector3(0,.9,0));
    const list=id==="thorn"||id==="cannon"?candidates.filter(t=>!this.feedback.collision?.(origin,center(t))):candidates,target=list[0];if(!target||target.mesh.position.distanceTo(player)>17)continue;
-   const s=spellStats(build,id),damage=baseDamage*s.damage,color=s.evolved?SPELL_COLORS[id].evolved:SPELL_COLORS[id].base;
+   const s=spellStats(build,id),damage=baseDamage*s.damage*(build.mastery===id&&s.evolved?1.15:1),color=s.evolved?SPELL_COLORS[id].evolved:SPELL_COLORS[id].base;
    if(['sword','axe','hammer'].includes(id)&&(Math.hypot(target.mesh.position.x-player.x,target.mesh.position.z-player.z)>s.area+(target.radius??.6)||Math.abs(target.mesh.position.y-player.y)>2.2))continue;
-   this.timers[id]=s.cooldown;this.feedback.cast?.(id,target.mesh.position);this.feedback.audio?.play(id==='storm'?'storm':id==='cannon'?'cannon':id==='sword'||id==='axe'?'slash':'cast');
+   this.timers[id]=s.cooldown;this.feedback.cast?.(id,target.mesh.position);this.feedback.audio?.play(id==='storm'?'storm':id==='cannon'?'cannon':id==='sword'?'sword':id==='axe'?'axe':'cast');
    if(id==='cannon'){
     for(let i=0;i<s.count;i++){
      const aimed=list[i%Math.min(list.length,3)],origin=player.clone().add(new T.Vector3(0,.95,0)),aim=aimAt(aimed,origin,24).sub(origin).normalize();

@@ -2,11 +2,11 @@
 A Three.js browser prototype for Axie Vibeathon: cozy farming feeds survival expeditions, and expeditions supply the next harvest.
 
 ## Play
-Use WASD / arrow keys or click/tap terrain to move. Space jumps and double jumps, Shift sprints, and Q dashes. Move beside one of 24 farm beds and press E to plant, water or harvest the nearest bed. Cook two crops into a meal at the campfire. In dungeons, attacks fire automatically: collect dropped XP gems to level up and collect rare seed packets and supplies to bring home. Survive 90 seconds and defeat the guardian, then press E at the green return portal when ready to leave. Offer 4 Sunroot and 2 Moonberry at the farm portal to unlock Bramble Hollow and Embercorn seeds.
+Use WASD / arrow keys or click/tap terrain to move. Space jumps and double jumps, Shift sprints, and Q dashes. Move beside one of 24 farm beds and press E to plant, water or harvest the nearest bed. Cook two crops into a meal at the campfire. In dungeons, attacks fire automatically: collect dropped XP gems to level up and collect rare seed packets and supplies to bring home. Survive 90 seconds and defeat the guardian, then press E at the green return portal when ready to leave. Craft a Grove Key with 24 Sunroot at the farm portal. Deeper keys cost 12 Moonberry and 6 Glowcap.
 
 Seven playable Axies: Pomodoro, Bing, Kotaro, Kibo, Paladill, Tripp, and Xia, each with its own perk and official equipped weapon. Press E beside an island companion to switch. All ten Sapidae variants populate the island services and paths.
 Fertilizer accelerates a single crop. Rich soil permanently improves a bed's growth speed and yield.
-Four mature starter beds let players immediately test cooking and the gate offering.
+Four mature starter beds let players immediately test harvesting and cooking.
 
 ## Run
 Requires Node 22.13 or newer.
@@ -15,6 +15,7 @@ Requires Node 22.13 or newer.
 - npm run build
 - npx tsc --noEmit
 - node --experimental-strip-types scripts/test-game.mjs
+- node --experimental-transform-types scripts/test-roadmap.mjs
 
 Stack: Three.js, TypeScript, React, Vite/Vinext, existing Shadcn/Base UI primitives. No game backend, wallet or API key is required. Device-local saves use localStorage; expeditions themselves are not resumed after refresh. Crop timers run only during active play, including expeditions. Audio mixes official Axie Origins combat samples with synthesized pickup and movement cues. It starts after entering the game; the mute preference is saved locally.
 
@@ -40,12 +41,24 @@ Each expedition starts with one character weapon spell at level 1: Pomodoro / Th
 
 Battle drops use an 8% seed chance, 4% fertilizer chance and 2% soil chance per ordinary monster. Guardians drop one seed and one soil. Rewards enter the pack only on pickup; ending a run grants no extra seeds. Cleared runs retain all collected supplies, early returns and defeats retain half. Old 12-bed saves migrate to 24 beds while preserving existing crops and resources. The shop and currency system have been removed.
 
-The battle arena has a 120-unit radius (about half the area of the previous 170-unit arena). Biomes, hills, paths, bridges and landmarks fit the smaller footprint; vegetation counts follow its area.
+Both battle arenas use the same 30-unit floating-island footprint as home. They keep the grassy cel-shaded terrain, cliffs, sparse trees and natural rock cover while leaving out the farm, residents and service decorations.
 
 The farm uses a floating-island art direction: faceted stone cliffs, hanging vines, animated waterfalls, flower patches, a tiled cottage and mushroom pavilion. Cream-and-teal controls keep planting, watering and harvesting in one contextual E action. The camera opens with an island overview and remains freely orbitable during play.
 
-Farm hotbar: 1–3 equip seeds, 4 the watering can, 5 the sickle, 6 fertilizer, and 7 rich soil. E uses the held item on the nearest reachable bed. Tools remain selected after use; watering and harvesting require their matching tool. Farm tools appear in the Axie hand and the character weapon returns in dungeons.
+Farm hotbar: select one of eight seed types, the watering can, sickle, fertilizer, or rich soil. E uses the held item on the nearest reachable bed. Tools remain selected after use; watering and harvesting require their matching tool. Farm tools appear in the Axie hand and the character weapon returns in dungeons.
 
 The garden has shader-driven wind on tree crowns, vines, flowers, bushes and crops. The stream and waterfall ribbons ripple continuously; waterfall foam falls, chimney smoke rises, clouds drift, and lightweight windborne leaves cross the island. Reduced-motion preferences freeze ambient movement.
 
 Dungeon access uses consumable crafted keys. A Grove Key costs 24 Sunroot; a Hollow Key costs 12 Moonberry and 6 Glowcap. The portal crafts and displays each key, and entering consumes one. Sunroot seeds are unlimited and Sunroot takes 30 active seconds to grow after watering. The eight crops are Sunroot, Moonberry, Embercorn, Cloudmelon, Glowcap, Starpepper, Dewleaf and Crystalbean. Tier 1 and Tier 2 expeditions drop different seed pools.
+
+
+## Progression and atmosphere update
+The portal offers optional Elites, Rush, Bounty and Drought challenges. They trade difficulty for soil, fertilizer, doubled seed drops, or a returned key on clear. Drought blocks regeneration and level-up healing. Seed rarity stays at 8%, with each enemy favoring a different crop.
+
+Open the pack for four crop-funded permanent upgrades, each capped at three levels. At the campfire, combine two Moonberry with fertilizer to advance watered crops by 35%, or two Cloudmelon with fertilizer for four bonus harvests. Three clears with an Axie unlock its mastery bonus for its evolved starting weapon. All seven characters remain available.
+
+M opens the island map, discoveries and mastery collection. Level-up cards use short effect labels. Pause settings include saved volume and reduced motion preferences; touch farming tools use two rows of large targets.
+
+The farm has roaming chickens, butterflies, fireflies, a moving windmill and scarecrow, a four-minute day/night cycle, and seasonal foliage every four in-game days. Tier 1 stays bright and Tier 2 uses dusk lighting. Ambient movement pauses with the game and respects reduced motion.
+
+The roadmap integration suite verifies crop spending, save migration, compost quantities, character mastery, safe island spawns, drop rarity, challenges and bounded atmosphere objects. Visual and full mobile-device QA remain outstanding.

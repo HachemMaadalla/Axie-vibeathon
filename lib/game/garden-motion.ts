@@ -15,9 +15,11 @@ function track<M extends AnimatedMaterial>(material:M,strength:number,fall=false
  };
  material.customProgramCacheKey=()=>fall?'garden-fall-v1':'garden-wind-v1';return material;
 }
+let currentSeason=-1;
+export function setGardenSeason(season:number){if(season===currentSeason)return;currentSeason=season;for(const m of windCache.values()){const original=m.userData.originalColor as T.Color|undefined;if(!original)continue;m.color.copy(original);const hsl={h:0,s:0,l:0};original.getHSL(hsl);if(hsl.h>.16&&hsl.h<.48){if(season===2)m.color.lerp(new T.Color('#e9ae46'),.38);if(season===3)m.color.lerp(new T.Color('#b7d4cc'),.3);}}}
 const windCache=new Map<string,T.MeshToonMaterial>();
 export function windMaterial(color:string,strength=.12){
- const key=color+':'+strength;let material=windCache.get(key);if(!material){const created=toonMaterial(color);created.side=T.DoubleSide;material=track(created,strength);windCache.set(key,material);}return material;
+ const key=color+':'+strength;let material=windCache.get(key);if(!material){const created=toonMaterial(color);created.side=T.DoubleSide;material=track(created,strength);material.userData.originalColor=material.color.clone();windCache.set(key,material);currentSeason=-1;}return material;
 }
 export function waterMaterial(color:string,fall=false){
  const material=track(new T.MeshBasicMaterial({color,transparent:true,opacity:fall?.78:.88,side:fall?T.DoubleSide:T.FrontSide,depthWrite:false}),fall?.13:.045,fall);

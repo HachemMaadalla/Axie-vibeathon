@@ -43,6 +43,7 @@ export class CombatFX{
    const sprite=new T.Sprite(new T.SpriteMaterial({map,transparent:true,depthTest:false,depthWrite:false}));sprite.position.copy(point).add(new T.Vector3((Math.random()-.5)*.4,.6,0));sprite.scale.set(kill?1.2:.95,kill?.6:.475,1);this.root.add(sprite);this.texts.push({sprite,life:.6});
   }
  }
+ setReducedMotion(value:boolean){this.reduced=value;if(value)this.shake=0;}
  hurt(point:T.Vector3){this.burst(point,'#ff967e',14,5);this.shake=Math.max(this.shake,.14);}
  private discard(mesh:T.Mesh){mesh.removeFromParent();mesh.geometry.dispose();(mesh.material as T.Material).dispose();}
  update(dt:number,camera?:T.Camera){

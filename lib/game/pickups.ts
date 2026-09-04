@@ -1,15 +1,17 @@
 import * as T from 'three';
+import type {EnemyKind} from './enemies';
 import {CROPS,type CropId,type Loot} from './state';
+import {inkMaterial} from './spell-visuals';
 import {toonMaterial} from './toon';
 import {itemSprite} from './item-art';
 export type PickupKind='xp'|keyof Loot;
 export type Pickup={kind:PickupKind;amount:number;position:T.Vector3;ground:number;age:number;pulling:boolean;pullAge:number;visual?:T.Group};
 export type Drop={kind:PickupKind;amount:number};
 // One roll per monster: seeds 8%, fertilizer 4%, rich soil 2%.
-export function rollDrops(tier:number,boss=false,random:()=>number=Math.random):Drop[]{
+export function rollDrops(tier:number,boss=false,random:()=>number=Math.random,kind?:EnemyKind):Drop[]{
  if(boss)return [{kind:tier===2?'crystalbean':'glowcap',amount:1},{kind:'soil',amount:1}];
  const r=random();
- if(r<.08){const pool:CropId[]=tier===2?['embercorn','starpepper','crystalbean','cloudmelon']:['moonberry','cloudmelon','glowcap','dewleaf'];return [{kind:pool[Math.min(pool.length-1,Math.floor(r/.08*pool.length))],amount:1}];}
+ if(r<.08){const pool:CropId[]=tier===2?['embercorn','starpepper','crystalbean','cloudmelon']:['moonberry','cloudmelon','glowcap','dewleaf'];const favored:Record<string,number>={beetle:1,stalker:0,shaman:2,moth:3};const index=kind&&Object.hasOwn(favored,kind)?favored[kind]:Math.min(pool.length-1,Math.floor(r/.08*pool.length));return [{kind:pool[index],amount:1}];}
  if(r<.12)return [{kind:'fertilizer',amount:1}];
  if(r<.14)return [{kind:'soil',amount:1}];
  return [];
@@ -18,7 +20,7 @@ const MAX_PICKUPS=768;
 export class BattlePickups{
  readonly root=new T.Group();
  readonly items:Pickup[]=[];
- private gems:T.InstancedMesh;
+ private gems:T.InstancedMesh;private ink:T.InstancedMesh;
  private materials=new Map<PickupKind,T.Material>();
  private textures:T.Texture[]=[];
  private shapes:T.BufferGeometry[]=[];
@@ -32,6 +34,7 @@ export class BattlePickups{
   this.root.name='battle-pickups';parent.add(this.root);
   const gem=new T.OctahedronGeometry(.27),material=toonMaterial('#72f6cf');material.emissive.set('#0e6653');material.emissiveIntensity=.55;
   this.gems=new T.InstancedMesh(gem,material,MAX_PICKUPS);this.gems.count=0;this.gems.frustumCulled=false;this.gems.instanceMatrix.setUsage(T.DynamicDrawUsage);this.root.add(this.gems);
+  this.ink=new T.InstancedMesh(gem,inkMaterial(.055),MAX_PICKUPS);this.ink.instanceMatrix=this.gems.instanceMatrix;this.ink.frustumCulled=false;this.ink.count=0;this.gems.add(this.ink);
   this.shapes.push(gem);this.materials.set('xp',material);
   const loader=typeof document!=='undefined'?new T.TextureLoader():null;
   for(const id of Object.keys(CROPS) as CropId[]){
@@ -100,13 +103,13 @@ export class BattlePickups{
     this.matrix.compose(this.display,this.rotation,this.scale);this.gems.setMatrixAt(count++,this.matrix);
    }else if(p.visual){p.visual.position.copy(this.display);p.visual.rotation.y=Math.sin(this.clock*2)*.13;}
   }
-  this.gems.count=count;this.gems.instanceMatrix.needsUpdate=true;
+  this.gems.count=count;this.ink.count=count;this.gems.instanceMatrix.needsUpdate=true;
  }
  private removeVisual(p:Pickup){
   if(!p.visual)return;this.root.remove(p.visual);
   p.visual.traverse(o=>{if(o instanceof T.Mesh){if(!this.shapes.includes(o.geometry))o.geometry.dispose();if(![...this.materials.values()].includes(o.material as T.Material))(o.material as T.Material).dispose();}});
  }
- clear(){for(const p of this.items)this.removeVisual(p);this.items.length=0;this.gems.count=0;}
- dispose(){this.clear();this.root.removeFromParent();for(const geo of this.shapes)geo.dispose();for(const mat of this.materials.values())mat.dispose();for(const texture of this.textures)texture.dispose();}
+ clear(){for(const p of this.items)this.removeVisual(p);this.items.length=0;this.gems.count=0;this.ink.count=0;}
+ dispose(){this.clear();(this.ink.material as T.Material).dispose();this.ink.dispose();this.gems.dispose();this.root.removeFromParent();for(const geo of this.shapes)geo.dispose();for(const mat of this.materials.values())mat.dispose();for(const texture of this.textures)texture.dispose();}
 }
 

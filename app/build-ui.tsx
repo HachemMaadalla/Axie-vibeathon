@@ -29,8 +29,10 @@ export function UpgradeCards({choices,build,onChoose}:{choices:Choice[];build:Bu
    <span className="card-topline"><span>{evolution?'EVOLVE':c.kind==='heal'?'HEAL':owned?'UPGRADE':'NEW'}{!evolution&&c.kind!=='heal'&&<span className="card-level">{owned?owned+' → '+c.level:'Lv. 1'}</span>}</span><kbd>{index+1}</kbd></span>
    <span className="level-art"><ItemIcon id={c.id} size={128} evolved={evolution}/></span>
    <span className="card-name">{c.name}</span>
-   <span className="card-effect">{c.text}</span>
+   <span className="card-effect">{c.kind==='evolution'?'Awakened power':c.id==='heal'?c.text:shortEffect(c.id,c.level)}</span>
    {pair&&<span className={'card-synergy '+(pairOwned?'synergy-owned':'')} title={(evolution?'Evolved with ':'Evolves with ')+ITEMS[pair].name}><Plus size={13}/><ItemIcon id={pair} size={24}/><strong>{ITEMS[pair].name}</strong>{pairOwned&&<Check size={14}/>}</span>}
   </button>;
  })}</div>;
 }
+
+function shortEffect(id:ItemId,level:number){const text:Record<ItemId,string>={thorn:'Piercing thorns',petal:'Orbiting petals',spore:'Poison field',storm:'Chain lightning',ember:'Falling meteors',cannon:'Explosive shots',sword:'Straight vertical cut',hammer:'Ground shockwave',axe:'Wide sweeping cleave',sun:'More spell damage',wind:'Faster spells',dew:'Health + regeneration',echo:'Extra projectiles',heart:'Larger spell area'};return text[id]+(level>1?' ↑':'');}

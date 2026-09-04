@@ -6,7 +6,7 @@ const {makeEnemy,updateEnemy,disposeEnemy,ENEMY_INFO,enemyKindFor}=await import(
 const {EnemyBatch}=await import('../lib/game/enemy-batch.ts');
 const {CombatFX}=await import('../lib/game/combat-fx.ts');
 const {SpellEngine}=await import('../lib/game/spell-engine.ts');
-const {WORLD_RADIUS,terrainHeight,terrainBiome,BRIDGES,riverX,isWater}=await import('../lib/game/terrain.ts');
+const {WORLD_RADIUS,terrainHeight,terrainBiome,BRIDGES,isWater}=await import('../lib/game/terrain.ts');
 const {freshBuild,eligibleChoices,applyChoice,xpNeeded}=await import('../lib/game/build.ts');
 let passed=0;const check=(name,fn)=>{fn();passed++;console.log('PASS '+name);};
 const noop=()=>{};const events={telegraph:noop,projectile:noop,slam:noop,damage:noop};
@@ -65,11 +65,10 @@ check('Particle and warning pools remain bounded and reduced motion disables cam
  fx.update(2);assert.equal(fx.root.children[0].count,0);assert.equal(fx.root.children.length,1);
  fx.dispose();assert.equal(scene.children.length,0);
 });
-check('Four biomes, river crossings, peaks, and the compact 120-unit arena',()=>{
- assert.equal(WORLD_RADIUS.dungeon,120);
- assert.equal(new Set([[0,0],[100,0],[-100,0],[0,100]].map(([x,z])=>terrainBiome(x,z))).size,4);
- for(const z of BRIDGES){assert.ok(terrainHeight('dungeon',riverX(z),z)>=1);assert.equal(isWater(riverX(z),z),false);}
- assert.ok(terrainHeight('dungeon',-104*120/170,-85*120/170)>12);assert.equal(terrainHeight('dungeon',0,0),0);
+check('Combat uses the same compact grassy-island footprint as home',()=>{
+ assert.equal(WORLD_RADIUS.dungeon,WORLD_RADIUS.farm);assert.equal(WORLD_RADIUS.dungeon,30);
+ assert.equal(terrainBiome(20,20),'woodland');assert.equal(BRIDGES.length,0);assert.equal(isWater(0,20),false);
+ assert.equal(terrainHeight('dungeon',0,0),0);assert.ok(terrainHeight('dungeon',15,13)>2.5);assert.ok(terrainHeight('dungeon',29,0)<.1);
 });
 check('A full mixed-enemy run earns levels and an evolution while traversing the terrain',()=>{
  const engine=new SpellEngine(new T.Scene()),b=freshBuild();applyChoice(b,eligibleChoices(b).find(c=>c.id==='storm'));

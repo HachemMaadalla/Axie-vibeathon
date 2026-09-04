@@ -184,3 +184,45 @@
 @media(max-width:600px){.plot-prompt{width:184px;padding:10px;gap:4px 8px;grid-template-columns:32px 1fr}.plot-prompt-art{width:32px;height:38px}.plot-prompt-copy strong{font-size:14px}.plot-prompt-action{font-size:13px}}
 
 .portal-key{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;min-height:34px}.portal-key>b{padding:5px 9px;border-radius:8px;background:#183a38;color:#ffe09a;font-size:14px}.portal-key>span{display:flex;align-items:center;gap:2px;font-size:12px;font-weight:800;color:#fff2d0}.portal-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;width:100%}.portal-actions button{padding:9px 7px!important;font-size:12px}.farm-hotbar{max-width:calc(100vw - 20px);scrollbar-width:thin}.farm-hotbar .farm-slot{flex-shrink:0}@media(max-width:600px){.farm-hotbar .farm-slot{flex:1 1 0;min-width:27px}.farm-hotbar .farm-slot>.loot-art{width:28px!important;height:28px!important}.farm-slot kbd{font-size:8px}.farm-slot b{font-size:9px}}
+
+
+/* Compact progression controls inherit the game's cream rims and deep teal panels. */
+.world::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 48%,#fa795d);opacity:var(--hurt-opacity,0);z-index:3}
+.compact-fold{border-top:1px solid #cbb77c55;padding:12px 0;color:#f8e7bd;text-align:left}
+.compact-fold summary{cursor:pointer;font-weight:800;font-size:14px;min-height:32px;list-style:none;display:flex;gap:8px;align-items:center}
+.compact-fold summary::after{content:"+";margin-left:auto;font-size:20px}.compact-fold[open] summary::after{content:"−"}
+.compact-fold summary small{font-size:13px;color:#bacdb9}
+.roots-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:8px}
+.roots-grid button{display:grid;place-items:center;gap:7px;padding:15px 9px;border-radius:12px;border:1px solid #e5c78a;background:#1e423b;color:#ffe6ad;min-height:135px}
+.roots-grid strong{font-size:15px}.roots-grid span{font-size:13px;color:#c8d6bf}.roots-grid small{display:flex;align-items:center;gap:4px;font-size:14px}
+.roots-grid button:disabled{opacity:.55}.roots-grid button:hover:enabled{background:#2e6050}
+.challenge-options{display:flex;gap:5px;flex-wrap:wrap;justify-content:center}
+.challenge-options button{background:#183a38;border:1px solid #68856c;border-radius:9px;color:#ecdcb8;padding:9px 11px;font-size:14px}
+.challenge-options button[aria-pressed=true]{background:#e7bd73;color:#193f35;border-color:#ffe5a7}
+.challenge-hint{text-align:center;font-size:14px;color:#d5ddc1;margin:11px 0 18px;min-height:18px}
+.mastery-badge{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;color:#ffe29b;margin:7px 0}
+.mastery-badge small{width:100%;font-size:13px;color:#baccb3}.mastery-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mastery-list>div{display:flex;align-items:center;gap:8px}.mastery-list img{width:52px;height:52px;object-fit:contain}
+.map-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#ffe4ae;font-size:16px}.map-caption span{font-size:14px;color:#b4cdb8}
+.island-map{display:block;width:min(100%,310px);max-height:34vh;margin:10px auto}
+.map-legend{display:flex;justify-content:center;gap:18px;margin-bottom:12px;color:#e6d7b7;font-size:14px}.map-legend span{display:flex;gap:5px;align-items:center}
+.discovery-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:7px}
+.discovery-grid button{display:grid;place-items:center;aspect-ratio:1;border:1px solid #6e8270;border-radius:9px;background:#193c38;color:#a4b39b;min-height:44px}
+.discovery-grid button[aria-pressed=true]{border:2px solid #ffdd94;background:#3e604a}
+.discovery-caption{min-height:40px;color:#e8d8b6;font-size:14px;line-height:1.5}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0;font-size:14px;color:#f4e2bb}
+.setting-row input[type=checkbox]{width:22px;height:22px;accent-color:#35c9a4}.setting-row input[type=range]{width:115px;accent-color:#35c9a4}
+.save-status{display:flex;justify-content:center;align-items:center;gap:6px;font-size:13px;margin:15px 0;color:#acd3b7}
+.evolution-book>p{display:none}
+.game-shell .card-synergy strong{display:none}
+.game-shell .card-effect{font-size:14px;line-height:1.35;min-height:38px}
+@media(max-width:600px){
+ .game-shell .farm-hotbar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));max-width:410px;overflow:visible}
+ .game-shell .farm-hotbar .farm-slot{width:100%;height:44px;min-width:40px}
+ .game-shell:not(.in-dungeon) .island-interact{bottom:155px}
+ .game-shell:not(.in-dungeon) .traversal-actions,.game-shell:not(.in-dungeon) .touch-controls{bottom:145px}
+ .game-shell .utility{gap:3px}.game-shell .utility button{width:32px;height:34px}.game-shell .wordmark strong{font-size:18px}
+ .mastery-list{grid-template-columns:1fr}.discovery-grid{grid-template-columns:repeat(5,1fr)}
+ .challenge-options button{padding:9px 8px}
+}
+@media(prefers-reduced-motion:reduce){.game-shell *{animation-duration:.001ms!important;transition-duration:.001ms!important}}

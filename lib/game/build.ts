@@ -2,7 +2,7 @@ import type {HeroId} from './state';
 export type WeaponId='thorn'|'petal'|'spore'|'storm'|'ember'|'cannon'|'sword'|'hammer'|'axe';
 export type PassiveId='sun'|'wind'|'dew'|'echo'|'heart';
 export type ItemId=WeaponId|PassiveId;
-export type Build={items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
+export type Build={mastery?:WeaponId;heroMastery?:HeroId;items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
 export const WEAPONS:WeaponId[]=['thorn','petal','spore','storm','ember','cannon','sword','hammer','axe'];
 export const PASSIVES:PassiveId[]=['sun','wind','dew','echo','heart'];
 export const SLOT_LIMIT=4;
@@ -102,6 +102,16 @@ export function spellStats(b:Build,id:WeaponId){
   if(id==='storm'){base.count=8;base.damage*=2;base.cooldown=1.4;}
   if(id==='ember'){base.count=5;base.area=2.6;base.damage*=1.4;base.duration=4;}
  }
+ if(evolved&&buildMastery(b,id)){
+  if(b.heroMastery==='bing')base.count++;
+  if(b.heroMastery==='kotaro')base.area*=1.2;
+  if(b.heroMastery==='kibo')base.area*=1.2;
+  if(b.heroMastery==='paladill')base.damage*=1.2;
+  if(b.heroMastery==='tripp')base.cooldown*=.85;
+  if(b.heroMastery==='xia'){base.area*=1.15;base.cooldown*=.9;}
+ }
  return {...base,count:base.count+(['spore','sword','hammer','axe'].includes(id)?0:m.extra),area:base.area*m.area,damage:base.damage*m.damage,cooldown:base.cooldown*m.cooldown,level,evolved};
 }
 
+
+function buildMastery(b:Build,id:WeaponId){return !!b.heroMastery&&STARTER_SPELL[b.heroMastery]===id;}

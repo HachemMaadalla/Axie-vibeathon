@@ -22,7 +22,7 @@ export class MovementMotor{
   this.jumpBuffer=Math.max(0,this.jumpBuffer-dt);
   const desired=input.clone().multiplyScalar(speed*(sprint?1.55:1));
   if(this.dashLeft>0)this.velocity.copy(this.dashDirection).multiplyScalar(29);
-  else this.velocity.lerp(desired,1-Math.exp(-dt*(this.grounded?20:6)));
+  else this.velocity.lerp(desired,1-Math.exp(-dt*(this.grounded?(input.lengthSq()<.01?28:24):12)));
   // Substeps stop a fast dash skipping raised terrain or the edge of the island.
   const steps=Math.max(1,Math.ceil(this.velocity.length()*dt/.25)),sub=dt/steps;
   for(let i=0;i<steps;i++){

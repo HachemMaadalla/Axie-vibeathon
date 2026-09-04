@@ -30,7 +30,7 @@ for(const id of ['sword','axe','hammer']){
  const engine=new SpellEngine(new T.Scene()),front={mesh:new T.Group(),hp:100,boss:false},back={mesh:new T.Group(),hp:100,boss:false},far={mesh:new T.Group(),hp:100,boss:false};
  front.mesh.position.set(0,0,2);back.mesh.position.set(0,0,-3);far.mesh.position.set(0,0,12);
  engine.update(.016,new T.Vector3(),{items:{[id]:1},evolved:[]},18,[front,back,far],(t,d)=>t.hp-=d);
- assert.ok(front.hp<100);assert.equal(far.hp,100);assert.equal(back.hp<100,id==='hammer');engine.dispose();
+ assert.equal(front.hp,100,"Melee waits for the swing wind-up");for(let i=0;i<10;i++)engine.update(.016,new T.Vector3(),{items:{[id]:1},evolved:[]},18,[front,back,far],(t,d)=>t.hp-=d);assert.ok(front.hp<100);assert.equal(far.hp,100);assert.equal(back.hp<100,id==='hammer');engine.dispose();
 }
 const visual=new SpellVisuals(),arc=visual.slash(new T.Vector3(),3,0,Math.PI*.9,'#ffffff');arc.geometry.computeBoundingBox();assert.ok(arc.geometry.boundingBox.min.z>=0,'Forward slash points toward +Z, matching its damage cone');visual.release(arc);visual.dispose();
 console.log('PASS Melee range, forward arcs, and shockwave coverage agree with their visuals');

@@ -18,3 +18,10 @@ No Stardew Valley or Vampire Survivors artwork, audio, code, or characters are i
 
 
 GameBlocks terrain and rock modules: https://github.com/xt4d/GameBlocks, revision 668b7d8a558e23c800e619b33a72c5f8844c4b75. Copyright (c) 2026 Weihao Cheng, MIT. See gameblocks_usage.md and public/licenses/GameBlocks-LICENSE.txt.
+
+
+## Official Axie Origins audio
+Source: https://github.com/axieinfinity/axie-origins-asset-kit
+Pinned revision: 069a59b772e54633d04a3d9d12ecde73b3e4be5d
+13 original WAV files in public/assets/audio: plant_projectile_attack, plant_projectile_hit, beast_smash_attack, beast_slash_attack, mech_projectile_attack, mech_smash_attack, mech_cast_hit, mech_projectile_hit, beast_bite_attack, power_gain, power_awaken, leaf, beast_fly.
+Sky Mavis retains the rights. Used under the asset kit's limited permission for Axie Vibeathon; this is not a general open-source audio license. Preserve public/licenses/axie-origins-audio-LICENSE.md. Source WAVs are unmodified; playback normalizes volume, trims leading silence, varies pitch slightly, and fades capped voices in the browser.

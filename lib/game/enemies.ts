@@ -6,13 +6,13 @@ export const ENEMY_INFO={
  beetle:{name:'Bramble Scarab',color:'#df9963',hp:40,speed:3.5,radius:.95,aim:.85,xp:1},
  stalker:{name:'Root Reaver',color:'#93b978',hp:29,speed:4.7,radius:.7,aim:1,xp:1},
  shaman:{name:'Spore Hexer',color:'#b79de5',hp:35,speed:3,radius:.75,aim:1.1,xp:2},
- moth:{name:'Lantern Moth',color:'#76d6da',hp:22,speed:5.8,radius:.85,aim:.6,xp:1},
+ moth:{name:'Lantern Moth',color:'#76d6da',hp:18,speed:5.8,radius:.85,aim:.6,xp:1},
  guardian:{name:'Elder Thornwarden',color:'#d1b875',hp:720,speed:3.6,radius:2,aim:2.3,xp:12}
 } as const;
 export type EnemyUnit={
  mesh:T.Group;visual:T.Group;kind:EnemyKind;hp:number;max:number;speed:number;boss:boolean;bar:HealthBar;
  phase:number;state:'seek'|'windup'|'attack'|'recover';timer:number;cooldown:number;heading:T.Vector3;push:T.Vector3;
- flash:number;rig:{legs:T.Group[];arms:T.Group[];wings:T.Group[];head:T.Group;body:T.Group;materials:T.MeshToonMaterial[]};
+ flash:number;stagger:number;rig:{legs:T.Group[];arms:T.Group[];wings:T.Group[];head:T.Group;body:T.Group;materials:T.MeshToonMaterial[]};
  radius:number;aimHeight:number;xpValue:number;spawnAge:number;
 };
 export type EnemyEvents={
@@ -79,7 +79,7 @@ export function makeEnemy(kind:EnemyKind,tier=1,phase=0):EnemyUnit{
  const bar=new HealthBar(kind==='guardian'?3.2:1.4,kind==='guardian'?.24:.18,'#f36768');
  bar.position.y=kind==='guardian'?6.8:kind==='moth'?2.05:2.65;mesh.add(bar);
  const max=info.hp*(1+(tier-1)*.4);
- return {mesh,visual,kind,hp:max,max,speed:info.speed,boss:kind==='guardian',bar,phase,state:'seek',timer:0,cooldown:.7+phase%1.5,heading:new T.Vector3(),push:new T.Vector3(),flash:0,rig:{legs,arms,wings,head,body,materials:[...materials.values()]},radius:info.radius,aimHeight:info.aim,xpValue:info.xp,spawnAge:0};
+ return {mesh,visual,kind,hp:max,max,speed:info.speed,boss:kind==='guardian',bar,phase,state:'seek',timer:0,cooldown:.7+phase%1.5,heading:new T.Vector3(),push:new T.Vector3(),flash:0,stagger:0,rig:{legs,arms,wings,head,body,materials:[...materials.values()]},radius:info.radius,aimHeight:info.aim,xpValue:info.xp,spawnAge:0};
 }
 export function disposeEnemy(e:EnemyUnit){
  e.mesh.removeFromParent();const geometry=new Set<T.BufferGeometry>(),materials=new Set<T.Material>();
@@ -87,7 +87,8 @@ export function disposeEnemy(e:EnemyUnit){
  geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
 }
 export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,height:(x:number,z:number)=>number,slow:number,events:EnemyEvents){
- e.spawnAge+=dt;e.cooldown-=dt;e.flash=Math.max(0,e.flash-dt);
+ const hitStop=e.stagger>0;e.stagger=Math.max(0,e.stagger-dt);const moveDt=hitStop?dt*.12:dt;
+ e.spawnAge+=dt;e.cooldown-=moveDt;e.flash=Math.max(0,e.flash-dt);
  const delta=player.clone().sub(e.mesh.position);delta.y=0;const distance=delta.length(),direction=delta.normalize();
  const {body,legs,arms,wings,materials}=e.rig;
  const phase=time*(e.kind==='moth'?12:8)+e.phase;
@@ -96,14 +97,14 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
  wings.forEach((wing,i)=>{wing.rotation.y=Math.sin(phase)*(i===0?1:-1)*.75;});
  body.position.y=Math.abs(Math.sin(phase))*.06;
  const size=e.boss?2.15:1,spawn=Math.min(1,e.spawnAge*5);
- e.visual.scale.set(size*(e.flash>0?1.1:1)*spawn,size*(e.flash>0?.88:1)*spawn,size*(e.flash>0?1.1:1)*spawn);
+ e.visual.scale.set(size*(1+Math.min(1,e.flash/.09)*.12)*spawn,size*(1-Math.min(1,e.flash/.09)*.15)*spawn,size*(1+Math.min(1,e.flash/.09)*.12)*spawn);
  for(const m of materials){m.emissive.set(e.flash>0?'#fff4d4':m.userData.glow?m.color:'#000000');m.emissiveIntensity=e.flash>0?1.2:m.userData.glow?.65:0;}
  e.bar.visible=e.hp>0&&e.spawnAge>.2;e.bar.update(e.hp,e.max,dt);
  if(e.state==='seek'){
   e.mesh.rotation.y=Math.atan2(direction.x,direction.z);
   const range=e.kind==='shaman'?12:e.boss?8:e.kind==='beetle'?10:2.1;
   const movement=e.kind==='shaman'?(distance<8?-1:distance>12?1:0):1;
-  if(distance>1.1||movement<0)e.mesh.position.addScaledVector(direction,e.speed*(distance>26?1.8:1)*movement*dt*slow);
+  if(distance>1.1||movement<0)e.mesh.position.addScaledVector(direction,e.speed*(distance>26?1.8:1)*movement*moveDt*slow);
   if(distance<range&&e.cooldown<=0){
    e.state='windup';e.timer=e.boss?1:e.kind==='beetle'?.7:e.kind==='shaman'?.8:.32;
    e.heading.copy(direction);
@@ -111,7 +112,7 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
    else if(e.kind==='beetle')events.telegraph(e.mesh.position.clone().addScaledVector(e.heading,4),1.1,e.timer);
   }
  }else if(e.state==='windup'){
-  e.timer-=dt;
+  e.timer-=moveDt;
   if(e.timer<=0){
    e.state='attack';e.timer=e.kind==='beetle'?.65:.18;
    if(e.kind==='shaman'){
@@ -121,13 +122,13 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
    if(e.boss)events.slam(e.mesh.position.clone(),10);
   }
  }else if(e.state==='attack'){
-  e.timer-=dt;
-  if(e.kind==='beetle')e.mesh.position.addScaledVector(e.heading,17*dt*slow);
-  else if(e.kind==='stalker'||e.kind==='moth')e.mesh.position.addScaledVector(e.heading,9*dt*slow);
+  e.timer-=moveDt;
+  if(e.kind==='beetle')e.mesh.position.addScaledVector(e.heading,17*moveDt*slow);
+  else if(e.kind==='stalker'||e.kind==='moth')e.mesh.position.addScaledVector(e.heading,9*moveDt*slow);
   const attackDistance=Math.hypot(player.x-e.mesh.position.x,player.z-e.mesh.position.z);
   if(e.kind!=='shaman'&&!e.boss&&attackDistance<e.radius+.7&&Math.abs(player.y-e.mesh.position.y)<1.4)events.damage(e.kind==='beetle'?15:9,e.mesh.position);
   if(e.timer<=0){e.state='recover';e.timer=e.boss?1:e.kind==='beetle'?.8:.45;}
- }else{e.timer-=dt;if(e.timer<=0){e.state='seek';e.cooldown=e.boss?2.8:e.kind==='shaman'?1.8:1;}}
+ }else{e.timer-=moveDt;if(e.timer<=0){e.state='seek';e.cooldown=e.boss?2.8:e.kind==='shaman'?1.8:1;}}
  e.mesh.position.addScaledVector(e.push,dt);e.push.multiplyScalar(Math.exp(-dt*12));
  e.mesh.position.y=height(e.mesh.position.x,e.mesh.position.z)+(e.kind==='moth'?(e.state==='attack'?.25:1.1+Math.sin(time*3+e.phase)*.25):0);
 }

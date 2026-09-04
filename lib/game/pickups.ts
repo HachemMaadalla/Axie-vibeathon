@@ -2,7 +2,7 @@ import * as T from 'three';
 import {CROPS,type CropId,type Loot} from './state';
 import {toonMaterial} from './toon';
 export type PickupKind='xp'|keyof Loot;
-export type Pickup={kind:PickupKind;amount:number;position:T.Vector3;ground:number;age:number;pulling:boolean;visual?:T.Group};
+export type Pickup={kind:PickupKind;amount:number;position:T.Vector3;ground:number;age:number;pulling:boolean;pullAge:number;visual?:T.Group};
 export type Drop={kind:PickupKind;amount:number};
 // One roll per monster: seeds 8%, fertilizer 4%, rich soil 2%.
 export function rollDrops(tier:number,boss=false,random:()=>number=Math.random):Drop[]{
@@ -54,7 +54,7 @@ export class BattlePickups{
   point.x+=Math.sin(n*2.4)*.55;point.z+=Math.cos(n*2.4)*.55;
   const r=Math.hypot(point.x,point.z),limit=this.radius-4;if(r>limit){point.x*=limit/r;point.z*=limit/r;}
   const ground=Math.max(.12,this.height(point.x,point.z));point.y=ground+.45;
-  const item:Pickup={kind,amount,position:point,ground,age:0,pulling:false};
+  const item:Pickup={kind,amount,position:point,ground,age:0,pulling:false,pullAge:0};
   if(kind!=='xp'){
    const group=new T.Group();group.name='pickup-'+kind;
    if(Object.hasOwn(CROPS,kind)){
@@ -72,11 +72,12 @@ export class BattlePickups{
   if(dt<=0)return;this.clock+=dt;
   for(let i=this.items.length-1;i>=0;i--){
    const item=this.items[i];item.age+=dt;
-   const dx=player.x-item.position.x,dz=player.z-item.position.z,reach=item.kind==='xp'?3.6:2.7;
+   const dx=player.x-item.position.x,dz=player.z-item.position.z,reach=item.kind==='xp'?4.5:3;
    if(item.age>.3&&dx*dx+dz*dz<reach*reach&&Math.abs(player.y-item.ground)<5.5)item.pulling=true;
    if(item.pulling){
+    item.pullAge+=dt;
     this.display.copy(player);this.display.y+=.8;
-    const distance=item.position.distanceTo(this.display),step=dt*28;
+    const distance=item.position.distanceTo(this.display),step=dt*(8+Math.min(1,item.pullAge/.2)*28);
     if(distance<=Math.max(.5,step)){
      this.items.splice(i,1);this.removeVisual(item);collect(item.kind,item.amount,item.position.clone());continue;
     }

@@ -40,6 +40,7 @@ wall.position.copy(focus).addScaledVector(direction,6);wall.updateMatrixWorld();
 rig.update(1/60,player,[wall]);
 assert.ok(camera.position.distanceTo(focus)<6,'Camera must move in front of the wall');
 assert.ok(camera.position.distanceTo(focus)>=3,'Camera must retain player clearance');
+const blocked=camera.position.distanceTo(focus);rig.update(1/60,player,[]);const recovering=camera.position.distanceTo(focus);assert.ok(recovering>blocked&&recovering<blocked+1,'Clearing a wall must ease out without a camera pop');for(let i=0;i<120;i++)rig.update(1/60,player,[]);assert.ok(Math.abs(camera.position.distanceTo(focus)-10)<.001);
 const event=(type,props)=>{const e=new Event(type,{cancelable:true});Object.assign(e,props);canvas.dispatchEvent(e);};
 const pointer=(type,x,y,button=0,id=1)=>event(type,{clientX:x,clientY:y,button,pointerId:id});
 pointer('pointerdown',100,100);pointer('pointerup',100,100);assert.equal(taps,1);

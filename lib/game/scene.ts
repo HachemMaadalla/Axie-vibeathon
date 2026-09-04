@@ -1,3 +1,4 @@
+import {PlayerFeel} from './player-feel';
 import {BattlePickups,rollDrops,type PickupKind} from './pickups';
 import {EQUIPMENT,equipAxie,equippedMotion} from './equipment';
 import {ActionFeedback,type ActionKind} from './action-feedback';
@@ -29,7 +30,8 @@ export type View={exitReady:boolean;nearExit:boolean;nearby:IslandService|null;b
 type Actor={root:T.Group;mixer:T.AnimationMixer;actions:Map<string,T.AnimationAction>;current:string};
 
 export class WildseedGame {
- private pickups!:BattlePickups;private returnPortal:T.Group|null=null;private pickupSoundAt=0;
+ private playerFeel=new PlayerFeel();private reducedMotion=false;private defeated:{enemy:EnemyUnit;life:number;max:number;velocity:T.Vector3;base:T.Vector3}[]=[];private dustAt=0;
+ private pickups!:BattlePickups;private returnPortal:T.Group|null=null;
  private actionFx!:ActionFeedback;private weaponAttackUntil=0;nearby:IslandService|null=null;private campFlame:T.Group|null=null;
  farm:FarmState=freshFarm();mode:'farm'|'dungeon'='farm';ready=false;error='';selected=0;inReach=false;seed:CropId='sunroot';hp=100;maxHp=100;time=0;kills=0;level=1;dash=0;loot:Loot=emptyLoot();upgrade=false;result:Result|null=null;message='';paused=false;saved=true;meal:CropId|null=null;tier=1;
  private scene=new T.Scene();private farmWorld=new T.Group();private arena=new T.Group();private camera:T.PerspectiveCamera;private renderer:T.WebGLRenderer;private cartoon:CartoonRenderer;private listener:(s:View)=>void;
@@ -38,12 +40,12 @@ export class WildseedGame {
  private followCamera:FollowCamera;private cameraObstacles:T.Object3D[]=[];
  private materialCache=new Map<string,T.MeshToonMaterial>();private sharedSphere=new T.SphereGeometry(1,16,10);private treeMats=new Map<string,ReturnType<typeof createTreeMaterials>>();private toonCache=new Map<T.Material,T.MeshToonMaterial>();
  constructor(private container:HTMLElement,onChange:(s:View)=>void,private onInteract?:(service:IslandService)=>void){
- this.listener=onChange;
+ this.listener=onChange;this.reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  try{const raw=localStorage.getItem('wildseed-v1');if(raw)this.farm=hydrateFarm(JSON.parse(raw));}catch{this.saved=false;}
  this.build=freshBuild(this.farm.hero);this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);
  this.camera=new T.PerspectiveCamera(62,container.clientWidth/container.clientHeight,.1,250);
  this.camera.position.set(18,24,29);this.camera.lookAt(0,0,0);
- this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));this.renderer.setSize(container.clientWidth,container.clientHeight);
+ this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.setSize(container.clientWidth,container.clientHeight);
  this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;this.renderer.toneMapping=T.NeutralToneMapping;this.renderer.toneMappingExposure=1;this.cartoon=new CartoonRenderer(this.renderer);this.cartoon.resize(container.clientWidth,container.clientHeight);container.appendChild(this.renderer.domElement);
  this.scene.add(new T.HemisphereLight('#fff6dc','#514277',.85));
  const sun=this.sunlight=new T.DirectionalLight('#fff0cc',2.8);sun.position.set(-12,25,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-25,right:25,top:25,bottom:-25});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.045;sun.shadow.bias=-.0003;this.scene.add(sun,sun.target);
@@ -232,7 +234,7 @@ export class WildseedGame {
  this.tendPlot();
  }
  private animate(a:Actor,name:string){if(a.current===name)return;const next=a.actions.get(name)||a.actions.get('Idle');if(!next)return;a.actions.get(a.current)?.fadeOut(.18);next.reset().fadeIn(.18).play();a.current=name;}
- private refreshPlants(){for(let i=0;i<this.farm.plots.length;i++){const group=this.plants[i],p=this.farm.plots[i];while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b','soil');if(!p.crop)continue;
+ private refreshPlants(){for(let i=0;i<this.farm.plots.length;i++){const group=this.plants[i],p=this.farm.plots[i],signature=[p.crop,Math.floor(p.growth*3),p.watered,p.rich].join(':');if(group.userData.plantSignature===signature)continue;group.userData.plantSignature=signature;while(group.children.length){const child=group.children[0];group.remove(child);child.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh&&o.geometry!==this.sharedSphere)o.geometry.dispose();});}this.plots[i].material=this.mat(p.watered?'#544b3e':p.rich?'#594337':'#80604b','soil');if(!p.crop)continue;
  const stage=Math.floor(p.growth*3),size=.3+stage*.2;for(let j=0;j<4;j++){const x=(j%2)*.75-.38,z=Math.floor(j/2)*.75-.38;this.blob(group,'#4b8648',x,.15+size*.28,z,.18,size,.12);this.blob(group,'#80b84f',x+.17,.22+size*.3,z,.26,.09,.12);this.blob(group,'#5f9e43',x-.16,.29+size*.3,z,.25,.09,.12);if(stage>=1){const color=CROPS[p.crop].color;this.blob(group,color,x,.15+size*.8,z,size*.32,p.crop==='embercorn'?size*.55:size*.3,size*.32);if(p.crop==='moonberry')this.blob(group,color,x+.17,.25+size*.7,z+.05,size*.2);}}
  }
  }
@@ -244,7 +246,7 @@ export class WildseedGame {
  setPaused(value:boolean){this.paused=value;this.keys.clear();this.emit();}
  setMuted(value:boolean){this.muted=value;this.combatAudio.muted=value;if(!value)this.combatAudio.enable();if(!value){this.audio??=new AudioContext();void this.audio.resume();this.sound(440);}}
  private sound(freq:number){if(this.muted||!this.audio)return;const osc=this.audio.createOscillator(),gain=this.audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,this.audio.currentTime);osc.frequency.exponentialRampToValueAtTime(freq*.7,this.audio.currentTime+.15);gain.gain.setValueAtTime(.035,this.audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,this.audio.currentTime+.2);osc.connect(gain);gain.connect(this.audio.destination);osc.start();osc.stop(this.audio.currentTime+.21);}
- selectHero(id:HeroId){if(this.mode!=='farm'||!this.actors.has(id))return;this.farm.hero=id;this.build=freshBuild(id);this.weaponAttackUntil=0;this.syncHeroes();this.nearby=null;this.save();this.emit();}
+ selectHero(id:HeroId){if(this.mode!=='farm'||!this.actors.has(id))return;this.playerFeel?.reset(this.actors.get(this.farm.hero)?.root);this.farm.hero=id;this.build=freshBuild(id);this.weaponAttackUntil=0;this.syncHeroes();this.nearby=null;this.save();this.emit();}
  selectSeed(id:CropId){this.seed=id;this.emit();}
  private syncNearbyPlot(){
  const near=nearestPlot(this.player.position),station=nearestService(this.player.position,this.farm.hero);
@@ -284,30 +286,31 @@ export class WildseedGame {
  if(before===this.farm.unlocked){this.toast(msg);return;}
  this.sound(920);this.actionDone('unlock',new T.Vector3(7.5,2,-5.8),undefined,'portal','Bramble Hollow unlocked');
  }
- expedition(tier:number){if(!this.ready||!this.started||this.mode!=='farm')return;let stats;try{stats=beginExpedition(this.farm,tier);}catch(e){this.toast((e as Error).message);return;}this.actionFx.clear();this.pickups.clear();this.clearReturnPortal();this.mode='dungeon';this.tier=tier;this.time=0;this.kills=0;this.level=1;this.xp=0;this.build=freshBuild(this.farm.hero);this.weaponAttackUntil=0;this.spells.clear();this.fx.clear();this.clearHostiles();this.spawnIndex=0;this.choices=[];this.upgrade=false;this.loot=emptyLoot();this.hp=this.maxHp=this.baseMaxHp=stats.hp;this.damage=stats.damage;this.speed=stats.speed*1.5;this.meal=stats.meal;this.bossDead=false;this.bossSpawned=false;this.spawnTimer=0;this.invuln=1;this.dash=0;this.motor.reset();this.target=null;this.paused=false;this.player.position.set(0,terrainHeight('dungeon',0,0),0);this.followCamera.snap(this.player.position);this.farmWorld.visible=false;this.arena.visible=true;this.scene.background=new T.Color(tier===1?'#8fd9f5':'#b6b3ed');this.scene.fog=new T.Fog(tier===1?'#8fd9f5':'#b6b3ed',100,235);this.save();this.toast('Survive & defeat the guardian.');}
+ expedition(tier:number){if(!this.ready||!this.started||this.mode!=='farm')return;let stats;try{stats=beginExpedition(this.farm,tier);}catch(e){this.toast((e as Error).message);return;}this.actionFx.clear();this.pickups.clear();this.clearReturnPortal();this.clearDefeated();this.playerFeel?.reset(this.actors.get(this.farm.hero)?.root);this.mode='dungeon';this.tier=tier;this.time=0;this.kills=0;this.level=1;this.xp=0;this.build=freshBuild(this.farm.hero);this.weaponAttackUntil=0;this.spells.clear();this.fx.clear();this.clearHostiles();this.spawnIndex=0;this.choices=[];this.upgrade=false;this.loot=emptyLoot();this.hp=this.maxHp=this.baseMaxHp=stats.hp;this.damage=stats.damage;this.speed=stats.speed*1.5;this.meal=stats.meal;this.bossDead=false;this.bossSpawned=false;this.spawnTimer=0;this.invuln=1;this.dash=0;this.motor.reset();this.target=null;this.paused=false;this.player.position.set(0,terrainHeight('dungeon',0,0),0);this.followCamera.snap(this.player.position);this.farmWorld.visible=false;this.arena.visible=true;this.scene.background=new T.Color(tier===1?'#8fd9f5':'#b6b3ed');this.scene.fog=new T.Fog(tier===1?'#8fd9f5':'#b6b3ed',100,235);this.save();this.toast('Survive & defeat the guardian.');}
  escape(){if(this.mode==='dungeon')this.finish('escaped');}
- private finish(outcome:'won'|'escaped'|'lost'){if(this.mode!=='dungeon')return;const loot=settleExpedition(this.farm,this.loot,outcome,this.tier);this.pickups.clear();this.clearReturnPortal();this.result={outcome,loot,kills:this.kills,tier:this.tier};this.mode='farm';this.hp=this.maxHp;this.upgrade=false;this.paused=false;this.farmWorld.visible=true;this.arena.visible=false;this.player.position.set(5,0,-3);this.motor.reset();this.dash=0;this.followCamera.snap(this.player.position);this.target=null;this.keys.clear();for(const e of this.enemies)this.removeEnemy(e);this.enemies=[];this.spells.clear();this.fx.clear();this.clearHostiles();this.choices=[];this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);this.refreshPlants();this.save();this.emit();}
+ private finish(outcome:'won'|'escaped'|'lost'){if(this.mode!=='dungeon')return;const loot=settleExpedition(this.farm,this.loot,outcome,this.tier);this.pickups.clear();this.clearReturnPortal();this.clearDefeated();this.playerFeel?.reset(this.actors.get(this.farm.hero)?.root);this.result={outcome,loot,kills:this.kills,tier:this.tier};this.mode='farm';this.hp=this.maxHp;this.upgrade=false;this.paused=false;this.farmWorld.visible=true;this.arena.visible=false;this.player.position.set(5,0,-3);this.motor.reset();this.dash=0;this.followCamera.snap(this.player.position);this.target=null;this.keys.clear();for(const e of this.enemies)this.removeEnemy(e);this.enemies=[];this.spells.clear();this.fx.clear();this.clearHostiles();this.choices=[];this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);this.refreshPlants();this.save();this.emit();}
  dismissResult(){this.result=null;this.emit();}
  private weaponCast(id:WeaponId,point:T.Vector3){
  if(id!==STARTER_SPELL[this.farm.hero])return;
  const actor=this.actors.get(this.farm.hero);if(!actor)return;
+ const direction=point.clone().sub(this.player.position);direction.y=0;if(direction.lengthSq())this.playerFeel?.fire(direction.normalize(),id==='hammer'||id==='cannon');
  const name=EQUIPMENT[this.farm.hero].prefix+'.Attack',attack=actor.actions.get(name);if(!attack)return;
  actor.actions.get(actor.current)?.fadeOut(.08);
  attack.reset().setLoop(T.LoopOnce,1).setEffectiveTimeScale(attack.getClip().duration/.5);attack.clampWhenFinished=true;attack.fadeIn(.08).play();
  actor.current=name;this.weaponAttackUntil=this.elapsed+.5;
  actor.root.rotation.y=Math.atan2(point.x-this.player.position.x,point.z-this.player.position.z);
  }
- private queueUpgrade(){if(this.mode!=='dungeon'||this.upgrade||this.xp<xpNeeded(this.level))return;this.xp-=xpNeeded(this.level);this.level++;this.choices=draftChoices(this.build);this.upgrade=true;this.keys.clear();this.emit();}
- chooseUpgrade(id:Choice['id']){if(!this.upgrade||this.mode!=='dungeon')return;const choice=this.choices.find(c=>c.id===id);if(!choice||!applyChoice(this.build,choice))return;const oldMax=this.maxHp;this.maxHp=this.baseMaxHp+modifiers(this.build).health;this.hp=Math.min(this.maxHp,this.hp+this.maxHp-oldMax+(id==='heal'?35:0));this.upgrade=false;this.choices=[];this.keys.clear();this.sound(choice.kind==='evolution'?1000:740);if(choice.kind==='evolution')this.toast(choice.name+' awakened!');this.queueUpgrade();this.emit();}
+ private queueUpgrade(){if(this.mode!=='dungeon'||this.upgrade||this.xp<xpNeeded(this.level))return;this.xp-=xpNeeded(this.level);this.level++;this.combatAudio?.play('levelup');this.choices=draftChoices(this.build);this.upgrade=true;this.keys.clear();this.emit();}
+ chooseUpgrade(id:Choice['id']){if(!this.upgrade||this.mode!=='dungeon')return;const choice=this.choices.find(c=>c.id===id);if(!choice||!applyChoice(this.build,choice))return;const oldMax=this.maxHp;this.maxHp=this.baseMaxHp+modifiers(this.build).health;this.hp=Math.min(this.maxHp,this.hp+this.maxHp-oldMax+(id==='heal'?35:0));this.upgrade=false;this.choices=[];this.keys.clear();this.combatAudio?.play(choice.kind==='evolution'?'evolve':'pickup');this.fx?.burst(this.player.position,choice.color,18,4);this.fx?.ring(this.player.position,2,choice.color,.4);if(choice.kind==='evolution')this.toast(choice.name+' awakened!');this.queueUpgrade();this.emit();}
 
 
  jumpNow(){if(!this.started||this.paused||this.upgrade||this.result)return;this.motor.requestJump();}
  dashNow(){if(!this.started||this.paused||this.upgrade||this.result)return;const facing=this.actors.get(this.farm.hero)?.root.rotation.y??Math.PI;const dir=this.motor.velocity.lengthSq()>.1?this.motor.velocity:new T.Vector3(Math.sin(facing),0,Math.cos(facing));if(this.motor.dash(dir)){this.invuln=.24;this.combatAudio.play('dash');this.fx.burst(this.player.position.clone().add(new T.Vector3(0,.5,0)),'#b6ead5',12,3);}}
 
  private pulse(pos:T.Vector3,color:string){const mesh=new T.Mesh(new T.RingGeometry(.2,.3,32),new T.MeshBasicMaterial({color,side:T.DoubleSide,transparent:true,opacity:.8}));mesh.rotation.x=-Math.PI/2;mesh.position.copy(pos);mesh.position.y=.3;this.scene.add(mesh);this.effects.push({mesh,life:.6});}
- private spawn(boss=false){
+ private spawn(boss=false,angle?:number){
  const kind=boss?'guardian':enemyKindFor(this.time,this.spawnIndex++),e=makeEnemy(kind,this.tier,this.spawnIndex*.71);
- const a=Math.random()*Math.PI*2,dist=boss?19:18+Math.random()*7;
+ const a=angle??Math.random()*Math.PI*2,dist=boss?19:(this.time<10?14:16)+Math.random()*3;
  e.mesh.position.copy(this.player.position).add(new T.Vector3(Math.cos(a)*dist,0,Math.sin(a)*dist));this.clampEnemy(e);
  e.mesh.position.y=terrainHeight('dungeon',e.mesh.position.x,e.mesh.position.z);e.max*=1+this.time*.001;e.hp=e.max;
  this.arena.add(e.mesh);this.enemies.push(e);this.fx.ring(e.mesh.position,e.boss?3:1.2,ENEMY_INFO[kind].color,.5);
@@ -315,16 +318,33 @@ export class WildseedGame {
  private clampEnemy(e:EnemyUnit){const r=Math.hypot(e.mesh.position.x,e.mesh.position.z),limit=WORLD_RADIUS.dungeon-3;if(r>limit){e.mesh.position.x*=limit/r;e.mesh.position.z*=limit/r;}}
  private removeEnemy(e:EnemyUnit){disposeEnemy(e);}
  private hurtEnemy(e:EnemyUnit,damage:number){
- if(e.hp<=0)return;e.hp-=damage;e.flash=.09;e.bar.update(e.hp,e.max);
- const away=e.mesh.position.clone().sub(this.player.position);away.y=0;if(away.lengthSq())e.push.addScaledVector(away.normalize(),e.boss?1:3.5);
- this.fx.impact(e.mesh.position.clone().add(new T.Vector3(0,e.aimHeight,0)),damage,ENEMY_INFO[e.kind].color,e.hp<=0,e.boss);
+ if(e.hp<=0)return;e.hp-=damage;e.flash=damage>=12?.11:.055;if(damage>=12)e.stagger=Math.max(e.stagger,e.boss?.018:.055);e.bar.update(e.hp,e.max);
+ const away=e.mesh.position.clone().sub(this.player.position);away.y=0;if(away.lengthSq())e.push.addScaledVector(away.normalize(),e.boss?1:damage>=18?7:2);
+ this.fx.impact(e.mesh.position.clone().add(new T.Vector3(0,e.aimHeight,0)),damage,ENEMY_INFO[e.kind].color,e.hp<=0,e.boss,away);
  this.combatAudio.play(e.hp<=0?'kill':'hit');
- if(e.hp<=0){this.kills++;const point=e.mesh.position.clone();this.pickups.spawn('xp',e.xpValue,point);for(const drop of rollDrops(this.tier,e.boss))this.pickups.spawn(drop.kind,drop.amount,point);if(e.boss)this.bossDead=true;this.removeEnemy(e);this.enemies=this.enemies.filter(x=>x!==e);}
+ if(e.hp<=0){this.kills++;const point=e.mesh.position.clone();this.pickups.spawn('xp',e.xpValue,point);for(const drop of rollDrops(this.tier,e.boss))this.pickups.spawn(drop.kind,drop.amount,point);if(e.boss)this.bossDead=true;this.leaveDefeated(e,away);this.enemies=this.enemies.filter(x=>x!==e);}
  }
+ private leaveDefeated(e:EnemyUnit,direction:T.Vector3){
+  e.bar.visible=false;
+  this.defeated??=[];
+  if(this.defeated.length>=24)this.removeEnemy(this.defeated.shift()!.enemy);
+  this.defeated.push({enemy:e,life:e.boss?.55:.32,max:e.boss?.55:.32,velocity:direction.clone().multiplyScalar(e.boss?2:6).add(new T.Vector3(0,e.boss?2.5:4.5,0)),base:e.visual.scale.clone()});
+ }
+ private updateDefeated(dt:number){
+  for(let i=this.defeated.length-1;i>=0;i--){
+   const d=this.defeated[i];d.life-=dt;d.enemy.flash=Math.max(0,d.enemy.flash-dt);
+   if(d.life<=0){this.removeEnemy(d.enemy);this.defeated.splice(i,1);continue;}
+   d.velocity.y-=18*dt;d.enemy.mesh.position.addScaledVector(d.velocity,dt);
+   d.enemy.mesh.rotation.z+=dt*(d.enemy.boss?1.3:5);d.enemy.mesh.rotation.x+=dt*2;
+   d.enemy.visual.scale.copy(d.base).multiplyScalar(Math.min(1,d.life/d.max*2.3));
+  }
+ }
+ private clearDefeated(){for(const d of this.defeated??[])this.removeEnemy(d.enemy);this.defeated=[];}
+
  private collectDrop(kind:PickupKind,amount:number,point:T.Vector3){
   if(kind==='xp'){this.xp+=amount;this.fx.burst(point,'#83f6d3',3,2);}
   else{this.loot[kind]+=amount;this.fx.burst(point,kind in CROPS?CROPS[kind as CropId].color:'#ffe299',10,3);this.fx.ring(this.player.position,.9,'#ffe299',.25);}
-  if(this.elapsed-this.pickupSoundAt>.09){this.sound(kind==='xp'?740:990);this.pickupSoundAt=this.elapsed;}
+  this.combatAudio.play(kind==='xp'?'xp':'pickup');
  }
  private openReturnPortal(){
   if(this.returnPortal)return;
@@ -358,7 +378,7 @@ export class WildseedGame {
  private clearHostiles(){for(const h of this.hostiles){this.scene.remove(h.mesh);h.mesh.geometry.dispose();(h.mesh.material as T.Material).dispose();}this.hostiles=[];}
  private combat(dt:number){
  if(!this.returnPortal)this.time+=dt;this.invuln=Math.max(0,this.invuln-dt);this.spawnTimer-=dt;this.hp=Math.min(this.maxHp,this.hp+dt*(modifiers(this.build).regen+this.spells.healingAt(this.player.position)));
- if(!this.returnPortal&&this.spawnTimer<=0&&this.enemies.length<60){this.spawn(false);if(this.time>25&&this.enemies.length<59&&this.spawnIndex%3===0)this.spawn(false);this.spawnTimer=Math.max(.28,.85-this.time*.006);}
+ if(!this.returnPortal&&this.spawnTimer<=0&&this.enemies.length<60){const count=this.time<10?2:this.time<35?3:4,angle=this.motor.velocity.lengthSq()>1?Math.atan2(this.motor.velocity.z,this.motor.velocity.x)+(Math.random()-.5)*Math.PI*1.3:Math.random()*Math.PI*2;for(let i=0;i<count&&this.enemies.length<60;i++)this.spawn(false,angle+(i-(count-1)/2)*.19);this.spawnTimer=this.time<10?1.8:this.time<35?1.55:1.25;}
  if(this.time>=60&&!this.bossSpawned){this.spawn(true);this.bossSpawned=true;this.toast('Elder Thornwarden awakened');}
  const player=this.player.position;
  for(const e of this.enemies){
@@ -384,24 +404,28 @@ export class WildseedGame {
  this.queueUpgrade();if(this.time>=90&&this.bossDead)this.openReturnPortal();
  }
 
- private tick=(t:number)=>{if(this.stopped)return;this.frame=requestAnimationFrame(this.tick);const realDt=this.last?Math.min((t-this.last)/1000,.05):0;const dt=realDt*(this.fx.freeze>0?.35:1);this.last=t;this.elapsed+=realDt;
+ private tick=(t:number)=>{if(this.stopped)return;this.frame=requestAnimationFrame(this.tick);const realDt=this.last?Math.min((t-this.last)/1000,.05):0;const dt=realDt;this.last=t;this.elapsed+=realDt;
  const active=this.started&&!this.paused&&!this.upgrade&&!this.result&&!document.hidden;
  if(active){grow(this.farm,dt);let dx=Number(this.keys.has('d')||this.keys.has('arrowright'))-Number(this.keys.has('a')||this.keys.has('arrowleft')),dz=Number(this.keys.has('s')||this.keys.has('arrowdown'))-Number(this.keys.has('w')||this.keys.has('arrowup'));let dir=this.followCamera.movement(dx,dz);if(dir.lengthSq()){dir.normalize();this.target=null;}else if(this.target){dir.copy(this.target).sub(this.player.position);dir.y=0;if(dir.length()<.22){dir.set(0,0,0);this.target=null;}else dir.normalize();}
- const jumped=this.motor.step(dt,this.player.position,dir,this.mode==='dungeon'?this.speed:8,this.keys.has('shift'),WORLD_RADIUS[this.mode]-2.5,(x,z)=>terrainHeight(this.mode,x,z));this.dash=this.motor.dashCooldown;if(jumped){this.sound(440);this.fx.burst(this.player.position,'#e5dfbd',8,2);}if(this.motor.dashing)this.fx.trail(this.player.position.clone().add(new T.Vector3(0,.6,0)),'#bcebd1',.2);const moving=this.motor.velocity.lengthSq()>.1;if(moving)dir.copy(this.motor.velocity).normalize();
+ const wasGrounded=this.motor.grounded,fallSpeed=this.motor.vertical;const jumped=this.motor.step(dt,this.player.position,dir,this.mode==='dungeon'?this.speed:8,this.keys.has('shift'),WORLD_RADIUS[this.mode]-2.5,(x,z)=>terrainHeight(this.mode,x,z));this.dash=this.motor.dashCooldown;if(jumped){this.playerFeel.takeoff();this.combatAudio.play('jump');this.fx.burst(this.player.position,'#e5dfbd',8,2);}if(this.motor.dashing)this.fx.trail(this.player.position.clone().add(new T.Vector3(0,.6,0)),'#bcebd1',.2);const moving=this.motor.velocity.lengthSq()>.1;if(moving)dir.copy(this.motor.velocity).normalize();
+ if(!wasGrounded&&this.motor.grounded){this.playerFeel.land(fallSpeed);this.combatAudio.play('land');this.fx.burst(this.player.position,'#e9d7a1',8,2.5);}
+ if(moving&&this.motor.grounded&&this.elapsed>this.dustAt){this.dustAt=this.elapsed+.09;this.fx.trail(this.player.position,'#dfc994',.11);}
  const actor=this.actors.get(this.farm.hero);if(actor&&this.elapsed>=this.weaponAttackUntil){if(moving)actor.root.rotation.y=Math.atan2(dir.x,dir.z);this.animate(actor,equippedMotion(actor,this.farm.hero,moving));}
  if(this.mode==='dungeon')this.combat(dt);else this.syncNearbyPlot();
+ this.updateDefeated(dt);
  }
  for(const [id,a] of this.actors)if(id===this.farm.hero||this.mode==='farm')a.mixer.update(active?dt:dt*.4);this.updateResidents(dt,active);
+ const playerActor=this.actors.get(this.farm.hero);if(playerActor)this.playerFeel.update(active?dt:0,playerActor.root,this.motor.velocity.lengthSq()>.1,this.motor.dashing,this.reducedMotion);
  if(this.campFlame)this.campFlame.scale.set(1+Math.sin(this.elapsed*9)*.06,1+Math.sin(this.elapsed*12)*.12,1);
  if(this.portal)this.portal.scale.setScalar(1+Math.sin(this.elapsed*1.8)*.045);
  this.ring.visible=this.inReach||!!this.nearby;this.ring.position.copy(this.nearby?new T.Vector3(this.nearby.x,.25,this.nearby.z):plotPosition(this.selected));this.ring.position.y=.25;this.ring.scale.setScalar(1+Math.sin(this.elapsed*3)*.03);
  for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i];e.life-=dt;e.mesh.scale.addScalar(dt*6);(e.mesh.material as T.MeshBasicMaterial).opacity=Math.max(0,e.life);if(e.life<=0){this.scene.remove(e.mesh);e.mesh.geometry.dispose();(e.mesh.material as T.Material).dispose();this.effects.splice(i,1);}}
  this.followCamera.update(dt,this.player.position,this.cameraObstacles.filter(o=>{let p:T.Object3D|null=o;while(p){if(!p.visible)return false;p=p.parent;}return true;}),(x,z)=>terrainHeight(this.mode,x,z));
- const desiredFov=this.motor.dashing?70:this.keys.has('shift')?67:62;this.camera.fov=T.MathUtils.lerp(this.camera.fov,desiredFov,1-Math.exp(-dt*6));this.camera.updateProjectionMatrix();this.sunlight.position.copy(this.player.position).add(new T.Vector3(-12,25,14));this.sunlight.target.position.copy(this.player.position);
- this.player.visible=this.mode!=='dungeon'||this.invuln<=0||Math.floor(this.invuln*18)%2===0;this.enemyBatch.update(this.enemies);this.playerBar.position.copy(this.player.position).add(new T.Vector3(0,2.5,0));this.playerBar.visible=this.started&&!this.result;this.playerBar.update(this.hp,this.maxHp,active?dt:0);this.playerBar.face(this.camera);for(const e of this.enemies)e.bar.face(this.camera);
+ const desiredFov=this.reducedMotion?62:this.motor.dashing?67:this.keys.has('shift')?65:62;this.camera.fov=T.MathUtils.lerp(this.camera.fov,desiredFov,1-Math.exp(-dt*6));this.camera.updateProjectionMatrix();this.sunlight.position.copy(this.player.position).add(new T.Vector3(-12,25,14));this.sunlight.target.position.copy(this.player.position);
+ this.player.visible=this.mode!=='dungeon'||this.invuln<=0||Math.floor(this.invuln*18)%2===0;this.enemyBatch.update(this.defeated.length?[...this.enemies,...this.defeated.map(d=>d.enemy)]:this.enemies);this.playerBar.position.copy(this.player.position).add(new T.Vector3(0,2.5,0));this.playerBar.visible=this.started&&!this.result;this.playerBar.update(this.hp,this.maxHp,active?dt:0);this.playerBar.face(this.camera);for(const e of this.enemies)e.bar.face(this.camera);
  this.fx.update(active?realDt:0,active?this.camera:undefined);const ripples=this.arena.getObjectByName('river-ripples');if(ripples)ripples.position.z=Math.sin(this.elapsed*.7)*.25;this.cartoon.render(this.scene,this.camera);this.actionFx.update(document.hidden?0:realDt,this.camera);
  if(this.elapsed-this.emitAt>.2){this.emitAt=this.elapsed;if(this.message&&this.elapsed>this.messageUntil)this.message='';this.emit();}
- if(this.elapsed-this.saveAt>3){this.saveAt=this.elapsed;if(active){this.refreshPlants();this.save();}}
+ if(this.elapsed-this.saveAt>3){this.saveAt=this.elapsed;if(active){if(this.mode==='farm')this.refreshPlants();this.save();}}
  };
  private keyDown=(e:KeyboardEvent)=>{const tag=(e.target as HTMLElement)?.tagName;if(['INPUT','TEXTAREA','SELECT'].includes(tag)||!this.started||this.paused||this.result||this.upgrade)return;const key=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','shift','q'].includes(key))e.preventDefault();this.keys.add(key);if(e.repeat)return;if(key==='v')this.followCamera.reset((this.actors.get(this.farm.hero)?.root.rotation.y??Math.PI)+Math.PI);if(key==='e')this.interact();if(key===' ')this.jumpNow();if(key==='q')this.dashNow();if(['1','2','3'].includes(key))this.selectSeed((['sunroot','moonberry','embercorn'] as CropId[])[Number(key)-1]);};
  private keyUp=(e:KeyboardEvent)=>{this.keys.delete(e.key.toLowerCase());};
@@ -411,7 +435,7 @@ export class WildseedGame {
  private click=(e:PointerEvent)=>{if(!this.started||this.paused||this.upgrade||this.result)return;const rect=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);
  const terrain=this.farmWorld.getObjectByName('terrain-surface');const surface=this.mode==='dungeon'?this.ray.intersectObjects(this.terrainChunks,false)[0]:terrain?this.ray.intersectObject(terrain,false)[0]:null;const point=surface?surface.point.clone():new T.Vector3();if(surface||this.ray.ray.intersectPlane(new T.Plane(new T.Vector3(0,1,0),0),point)){point.y=0;const bound=WORLD_RADIUS[this.mode]-3;const flat=Math.hypot(point.x,point.z);if(flat>bound){point.x*=bound/flat;point.z*=bound/flat;}point.y=terrainHeight(this.mode,point.x,point.z);this.target=point;}};
  moveKey(key:string,down:boolean){if(down)this.keys.add(key);else this.keys.delete(key);}
- dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.pickups.dispose();this.clearReturnPortal();this.actionFx.dispose();this.spells.dispose();this.enemyBatch.dispose();this.fx.dispose();this.combatAudio.dispose();this.clearHostiles();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.cartoon.dispose();this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
+ dispose(){this.stopped=true;cancelAnimationFrame(this.frame);this.save();this.abortTools();this.resizeObserver.disconnect();window.removeEventListener('keydown',this.keyDown);window.removeEventListener('keyup',this.keyUp);window.removeEventListener('blur',this.blur);document.removeEventListener('visibilitychange',this.visibility);this.followCamera.dispose();this.pickups.dispose();this.clearReturnPortal();this.clearDefeated();this.actionFx.dispose();this.spells.dispose();this.enemyBatch.dispose();this.fx.dispose();this.combatAudio.dispose();this.clearHostiles();this.renderer.domElement.removeEventListener('webglcontextlost',this.contextLost);this.scene.traverse(o=>{if(o instanceof T.Sprite){o.material.map?.dispose();o.material.dispose();}if(o instanceof T.Mesh){o.geometry.dispose();const materials=Array.isArray(o.material)?o.material:[o.material];for(const m of materials){for(const value of Object.values(m))if(value instanceof T.Texture)value.dispose();m.dispose();}}});this.cartoon.dispose();this.renderer.dispose();this.renderer.domElement.remove();void this.audio?.close();}
 }
 
 

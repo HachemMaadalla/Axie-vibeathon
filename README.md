@@ -16,7 +16,7 @@ Requires Node 22.13 or newer.
 - npx tsc --noEmit
 - node --experimental-strip-types scripts/test-game.mjs
 
-Stack: Three.js, TypeScript, React, Vite/Vinext, existing Shadcn/Base UI primitives. No game backend, wallet or API key is required. Device-local saves use localStorage; expeditions themselves are not resumed after refresh. Crop timers run only during active play, including expeditions. Audio is optional synthesized feedback.
+Stack: Three.js, TypeScript, React, Vite/Vinext, existing Shadcn/Base UI primitives. No game backend, wallet or API key is required. Device-local saves use localStorage; expeditions themselves are not resumed after refresh. Crop timers run only during active play, including expeditions. Audio mixes official Axie Origins combat samples with synthesized pickup and movement cues. It starts after entering the game; the mute preference is saved locally.
 
 ## Assets and provenance
 Axie/Sapidae models, textures, animations and preview portraits are from the event-listed jaatster/axie-3d-assets repository, pinned to commit 4eec7d9ccb1d0c962afc110e7be35d44e3d6356b. See public/licenses and ASSET_CREDITS.md. Original procedural Three.js terrain, farm structures, plants, enemies and game systems were created with AI assistance for this entry. Names for crops and locations are original game concepts, not claims about official Axie lore.

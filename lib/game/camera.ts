@@ -12,7 +12,7 @@ export class FollowCamera {
  private ray=new T.Raycaster();
  private pointers=new Map<number,{x:number;y:number;startX:number;startY:number;dragged:boolean;button:number}>();
  private abort=new AbortController();
- private zoomDistance=10;
+ private zoomDistance=10;private collisionDistance=10;
  constructor(private camera:T.PerspectiveCamera,private canvas:HTMLCanvasElement,private active:()=>boolean,private tap:(e:PointerEvent)=>void){
   const signal=this.abort.signal;
   canvas.addEventListener('pointerdown',this.down,{signal});
@@ -38,15 +38,16 @@ export class FollowCamera {
   const target=player.clone();target.y+=1.1;
   this.focus.lerp(target,1-Math.exp(-dt*16));
   this.zoomDistance=T.MathUtils.lerp(this.zoomDistance,this.distance,1-Math.exp(-dt*12));
-  this.place(obstacles);
+  this.place(obstacles,dt);
   if(height){this.camera.position.y=Math.max(this.camera.position.y,height(this.camera.position.x,this.camera.position.z)+1);this.camera.lookAt(this.focus);this.camera.updateMatrixWorld();}
  }
- private place(obstacles:T.Object3D[]){
+ private place(obstacles:T.Object3D[],dt=0){
   const offset=new T.Vector3(Math.sin(this.yaw)*Math.cos(this.pitch),Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch));
   this.ray.set(this.focus,offset);this.ray.near=0;this.ray.far=this.zoomDistance+.4;
   const hit=this.ray.intersectObjects(obstacles,false)[0];
   const distance=hit?Math.max(3,Math.min(this.zoomDistance,hit.distance-.45)):this.zoomDistance;
-  this.camera.position.copy(this.focus).addScaledVector(offset,distance);
+  this.collisionDistance=dt<=0||distance<this.collisionDistance?distance:T.MathUtils.lerp(this.collisionDistance,distance,1-Math.exp(-dt*9));
+  this.camera.position.copy(this.focus).addScaledVector(offset,this.collisionDistance);
   this.camera.lookAt(this.focus);this.camera.updateMatrixWorld();
  }
  private down=(e:PointerEvent)=>{

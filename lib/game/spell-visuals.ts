@@ -5,9 +5,9 @@ import type {WeaponId} from './build';
 
 export const SPELL_COLORS:Record<WeaponId,{base:string;evolved:string;trail:string}>={
  cannon:{base:'#56d3ef',evolved:'#ffd35e',trail:'#98edff'},
- sword:{base:'#b5eeff',evolved:'#90ffe2',trail:'#e6ffff'},
+ sword:{base:'#65dfff',evolved:'#90ffe2',trail:'#e6ffff'},
  hammer:{base:'#ffbe67',evolved:'#ffd865',trail:'#f7eac9'},
- axe:{base:'#ffb18e',evolved:'#ffdf79',trail:'#ffedc5'},
+ axe:{base:'#ff8d43',evolved:'#ffdf79',trail:'#ffedc5'},
  thorn:{base:'#b4ef35',evolved:'#ffdc58',trail:'#68b83e'},
  petal:{base:'#ff62b7',evolved:'#c780ff',trail:'#63edce'},
  spore:{base:'#8dda43',evolved:'#61efc2',trail:'#24a87d'},
@@ -107,10 +107,32 @@ export class SpellVisuals{
  puff(evolved:boolean){return this.cached(evolved?'dream-spore':'green-spore',()=>[{g:new T.IcosahedronGeometry(.22,1),color:evolved?'#60e9bb':'#45b56c'},{g:new T.IcosahedronGeometry(.12,0),color:evolved?'#bdffe3':'#b5ef57',position:[-.07,.12,.08]}]);}
  flame(){return this.cached('burning-flame',()=>[{g:new T.ConeGeometry(.18,.8,5),color:'#ff6230',position:[0,.4,0]},{g:new T.ConeGeometry(.1,.52,4),color:'#ffe17a',position:[.02,.3,.08]}]);}
  cannonball(evolved:boolean){return this.cached(evolved?'broadside-ball':'cannon-ball',()=>[{g:new T.IcosahedronGeometry(.28,2),color:evolved?'#ffc740':'#376d87'},{g:new T.SphereGeometry(.13,7,5),color:evolved?'#fff0a0':'#b9f5ff',position:[-.1,.12,.16]}]);}
- slash(point:T.Vector3,radius:number,angle:number,arc:number,color:string){
-  const parts:Part[]=[];
-  for(const [inner,outer,c] of [[.68,1,SPELL_INK],[.72,.96,color],[.89,.94,'#fff9dc']] as [number,number,string][]){const g=new T.RingGeometry(inner*radius,outer*radius,40,1,0,arc);g.rotateX(-Math.PI/2);g.rotateY(angle-Math.PI/2-arc/2);parts.push({g,color:c});}
-  const mesh=new T.Mesh(merge(parts),this.flat);mesh.name='weapon-slash';mesh.userData.transientGeometry=true;mesh.position.copy(point).y+=.7;return mesh;
+ swordStrike(point:T.Vector3,radius:number,angle:number,color:string,evolved=false){
+  const root=new T.Group();root.name='vertical-sword-strike';root.position.copy(point);root.rotation.y=angle;
+  for(const offset of evolved?[-1,0,1]:[0]){
+   const cut=this.cached('vertical-sword-'+color,()=>[
+    {g:blade([[.1,.05],[2.4,.12],[2.75,.24],[1.35,.7],[.22,1],[.06,.89],[.65,.5],[.95,.2]],.16),color,rotation:[0,0,Math.PI/2]},
+    {g:blade([[.27,.86],[1.28,.61],[2.37,.23],[1.2,.65],[.22,.98]],.025),color:'#f4ffff',rotation:[0,0,Math.PI/2],position:[-.095,0,0]},
+    {g:blade([[-.055,.18],[.055,.18],[.085,.88],[0,1],[-.085,.88]],.035),color:'#dcffff',position:[0,.065,0]}
+   ]);
+   cut.position.x=offset;cut.scale.z=radius;root.add(cut);
+  }
+  return root;
+ }
+ axeCleave(point:T.Vector3,radius:number,angle:number,color:string,evolved=false){
+  const root=new T.Group();root.name='heavy-axe-cleave';root.position.copy(point).y+=.65;root.rotation.y=angle;
+  for(const turn of evolved?[0,Math.PI]:[0]){
+   const cleave=this.cached('axe-cleave-'+color+'-'+evolved,()=>{
+    const arc=evolved?Math.PI*1.12:Math.PI*1.25,outer:number[][]=[],inner:number[][]=[],edge:number[][]=[];
+    for(let i=0;i<=24;i++){const t=i/24,a=(t-.5)*arc,taper=Math.sin(t*Math.PI),r=.91+(i%4===2?.085:0)*taper;outer.push([Math.sin(a)*r,Math.cos(a)*r]);inner.push([Math.sin(a)*(r-.31*taper),Math.cos(a)*(r-.31*taper)]);edge.push([Math.sin(a)*(r-.055*taper),Math.cos(a)*(r-.055*taper)]);}
+    return [
+     {g:blade([...outer,...inner.slice().reverse()],.18),color},
+     {g:blade([...outer,...edge.reverse()],.035),color:'#fff2c7',position:[0,.11,0]}
+    ];
+   });
+   cleave.scale.set(radius,1,radius);cleave.rotation.y=turn;root.add(cleave);
+  }
+  return root;
  }
  ring(point:T.Vector3,radius:number,color:string,height?:(x:number,z:number)=>number){
   const geo=band(radius,color);geo.rotateX(-Math.PI/2);

@@ -8,7 +8,7 @@ export const PASSIVES:PassiveId[]=['sun','wind','dew','echo','heart'];
 export const SLOT_LIMIT=4;
 export const ITEMS:Record<ItemId,{name:string;kind:'spell'|'passive';color:string;levels:string[]}>={
  cannon:{name:'Cannon Shot',kind:'spell',color:'#65d6f0',levels:['Fire an explosive cannonball.','Fire two cannonballs with wider blasts.','Fire three cannonballs with stronger blasts.']},
- sword:{name:'Sword Slash',kind:'spell',color:'#b9eaff',levels:['Slash through enemies in front of you.','A wider, stronger slash.','A powerful slash with greater reach.']},
+ sword:{name:'Sword Slash',kind:'spell',color:'#b9eaff',levels:['Cut a straight line through enemies ahead.','A stronger vertical cut with more reach.','A powerful vertical strike through a longer line.']},
  hammer:{name:'Hammer Slam',kind:'spell',color:'#ffc675',levels:['Slam nearby enemies with a shockwave.','A wider, stronger shockwave.','A heavy slam with greater reach.']},
  axe:{name:'Axe Cleave',kind:'spell',color:'#f5ae83',levels:['Sweep your axe through nearby enemies.','A wider cleave with more damage.','A powerful cleave with greater reach.']},
  thorn:{name:'Thorn Bolt',kind:'spell',color:'#d8e986',levels:['Fire a thorn at the nearest enemy.','Fire two thorns; each pierces one enemy.','Fire three thorns; each pierces two enemies.']},
@@ -24,7 +24,7 @@ export const ITEMS:Record<ItemId,{name:string;kind:'spell'|'passive';color:strin
 };
 export const EVOLUTIONS:Record<WeaponId,{passive:PassiveId;name:string;text:string}>={
  cannon:{passive:'echo',name:'Broadside',text:'A rapid barrage of larger explosive cannonballs.'},
- sword:{passive:'wind',name:'Blade Cyclone',text:'Fast slashes strike all around you.'},
+ sword:{passive:'wind',name:'Skybreaker',text:'Three vertical cuts tear through enemies ahead.'},
  hammer:{passive:'heart',name:'Earthshaker',text:'Huge shockwaves crush surrounding enemies.'},
  axe:{passive:'sun',name:'Crescent Reaper',text:'A powerful circular cleave with extended reach.'},
  thorn:{passive:'sun',name:'Sunlance',text:'Golden lances pierce entire lines of enemies and burst on impact.'},

@@ -4,7 +4,7 @@ import type {CombatFX,CombatAudio} from './combat-fx';
 import {WEAPONS,ITEMS,itemLevel,spellStats,type Build,type WeaponId} from './build';
 export type SpellTarget={mesh:T.Group;hp:number;boss:boolean;radius?:number;aimHeight?:number};
 const center=(t:SpellTarget)=>t.mesh.position.clone().add(new T.Vector3(0,t.aimHeight??.7,0));
-type Melee={id:'sword'|'axe'|'hammer';direction:T.Vector3;delay:number;radius:number;damage:number;arc:number;color:string};
+type Melee={id:'sword'|'axe'|'hammer';direction:T.Vector3;delay:number;radius:number;damage:number;arc:number;color:string;evolved:boolean;width:number};
 type Projectile={mesh:T.Mesh;velocity:T.Vector3;life:number;damage:number;remaining:number;hit:Set<SpellTarget>;burst:boolean;explosion?:number;color?:string};
 type Zone={mesh:T.Group;radius:number;life:number;max:number;damage:number;slow:boolean;heal:boolean;tick:number;motes:T.Mesh[];fire:boolean};
 type Meteor={mesh:T.Mesh;marker:T.Mesh;point:T.Vector3;life:number;radius:number;damage:number;burn:boolean};
@@ -17,6 +17,7 @@ export class SpellEngine{
  private meteors:Meteor[]=[];
  private petals:T.Mesh[]=[];
  private flashes:{object:T.Object3D;life:number}[]=[];
+ private cuts:{object:T.Group;age:number;max:number;kind:"sword"|"axe";angle:number}[]=[];
  private clock=0;private melee:Melee[]=[];private previousTargets=new WeakMap<SpellTarget,T.Vector3>();
  private orbitTick=0;private trailAt=0;
  constructor(scene:T.Scene,private feedback:{fx?:CombatFX;audio?:CombatAudio;height?:(x:number,z:number)=>number;cast?:(id:WeaponId,target:T.Vector3)=>void;collision?:(from:T.Vector3,to:T.Vector3)=>T.Vector3|null}={}){scene.add(this.root);}
@@ -72,7 +73,7 @@ export class SpellEngine{
    if(id==='sword'||id==='axe'||id==='hammer'){
     const direction=target.mesh.position.clone().sub(player);direction.y=0;direction.normalize();
     const arc=id==='hammer'||s.evolved?Math.PI*2:id==='axe'?Math.PI*1.25:Math.PI*.9;
-    this.melee.push({id,direction,delay:id==='hammer'?.13:.085,radius:s.area,damage,arc,color});
+    this.melee.push({id,direction,delay:id==='hammer'?.13:id==='axe'?.12:.07,radius:s.area,damage,arc,color,evolved:s.evolved,width:.35+s.level*.09});
    }
    if(id==='thorn'){
     for(let i=0;i<s.count;i++){
@@ -110,10 +111,14 @@ export class SpellEngine{
     if(enemy.hp<=0)continue;
     const offset=enemy.mesh.position.clone().sub(player),vertical=Math.abs(offset.y);offset.y=0;
     if(vertical>2.8||offset.length()>swing.radius+(enemy.radius??.6))continue;
-    if(swing.arc>=Math.PI*2||offset.length()<.7||offset.normalize().dot(swing.direction)>=Math.cos(swing.arc/2))hurt(enemy,swing.damage);
+    if(swing.id==="sword"){
+     const forward=offset.dot(swing.direction),side=offset.x*swing.direction.z-offset.z*swing.direction.x,lanes=swing.evolved?[-1,0,1]:[0];
+     if(forward>=0&&forward<=swing.radius+(enemy.radius??.6)&&lanes.some(lane=>Math.abs(side-lane)<swing.width+(enemy.radius??.6)))hurt(enemy,swing.damage);
+    }else if(swing.arc>=Math.PI*2||offset.length()<.7||offset.normalize().dot(swing.direction)>=Math.cos(swing.arc/2))hurt(enemy,swing.damage);
    }
-   const effect=swing.id==='hammer'?this.ring(player,swing.radius,swing.color):this.visuals.slash(player,swing.radius,Math.atan2(swing.direction.x,swing.direction.z),swing.arc,swing.color);
-   if(swing.id!=='hammer')this.root.add(effect);this.flashes.push({object:effect,life:.2});
+   const angle=Math.atan2(swing.direction.x,swing.direction.z);
+   if(swing.id==='hammer')this.flashes.push({object:this.ring(player,swing.radius,swing.color),life:.2});
+   else{const effect=swing.id==='sword'?this.visuals.swordStrike(player,swing.radius,angle,swing.color,swing.evolved):this.visuals.axeCleave(player,swing.radius,angle,swing.color,swing.evolved);this.root.add(effect);this.cuts.push({object:effect,age:0,max:swing.id==='sword'?.24:.3,kind:swing.id,angle});}
    this.feedback.fx?.burst(player.clone().addScaledVector(swing.direction,1.5),swing.color,swing.id==='hammer'?15:6,swing.id==='hammer'?4:2);
    if(swing.id==='hammer')this.feedback.audio?.play('hammer');
    this.melee.splice(i,1);
@@ -148,9 +153,10 @@ export class SpellEngine{
    z.motes.forEach((m,j)=>{const angle=j/z.motes.length*Math.PI*2+(z.fire?0:this.clock*.45),x=Math.cos(angle)*z.radius*.64,zp=Math.sin(angle)*z.radius*.64;m.position.set(x,(this.feedback.height?.(z.mesh.position.x+x,z.mesh.position.z+zp)??z.mesh.position.y)-z.mesh.position.y+(z.fire?.05:.38+Math.sin(this.clock*3+j)*.15),zp);m.rotation.y=this.clock*(z.fire?1.5:.5)+j;m.scale.setScalar(Math.min(1,(z.max-z.life)*8,z.life*4)*(z.fire?.8+Math.sin(this.clock*10+j)*.16:1.25));});
    if(z.life<=0){this.discard(z.mesh);this.zones.splice(i,1);}
   }
+  for(let i=this.cuts.length-1;i>=0;i--){const c=this.cuts[i];c.age+=dt;const t=c.age/c.max;if(t>=1){this.discard(c.object);this.cuts.splice(i,1);continue;}const tail=Math.min(1,(1-t)*4);if(c.kind==="sword"){c.object.scale.set(tail,tail,.45+.55*Math.min(1,c.age/.055));}else{c.object.rotation.y=c.angle+(t-.25)*.55;const grow=.55+.45*Math.min(1,c.age/.045);c.object.scale.set(grow*tail,1,grow*tail);}}
   for(let i=this.flashes.length-1;i>=0;i--){const f=this.flashes[i];f.life-=dt;if(f.life<=0){this.discard(f.object);this.flashes.splice(i,1);}}
  }
- clear(){for(const child of [...this.root.children])this.discard(child);this.timers={};this.projectiles=[];this.zones=[];this.meteors=[];this.petals=[];this.flashes=[];this.clock=0;this.orbitTick=0;this.trailAt=0;this.petalEvolved=false;this.melee=[];this.previousTargets=new WeakMap();}
+ clear(){for(const child of [...this.root.children])this.discard(child);this.timers={};this.projectiles=[];this.zones=[];this.meteors=[];this.petals=[];this.flashes=[];this.clock=0;this.orbitTick=0;this.trailAt=0;this.petalEvolved=false;this.melee=[];this.cuts=[];this.previousTargets=new WeakMap();}
  dispose(){this.clear();this.visuals.dispose();this.root.removeFromParent();}
 }
 

@@ -8,7 +8,7 @@ const {plotPosition}=await import('../lib/game/farming.ts');
 const {ActionFeedback,projectPopup,popupMotion}=await import('../lib/game/action-feedback.ts');
 let checks=0;const check=(name,f)=>{f();checks++;console.log('PASS '+name)};
 function fixture(){
- const events=[],g=Object.assign(Object.create(WildseedGame.prototype),{farm:freshFarm(),player:new T.Group(),mode:'farm',started:true,paused:false,result:null,upgrade:false,selected:0,inReach:false,nearby:null,seed:'sunroot',
+ const events=[],g=Object.assign(Object.create(WildseedGame.prototype),{farm:freshFarm(),player:new T.Group(),mode:'farm',started:true,paused:false,result:null,upgrade:false,selected:0,inReach:false,nearby:null,seed:'sunroot',held:'sunroot',
  actionFx:{spawn:(...args)=>events.push(args)},emit:()=>{},sound:()=>{},pulse:()=>{},changed:()=>{},toast:s=>s});
  return {g,events};
 }
@@ -16,8 +16,8 @@ check('E emits the correct art above the acted-on soil, with exact harvested qua
  const {g,events}=fixture();const index=g.farm.plots.findIndex(p=>!p.crop);g.player.position.copy(plotPosition(index));
  g.syncNearbyPlot();assert.equal(events.length,0);g.interact();assert.equal(events[0][0],'plant');
  assert.equal(events[0][1].x,plotPosition(index).x);assert.equal(events[0][1].z,plotPosition(index).z);assert.ok(events[0][1].y>plotPosition(index).y);
- g.interact();assert.equal(events[1][0],'water');g.interact();assert.equal(events.length,2,'Growing crops do not trigger fake successes');
- g.farm.plots[index].growth=1;g.farm.plots[index].rich=true;g.interact();assert.equal(events[2][0],'harvest');assert.equal(events[2][2].amount,3);
+ g.selectFarmItem('water');g.interact();assert.equal(events[1][0],'water');g.interact();assert.equal(events.length,2,'Growing crops do not trigger fake successes');
+ g.farm.plots[index].growth=1;g.farm.plots[index].rich=true;g.selectFarmItem('sickle');g.interact();assert.equal(events[2][0],'harvest');assert.equal(events[2][2].amount,3);
 });
 check('Missing seeds, distant actions, and paused E never trigger a success icon',()=>{
  const {g,events}=fixture();const index=g.farm.plots.findIndex(p=>!p.crop);g.player.position.copy(plotPosition(index));g.farm.seeds.sunroot=0;g.interact();assert.equal(events.length,0);
@@ -25,8 +25,8 @@ check('Missing seeds, distant actions, and paused E never trigger a success icon
  g.paused=false;g.player.position.set(50,0,50);g.interact();assert.equal(events.length,0);
 });
 check('Soil, fertilizer, cooking, and portal rewards only animate on a real state change',()=>{
- const {g,events}=fixture();g.player.position.copy(plotPosition(0));g.farm.soil=2;g.farm.plots[0].rich=false;g.improvePlot('soil');g.improvePlot('soil');assert.deepEqual(events.map(e=>e[0]),['soil']);
- g.farm.plots[0]={crop:'sunroot',growth:0,watered:false,rich:true,fertilized:false};g.farm.fertilizer=2;g.improvePlot('fertilizer');g.improvePlot('fertilizer');assert.equal(events.length,2);
+ const {g,events}=fixture();g.player.position.copy(plotPosition(0));g.farm.soil=2;g.farm.plots[0].rich=false;g.selectFarmItem('soil');g.improvePlot('soil');g.improvePlot('soil');assert.deepEqual(events.map(e=>e[0]),['soil']);
+ g.farm.plots[0]={crop:'sunroot',growth:0,watered:false,rich:true,fertilized:false};g.farm.fertilizer=2;g.selectFarmItem('fertilizer');g.improvePlot('fertilizer');g.improvePlot('fertilizer');assert.equal(events.length,2);
  g.farm.crops.sunroot=2;g.cookMeal('sunroot');g.cookMeal('sunroot');assert.equal(events.length,3);assert.equal(events[2][2].anchor,'cook-sunroot');assert.equal(events[2][2].amount,1);assert.equal(events[2][2].crop,'sunroot');
  g.farm.crops.sunroot=4;g.farm.crops.moonberry=2;g.unlock();g.unlock();assert.equal(events.length,4);assert.equal(events[3][0],'unlock');
 });

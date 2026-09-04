@@ -9,7 +9,7 @@ const {HealthBar}=await import('../lib/game/health-bar.ts');
 const {makeEnemy,updateEnemy,disposeEnemy}=await import('../lib/game/enemies.ts');
 let checks=0;const check=(name,f)=>{f();checks++;console.log('PASS '+name);};
 function fixture(){return Object.assign(Object.create(WildseedGame.prototype),{
- farm:freshFarm(),player:new T.Group(),mode:'farm',started:true,paused:false,result:null,upgrade:false,keys:new Set(),selected:11,inReach:false,seed:'sunroot',
+ farm:freshFarm(),player:new T.Group(),mode:'farm',started:true,paused:false,result:null,upgrade:false,keys:new Set(),selected:11,inReach:false,seed:'sunroot',held:'sunroot',
  emit:()=>{},sound:()=>{},pulse:()=>{},changed:s=>s,toast:s=>s
 });}
 const pressE=g=>g.tendPlot();
@@ -19,12 +19,12 @@ check('Walking between beds only changes the highlighted target; E performs each
  assert.equal(JSON.stringify(g.farm),before,'Proximity must never tend automatically');
  const index=g.farm.plots.findIndex(p=>!p.crop);assert.ok(index>=0);g.player.position.copy(plotPosition(index));
  const seeds=g.farm.seeds.sunroot;pressE(g);assert.equal(g.farm.plots[index].crop,'sunroot');assert.equal(g.farm.plots[index].watered,false);assert.equal(g.farm.seeds.sunroot,seeds-1);
- g.syncNearbyPlot();assert.equal(g.farm.plots[index].watered,false);pressE(g);assert.equal(g.farm.plots[index].watered,true);
+ g.syncNearbyPlot();assert.equal(g.farm.plots[index].watered,false);pressE(g);assert.equal(g.farm.plots[index].watered,false,'Seeds cannot water');g.selectFarmItem('water');pressE(g);assert.equal(g.farm.plots[index].watered,true);
  g.farm.plots[index].growth=1;const crops=g.farm.crops.sunroot;g.syncNearbyPlot();assert.equal(g.farm.crops.sunroot,crops);
- pressE(g);assert.equal(g.farm.plots[index].crop,null);assert.ok(g.farm.crops.sunroot>crops);
+ pressE(g);assert.equal(g.farm.plots[index].crop,'sunroot','Can cannot harvest');g.selectFarmItem('sickle');pressE(g);assert.equal(g.farm.plots[index].crop,null);assert.ok(g.farm.crops.sunroot>crops);
 });
 check('E resolves the current nearest bed and refuses distant or paused interactions',()=>{
- const g=fixture();g.selected=11;g.player.position.copy(plotPosition(0));const count=g.farm.crops.sunroot;pressE(g);
+ const g=fixture();g.held='sickle';g.selected=11;g.player.position.copy(plotPosition(0));const count=g.farm.crops.sunroot;pressE(g);
  assert.equal(g.selected,0);assert.ok(g.farm.crops.sunroot>count);
  g.player.position.set(20,0,20);const saved=JSON.stringify(g.farm);pressE(g);assert.equal(JSON.stringify(g.farm),saved);
  g.player.position.copy(plotPosition(1));g.paused=true;pressE(g);assert.equal(JSON.stringify(g.farm),saved);

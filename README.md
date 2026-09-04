@@ -43,3 +43,5 @@ Battle drops use an 8% seed chance, 4% fertilizer chance and 2% soil chance per 
 The battle arena has a 120-unit radius (about half the area of the previous 170-unit arena). Biomes, hills, paths, bridges and landmarks fit the smaller footprint; vegetation counts follow its area.
 
 The farm uses a floating-island art direction: faceted stone cliffs, hanging vines, animated waterfalls, flower patches, a tiled cottage and mushroom pavilion. Cream-and-teal controls keep planting, watering and harvesting in one contextual E action. The camera opens with an island overview and remains freely orbitable during play.
+
+Farm hotbar: 1–3 equip seeds, 4 the watering can, 5 the sickle, 6 fertilizer, and 7 rich soil. E uses the held item on the nearest reachable bed. Tools remain selected after use; watering and harvesting require their matching tool. Farm tools appear in the Axie hand and the character weapon returns in dungeons.

@@ -37,11 +37,11 @@ export function packItems(v:View):PackItem[]{
 export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:CropId)=>void;onMeal:(id:CropId)=>void;onReturn:()=>void}){
  const [selected,setSelected]=useState('seed-'+v.seed);
  const farm=v.mode==='farm',items=packItems(v).filter(i=>i.count>0),item=items.find(i=>i.key===selected)??items[0];
- const equipped=item?.crop&&(item.category==='Seeds'?v.seed===item.crop:item.category==='Meals'?v.farm.meal===item.crop:false);
+ const equipped=item?.crop&&(item.category==='Seeds'?v.held===item.crop:item.category==='Meals'?v.farm.meal===item.crop:false);
  const hint=item?.category==='Seeds'?(farm?'Plant with E':'Bring home to plant'):item?.category==='Meals'?CROPS[item.crop!].effect:item?.category==='Crops'?'Cook at the kitchen':item?.key==='soil'?'Faster growth · +1 crop':'Faster crop growth';
  return <div className="simple-inventory">
   <div className="inventory-grid" aria-label="Inventory items">
-   {items.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+i.count} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><b>{i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.seed===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
+   {items.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+i.count} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><b>{i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.held===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
    {Array.from({length:Math.max(0,12-items.length)},(_,i)=><div key={'empty-'+i} className="inventory-slot empty-slot" aria-hidden="true"/>)}
   </div>
   {item?<div className="pack-selection" aria-live="polite">

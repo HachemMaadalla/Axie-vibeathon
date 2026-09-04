@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {toonMaterial} from './toon';
+import {HealthBar} from './health-bar';
 export type EnemyKind='beetle'|'stalker'|'shaman'|'moth'|'guardian';
 export const ENEMY_INFO={
  beetle:{name:'Bramble Scarab',color:'#df9963',hp:40,speed:3.5,radius:.95,aim:.85,xp:1},
@@ -9,7 +10,7 @@ export const ENEMY_INFO={
  guardian:{name:'Elder Thornwarden',color:'#d1b875',hp:720,speed:3.6,radius:2,aim:2.3,xp:12}
 } as const;
 export type EnemyUnit={
- mesh:T.Group;visual:T.Group;kind:EnemyKind;hp:number;max:number;speed:number;boss:boolean;bar:T.Mesh;
+ mesh:T.Group;visual:T.Group;kind:EnemyKind;hp:number;max:number;speed:number;boss:boolean;bar:HealthBar;
  phase:number;state:'seek'|'windup'|'attack'|'recover';timer:number;cooldown:number;heading:T.Vector3;push:T.Vector3;
  flash:number;rig:{legs:T.Group[];arms:T.Group[];wings:T.Group[];head:T.Group;body:T.Group;materials:T.MeshToonMaterial[]};
  radius:number;aimHeight:number;xpValue:number;spawnAge:number;
@@ -75,8 +76,8 @@ export function makeEnemy(kind:EnemyKind,tier=1,phase=0):EnemyUnit{
    box(wing,'#efcf79',side*.95,-.16,.04,.45,.38,.09);box(wing,'#405b74',side*1.35,-.27,.04,.24,.55,.08);wings.push(wing);
   }
  }
- const bar=new T.Mesh(new T.PlaneGeometry(kind==='guardian'?3:1,.075),new T.MeshBasicMaterial({color:info.color,depthTest:false}));
- bar.position.y=kind==='guardian'?6.8:kind==='moth'?2.05:2.5;bar.visible=false;mesh.add(bar);
+ const bar=new HealthBar(kind==='guardian'?3.2:1.4,kind==='guardian'?.24:.18,'#f36768');
+ bar.position.y=kind==='guardian'?6.8:kind==='moth'?2.05:2.65;mesh.add(bar);
  const max=info.hp*(1+(tier-1)*.4);
  return {mesh,visual,kind,hp:max,max,speed:info.speed,boss:kind==='guardian',bar,phase,state:'seek',timer:0,cooldown:.7+phase%1.5,heading:new T.Vector3(),push:new T.Vector3(),flash:0,rig:{legs,arms,wings,head,body,materials:[...materials.values()]},radius:info.radius,aimHeight:info.aim,xpValue:info.xp,spawnAge:0};
 }
@@ -97,7 +98,7 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
  const size=e.boss?2.15:1,spawn=Math.min(1,e.spawnAge*5);
  e.visual.scale.set(size*(e.flash>0?1.1:1)*spawn,size*(e.flash>0?.88:1)*spawn,size*(e.flash>0?1.1:1)*spawn);
  for(const m of materials){m.emissive.set(e.flash>0?'#fff4d4':m.userData.glow?m.color:'#000000');m.emissiveIntensity=e.flash>0?1.2:m.userData.glow?.65:0;}
- e.bar.visible=e.hp<e.max&&e.spawnAge>1;
+ e.bar.visible=e.hp>0&&e.spawnAge>.2;e.bar.update(e.hp,e.max,dt);
  if(e.state==='seek'){
   e.mesh.rotation.y=Math.atan2(direction.x,direction.z);
   const range=e.kind==='shaman'?12:e.boss?8:e.kind==='beetle'?10:2.1;

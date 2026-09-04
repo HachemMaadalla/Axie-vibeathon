@@ -1,12 +1,21 @@
 export type CropId='sunroot'|'moonberry'|'embercorn';
-export type HeroId='pomodoro'|'bing'|'kotaro';
+export type HeroId='pomodoro'|'bing'|'kotaro'|'kibo'|'paladill'|'tripp'|'xia';
 export type Plot={crop:CropId|null;growth:number;watered:boolean;rich:boolean;fertilized:boolean};
 export const CROPS={
 sunroot:{name:'Sunroot',color:'#ffc969',seconds:55,description:'A golden root that makes a hearty recovery broth.',meal:'Sunroot broth',effect:'+35 maximum health'},
 moonberry:{name:'Moonberry',color:'#b79cfa',seconds:75,description:'Sweet twilight berries, full of quick-footed energy.',meal:'Moonberry tea',effect:'+25% movement speed'},
 embercorn:{name:'Embercorn',color:'#ff8562',seconds:95,description:'A rare crop found beyond the Bramble Gate.',meal:'Embercorn roast',effect:'+40% attack damage'}
 } as const;
-export const HEROES={pomodoro:{name:'Pomodoro',role:'The gentle gardener',perk:'Harvests have a 25% chance to return a seed.',color:'#f68d83'},bing:{name:'Bing',role:'The curious explorer',perk:'Starts each expedition with 20 extra health.',color:'#92d7ed'},kotaro:{name:'Kotaro',role:'The brave wayfarer',perk:'Deals 15% more damage in the wilds.',color:'#f3c382'}} as const;
+export const HEROES={
+pomodoro:{name:'Pomodoro',role:'The gentle gardener',perk:'Harvests have a 25% chance to return a seed.',shortPerk:'Bonus harvest seeds',color:'#f68d83',health:0,damage:1,speed:1},
+bing:{name:'Bing',role:'The curious explorer',perk:'Starts each expedition with 20 extra health.',shortPerk:'+20 health',color:'#92d7ed',health:20,damage:1,speed:1},
+kotaro:{name:'Kotaro',role:'The brave wayfarer',perk:'Deals 15% more damage in the wilds.',shortPerk:'+15% damage',color:'#f3c382',health:0,damage:1.15,speed:1},
+kibo:{name:'Kibo',role:'The hammer keeper',perk:'Starts with 10 extra health and deals 10% more damage.',shortPerk:'+10 health · +10% damage',color:'#f3ae85',health:10,damage:1.1,speed:1},
+paladill:{name:'Paladill',role:'The island guardian',perk:'Starts each expedition with 35 extra health.',shortPerk:'+35 health',color:'#a6c8f0',health:35,damage:1,speed:1},
+tripp:{name:'Tripp',role:'The roaming scout',perk:'Moves 15% faster.',shortPerk:'+15% speed',color:'#c1a0f2',health:0,damage:1,speed:1.15},
+xia:{name:'Xia',role:'The swift fighter',perk:'Deals 8% more damage and moves 8% faster.',shortPerk:'+8% damage · +8% speed',color:'#f3be67',health:0,damage:1.08,speed:1.08}
+} as const;
+export const HERO_IDS=Object.keys(HEROES) as HeroId[];
 export type FarmState={version:1;coins:number;hero:HeroId;seeds:Record<CropId,number>;crops:Record<CropId,number>;plots:Plot[];fertilizer:number;soil:number;meals:Record<CropId,number>;meal:CropId|null;unlocked:boolean;runs:number;harvests:number;clears:number;day:number};
 export const freshFarm=():FarmState=>({version:1,coins:30,hero:'pomodoro',seeds:{sunroot:7,moonberry:3,embercorn:0},crops:{sunroot:0,moonberry:0,embercorn:0},plots:Array.from({length:12},(_,i)=>({crop:i<3?'sunroot':i===3?'moonberry':null,growth:i<4?1:0,watered:i<4,rich:false,fertilized:false})),fertilizer:2,soil:1,meals:{sunroot:0,moonberry:0,embercorn:0},meal:null,unlocked:false,runs:0,harvests:0,clears:0,day:1});
 export function hydrateFarm(value:unknown):FarmState{
@@ -29,6 +38,6 @@ export function offerHarvest(farm:FarmState):string{if(farm.unlocked)return 'The
 export type Loot={sunroot:number;moonberry:number;embercorn:number;fertilizer:number;soil:number};
 export const emptyLoot=():Loot=>({sunroot:0,moonberry:0,embercorn:0,fertilizer:0,soil:0});
 export function rewardKill(loot:Loot,kills:number,tier:number){if(kills%3===0)loot.sunroot++;if(kills%5===0)loot.moonberry++;if(kills%7===0)loot.fertilizer++;if(kills%11===0)loot.soil++;if(tier===2&&kills%6===0)loot.embercorn++;}
-export function beginExpedition(farm:FarmState,tier:number){if(tier!==1&&tier!==2)throw new Error('Unknown expedition');if(tier===2&&!farm.unlocked)throw new Error('Open the Bramble Gate first');let meal:CropId|null=null;if(farm.meal&&farm.meals[farm.meal]>0){meal=farm.meal;farm.meals[meal]--;}farm.meal=null;return{hp:100+(farm.hero==='bing'?20:0)+(meal==='sunroot'?35:0),damage:18*(farm.hero==='kotaro'?1.15:1)*(meal==='embercorn'?1.4:1),speed:6*(meal==='moonberry'?1.25:1),meal};}
+export function beginExpedition(farm:FarmState,tier:number){if(tier!==1&&tier!==2)throw new Error('Unknown expedition');if(tier===2&&!farm.unlocked)throw new Error('Open the Bramble Gate first');let meal:CropId|null=null;if(farm.meal&&farm.meals[farm.meal]>0){meal=farm.meal;farm.meals[meal]--;}farm.meal=null;return{hp:100+HEROES[farm.hero].health+(meal==='sunroot'?35:0),damage:18*HEROES[farm.hero].damage*(meal==='embercorn'?1.4:1),speed:6*HEROES[farm.hero].speed*(meal==='moonberry'?1.25:1),meal};}
 export function settleExpedition(farm:FarmState,loot:Loot,outcome:'won'|'escaped'|'lost',tier:number):Loot{const result={...loot};if(outcome==='won'){result.sunroot+=3;result.moonberry+=2;result.fertilizer++;result.soil++;if(tier===2)result.embercorn+=3;farm.clears++;}else for(const k of Object.keys(result) as (keyof Loot)[])result[k]=Math.ceil(result[k]/2);result.sunroot=Math.max(1,result.sunroot);for(const id of Object.keys(CROPS) as CropId[])farm.seeds[id]+=result[id];farm.fertilizer+=result.fertilizer;farm.soil+=result.soil;farm.runs++;farm.day++;return result;}
 

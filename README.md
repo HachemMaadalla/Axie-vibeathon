@@ -4,7 +4,7 @@ A Three.js browser prototype for Axie Vibeathon: cozy farming feeds survival exp
 ## Play
 Use WASD / arrow keys or click/tap terrain to move. Select a garden bed, choose a seed, and press E or the garden action button to plant, water, or harvest. The camp kitchen turns two crops into one meal. Pack a meal before entering a dungeon. Attacks fire automatically; Space dashes. Win by surviving at least 90 seconds and defeating the guardian that arrives at 60 seconds. Offer 4 Sunroot and 2 Moonberry to open Bramble Hollow, which drops Embercorn seeds.
 
-Three playable Axies: Pomodoro (seed recovery), Bing (extra health), Kotaro (extra damage).
+Seven playable Axies: Pomodoro, Bing, Kotaro, Kibo, Paladill, Tripp, and Xia, each with its own perk and official equipped weapon. Press E beside an island companion to switch. All ten Sapidae variants populate the island services and paths.
 Fertilizer accelerates a single crop. Rich soil permanently improves a bed's growth speed and yield.
 Four mature starter beds let players immediately test cooking and the gate offering.
 
@@ -32,4 +32,5 @@ Axie/Sapidae models, textures, animations and preview portraits are from the eve
 
 ## Validation
 Progression checks cover the initial harvest-to-meal-to-gate chain, watering, soil, fertilizer, resources, deeper dungeon loot, failed expedition recovery, and save validation.
+
 

@@ -12,7 +12,7 @@ export function IslandShop({farm,onTrade}:{farm:FarmState;onTrade:(side:'buy'|'s
  }))}</div></div>;
 }
 export function CompanionTalk({id,onChoose,onClose}:{id:HeroId;onChoose:()=>void;onClose:()=>void}){
- const perk={pomodoro:'Bonus harvest seeds',bing:'+20 starting health',kotaro:'+15% damage'}[id];
+ const perk=HEROES[id].shortPerk;
  return <div className="companion-talk"><img src={'/assets/axie/'+id+'.png'} alt={HEROES[id].name}/><div><p>Take over?</p><small>{perk}</small></div><div className="talk-actions"><button className="secondary" onClick={onClose}>Later</button><button className="primary" onClick={onChoose}>Play as {HEROES[id].name}</button></div></div>;
 }
 export function IslandPortal({farm,onEnter,onUnlock}:{farm:FarmState;onEnter:(tier:number)=>void;onUnlock:()=>void}){

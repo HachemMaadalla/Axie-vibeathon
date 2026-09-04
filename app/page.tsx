@@ -45,7 +45,7 @@ export default function Home(){
   </header>
   {!started&&<section className="quiet-welcome panel"><span className="menu-kicker">LUNACIA</span><h1>Wildseed</h1><button className="primary" disabled={!v.ready||!!v.error} onClick={()=>{setStarted(true);game.current?.setMuted(muted);game.current?.start();}}>{v.ready?'Enter Lunacia':'Loading...'}<Play size={18}/></button></section>}
   {started&&isFarm&&<>
-   <FarmHotbar view={v} locked={!!modal||userPaused||!!v.result} onSelect={item=>game.current?.selectFarmItem(item)} onUse={()=>game.current?.tendPlot()}/>
+   <FarmHotbar view={v} locked={!!modal||userPaused||!!v.result} onSelect={item=>game.current?.selectFarmItem(item)}/>
    {v.nearby&&!modal&&!userPaused&&<button className="island-interact panel" onClick={()=>game.current?.interact()}><kbd>E</kbd>{v.nearby.hero?HEROES[v.nearby.hero].name:v.nearby.label}</button>}
   </>}
   {started&&!isFarm&&<>

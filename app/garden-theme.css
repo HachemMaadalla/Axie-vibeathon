@@ -151,12 +151,6 @@
 .farm-slot.depleted>.loot-art{opacity:.45;filter:saturate(.5)}
 .farm-slot kbd{position:absolute;left:4px;top:3px;font:800 10px "Trebuchet MS",sans-serif;color:#315e51;z-index:1}
 .farm-slot b{position:absolute;right:3px;bottom:3px;padding:1px 4px;border-radius:5px;background:#24564b;color:#fff7dc;font-size:11px;line-height:1.2}
-.game-shell .farm-use{pointer-events:auto;display:flex;align-items:center;gap:10px;padding:9px 18px;border:3px solid #fff9dc;border-radius:14px;background:#fff3da;color:#35584e;font-size:16px;font-weight:800;box-shadow:0 4px #356b66;min-height:45px}
-.game-shell .farm-use:disabled{opacity:1;filter:none;background:#f2ead4;color:#65776b}
-.game-shell .farm-use.ready{background:#2ebc9e;color:#fff9dd}
-.game-shell .farm-use[data-action="water"].ready{background:#38b7d0}
-.game-shell .farm-use[data-action="harvest"].ready{background:#f9b44c;color:#70451f}
-.farm-use kbd{display:grid;place-items:center;width:23px;height:24px;border:1px solid #ecf7cf;border-radius:5px;background:#244e4940;font-size:12px;color:inherit}
 .game-shell:not(.in-dungeon) .island-interact{bottom:120px}
 @media(max-width:600px){
  .farm-hotbar-wrap{bottom:14px;width:calc(100% - 20px);gap:8px}
@@ -164,10 +158,27 @@
  .farm-hotbar .farm-slot{flex:1;min-width:0;width:auto;height:49px;border-radius:10px;padding:2px}
  .farm-slot>.loot-art{width:35px!important;height:35px!important}
  .farm-slot kbd{font-size:9px;top:2px;left:3px}.farm-slot b{font-size:10px;padding:1px 3px}
- .game-shell .farm-use{font-size:14px;padding:7px 13px;min-height:40px}
  .game-shell:not(.in-dungeon) .island-interact{bottom:93px}
 }
 @media(max-width:380px){.game-shell .farm-hotbar{gap:4px;padding:6px}.farm-slot>.loot-art{width:31px!important;height:31px!important}}
 
 @media(max-width:900px){.game-shell:not(.in-dungeon) .traversal-actions{bottom:105px}}
-@media(pointer:coarse) and (max-width:600px){.game-shell .farm-use{position:absolute;bottom:calc(100% + 105px)}.game-shell:not(.in-dungeon) .island-interact{bottom:190px}}
+
+@media(pointer:coarse) and (max-width:600px){.game-shell:not(.in-dungeon) .island-interact{bottom:190px}}
+
+/* Crop card follows the nearest bed in world space. */
+.plot-prompt{position:absolute;top:0;left:0;display:grid;grid-template-columns:38px 1fr;gap:4px 10px;width:204px;padding:12px 13px;border:1px solid #c3a56a;border-radius:9px;background:linear-gradient(130deg,#233e39f5,#122f2ef5);color:#fff0cd;box-shadow:0 3px 0 #0b2526,0 8px 20px #12333738;text-align:left;z-index:2;will-change:transform;font-family:"Trebuchet MS",sans-serif}
+.plot-prompt[hidden]{display:none}
+.plot-prompt:after{content:"";position:absolute;left:var(--pointer-x,20px);bottom:-6px;width:10px;height:10px;background:#173330;border-right:1px solid #c3a56a;border-bottom:1px solid #c3a56a;transform:translateX(-50%) rotate(45deg)}
+.game-shell .plot-prompt:disabled{opacity:1;filter:none;cursor:default}
+.game-shell .plot-prompt:active{translate:none}
+.plot-prompt:not(:disabled):hover{border-color:#ffdea1;background:linear-gradient(130deg,#2c4d40,#183c34)}
+.plot-prompt-art{width:38px;height:42px;object-fit:contain;align-self:center;filter:drop-shadow(0 2px 1px #0006)}
+.plot-prompt-copy{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.plot-prompt-copy strong{font-size:15px;line-height:1.1;color:#ffe4a4;font-weight:800}
+.plot-prompt-copy small{font-size:12px;line-height:1.2;color:#f0ecd5}
+.plot-prompt-action{grid-column:2;display:flex;align-items:center;gap:7px;margin-top:4px;min-height:24px;font-size:14px;font-weight:700;color:#fff6dd}
+.plot-prompt-action kbd{display:grid;place-items:center;min-width:22px;height:23px;padding:1px 5px;background:#f8e4b9;border-radius:4px;box-shadow:0 2px #a48c61;color:#3a493a;font-size:13px}
+.plot-prompt-action kbd[hidden]{display:none}
+.plot-prompt:disabled .plot-prompt-action{color:#b5c8b7;font-size:12px}
+@media(max-width:600px){.plot-prompt{width:184px;padding:10px;gap:4px 8px;grid-template-columns:32px 1fr}.plot-prompt-art{width:32px;height:38px}.plot-prompt-copy strong{font-size:14px}.plot-prompt-action{font-size:13px}}

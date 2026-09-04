@@ -1,4 +1,6 @@
 'use client';
+import {STARTER_SPELL,ITEMS} from '@/lib/game/build';
+import {ItemIcon} from './build-ui';
 import {Coins,Lock} from 'lucide-react';
 import {CROPS,HEROES,type CropId,type FarmState,type HeroId} from '@/lib/game/state';
 import {PRICES,type TradeKind} from '@/lib/game/economy';
@@ -13,7 +15,7 @@ export function IslandShop({farm,onTrade}:{farm:FarmState;onTrade:(side:'buy'|'s
 }
 export function CompanionTalk({id,onChoose,onClose}:{id:HeroId;onChoose:()=>void;onClose:()=>void}){
  const perk=HEROES[id].shortPerk;
- return <div className="companion-talk"><img src={'/assets/axie/'+id+'.png'} alt={HEROES[id].name}/><div><p>Take over?</p><small>{perk}</small></div><div className="talk-actions"><button className="secondary" onClick={onClose}>Later</button><button className="primary" onClick={onChoose}>Play as {HEROES[id].name}</button></div></div>;
+ return <div className="companion-talk"><img src={'/assets/axie/'+id+'.png'} alt={HEROES[id].name}/><div><p>Take over?</p><small>{perk}</small><span className="companion-starter"><ItemIcon id={STARTER_SPELL[id]} size={22}/>{ITEMS[STARTER_SPELL[id]].name}</span></div><div className="talk-actions"><button className="secondary" onClick={onClose}>Later</button><button className="primary" onClick={onChoose}>Play as {HEROES[id].name}</button></div></div>;
 }
 export function IslandPortal({farm,onEnter,onUnlock}:{farm:FarmState;onEnter:(tier:number)=>void;onUnlock:()=>void}){
  return <div className="island-portals"><button className="portal-choice" onClick={()=>onEnter(1)}><span className="portal-gem grove-gem"/><strong>Whispering Grove</strong><small>Enter →</small></button>

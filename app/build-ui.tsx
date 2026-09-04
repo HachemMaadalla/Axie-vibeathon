@@ -1,8 +1,10 @@
 'use client';
+import {WeaponSpellIcon} from './weapon-icon';
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import {Sprout,Flower2,Cloud,Zap,Flame,Sun,Wind,Droplets,Gem,Heart,Sparkles,ArrowRight,Plus,Check} from 'lucide-react';
 import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,canEvolve,SLOT_LIMIT,type ItemId,type WeaponId,type Build,type Choice} from '@/lib/game/build';
 export function ItemIcon({id,size=24,evolved=false}:{id:ItemId|'heal';size?:number;evolved?:boolean}){
+ if(['cannon','sword','hammer','axe'].includes(id))return <WeaponSpellIcon id={id} size={size} evolved={evolved}/>;
  return <img src={'/assets/skills/'+id+(evolved&&WEAPONS.includes(id as WeaponId)?'-evolved':'')+'.png'} width={size} height={size} alt="" aria-hidden="true" draggable={false} className={'skill-art-icon '+(evolved?'evolved-art':'')} style={{width:size,height:size}}/>;
 }
 export function BuildSummary({build}:{build:Build}){
@@ -20,7 +22,7 @@ export function UpgradeCards({choices,build,onChoose}:{choices:Choice[];build:Bu
  return <div className={'level-choice-grid '+(selected?'has-selection':'')} aria-label="Choose one upgrade">{choices.map((c,index)=>{
   const weapon=c.id!=='heal'&&WEAPONS.includes(c.id as WeaponId)?c.id as WeaponId:null;
   const recipe=weapon?EVOLUTIONS[weapon]:null;
-  const pair:ItemId|null=recipe?recipe.passive:c.id!=='heal'?WEAPONS.find(w=>EVOLUTIONS[w].passive===c.id)??null:null;
+  const pair:ItemId|null=recipe?recipe.passive:c.id!=='heal'?WEAPONS.find(w=>EVOLUTIONS[w].passive===c.id&&itemLevel(build,w)>0)??WEAPONS.find(w=>EVOLUTIONS[w].passive===c.id)??null:null;
   const pairOwned=pair?itemLevel(build,pair)>0:false;
   const owned=c.id==='heal'?0:itemLevel(build,c.id),evolution=c.kind==='evolution';
   return <button key={c.id} className={'level-card '+(evolution?'awakening-card ':'')+(selected===c.id?'card-selected':'')} style={{'--skill-color':c.color,'--card-index':index} as CSSProperties} disabled={selected!==null} onClick={()=>select(c.id)} aria-label={c.name+'. '+(evolution?'Evolution. ':c.kind==='heal'?'':owned?'Upgrade to level '+c.level+'. ':'New '+(c.kind==='spell'?'spell':'item')+'. ')+c.text}>

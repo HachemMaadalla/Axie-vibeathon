@@ -77,7 +77,7 @@ export default function Home(){
   </DialogContent></Dialog>
   <Dialog open={v.upgrade} onOpenChange={()=>{}}><DialogContent className="game-dialog upgrade-dialog power-dialog" showCloseButton={false}>
    <div className="power-heading"><span className="power-wings" aria-hidden="true">✦</span><div className="power-crest"><ChevronsUp size={26}/><b>{v.level}</b></div><span className="power-wings" aria-hidden="true">✦</span></div>
-   <span className="power-kicker">{v.time===0?'EXPEDITION BLESSING':'LEVEL UP'}</span><DialogTitle className="dialog-title">Choose your power</DialogTitle><DialogDescription>One choice. Make it yours.</DialogDescription>
+   <span className="power-kicker">LEVEL UP</span><DialogTitle className="dialog-title">Choose your power</DialogTitle><DialogDescription>One choice. Make it yours.</DialogDescription>
    {v.upgrade&&<UpgradeCards key={v.level} choices={v.choices} build={v.build} onChoose={id=>game.current?.chooseUpgrade(id)}/>}
    <div className="power-footer"><span><Pause size={12}/> Combat paused</span><span>Choose a card <i>or</i> press <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span></div>
    <details className="power-loadout"><summary>Current loadout <span>{Object.keys(v.build.items).length} / 8 slots</span></summary><BuildSummary build={v.build}/></details>

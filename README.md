@@ -34,3 +34,6 @@ Axie/Sapidae models, textures, animations and preview portraits are from the eve
 Progression checks cover the initial harvest-to-meal-to-gate chain, watering, soil, fertilizer, resources, deeper dungeon loot, failed expedition recovery, and save validation.
 
 
+
+Each expedition starts with one character weapon spell at level 1: Pomodoro / Thorn Bolt (staff), Bing / Cannon Shot, Kotaro and Tripp / Sword Slash, Kibo / Hammer Slam, Paladill and Xia / Axe Cleave. There is no opening spell draft. Weapon spells use the same level-up, four-slot, and evolution rules as other spells.
+

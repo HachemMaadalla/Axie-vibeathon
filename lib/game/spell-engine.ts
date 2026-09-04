@@ -4,7 +4,7 @@ import type {CombatFX,CombatAudio} from './combat-fx';
 import {WEAPONS,ITEMS,itemLevel,spellStats,type Build,type WeaponId} from './build';
 export type SpellTarget={mesh:T.Group;hp:number;boss:boolean;radius?:number;aimHeight?:number};
 const center=(t:SpellTarget)=>t.mesh.position.clone().add(new T.Vector3(0,t.aimHeight??.7,0));
-type Projectile={mesh:T.Mesh;velocity:T.Vector3;life:number;damage:number;remaining:number;hit:Set<SpellTarget>;burst:boolean};
+type Projectile={mesh:T.Mesh;velocity:T.Vector3;life:number;damage:number;remaining:number;hit:Set<SpellTarget>;burst:boolean;explosion?:number;color?:string};
 type Zone={mesh:T.Group;radius:number;life:number;max:number;damage:number;slow:boolean;heal:boolean;tick:number;motes:T.Mesh[];fire:boolean};
 type Meteor={mesh:T.Mesh;marker:T.Mesh;point:T.Vector3;life:number;radius:number;damage:number;burn:boolean};
 export class SpellEngine{
@@ -18,7 +18,7 @@ export class SpellEngine{
  private flashes:{object:T.Object3D;life:number}[]=[];
  private clock=0;
  private orbitTick=0;private trailAt=0;
- constructor(scene:T.Scene,private feedback:{fx?:CombatFX;audio?:CombatAudio;height?:(x:number,z:number)=>number}={}){scene.add(this.root);}
+ constructor(scene:T.Scene,private feedback:{fx?:CombatFX;audio?:CombatAudio;height?:(x:number,z:number)=>number;cast?:(id:WeaponId,target:T.Vector3)=>void}={}){scene.add(this.root);}
  private discard(object:T.Object3D){this.visuals.release(object);}
  private ring(point:T.Vector3,radius:number,color:string){
   const mesh=this.visuals.ring(point,radius,color,this.feedback.height);this.root.add(mesh);return mesh;
@@ -54,7 +54,29 @@ export class SpellEngine{
    if(this.timers[id]!>0)continue;
    const list=near(player),target=list[0];if(!target||target.mesh.position.distanceTo(player)>17)continue;
    const s=spellStats(build,id),damage=baseDamage*s.damage,color=s.evolved?SPELL_COLORS[id].evolved:SPELL_COLORS[id].base;
-   this.timers[id]=s.cooldown;this.feedback.audio?.play(id==='storm'?'storm':id==='ember'?'cast':'cast');
+   if(['sword','axe','hammer'].includes(id)&&(Math.hypot(target.mesh.position.x-player.x,target.mesh.position.z-player.z)>s.area+(target.radius??.6)||Math.abs(target.mesh.position.y-player.y)>2.2))continue;
+   this.timers[id]=s.cooldown;this.feedback.cast?.(id,target.mesh.position);this.feedback.audio?.play(id==='storm'?'storm':id==='ember'?'cast':'cast');
+   if(id==='cannon'){
+    for(let i=0;i<s.count;i++){
+     const aimed=list[i%Math.min(list.length,3)],origin=player.clone().add(new T.Vector3(0,.95,0)),aim=center(aimed).sub(origin).normalize();
+     aim.applyAxisAngle(new T.Vector3(0,1,0),(i-(s.count-1)/2)*.075);
+     const mesh=this.visuals.cannonball(s.evolved);mesh.position.copy(origin);this.root.add(mesh);this.feedback.fx?.burst(origin,color,5,2);
+     this.projectiles.push({mesh,velocity:aim.multiplyScalar(19),life:1.5,damage,remaining:1,hit:new Set(),burst:false,explosion:s.area,color});
+    }
+   }
+   if(id==='sword'||id==='axe'||id==='hammer'){
+    const direction=target.mesh.position.clone().sub(player);direction.y=0;direction.normalize();
+    const arc=id==='hammer'||s.evolved?Math.PI*2:id==='axe'?Math.PI*1.25:Math.PI*.9;
+    for(const enemy of alive()){
+     const offset=enemy.mesh.position.clone().sub(player),vertical=Math.abs(offset.y);offset.y=0;
+     if(vertical>2.2||offset.length()>s.area+(enemy.radius??.6))continue;
+     if(arc>=Math.PI*2||offset.length()<.7||offset.normalize().dot(direction)>=Math.cos(arc/2))hurt(enemy,damage);
+    }
+    const effect=id==='hammer'?this.ring(player,s.area,color):this.visuals.slash(player,s.area,Math.atan2(direction.x,direction.z),arc,color);
+    if(id!=='hammer')this.root.add(effect);this.flashes.push({object:effect,life:.24});
+    this.feedback.fx?.burst(player.clone().addScaledVector(direction,1.5),color,id==='hammer'?15:6,id==='hammer'?4:2);
+    if(id==='hammer')this.feedback.audio?.play('meteor');
+   }
    if(id==='thorn'){
     for(let i=0;i<s.count;i++){
      const target=list[i%Math.min(list.length,3)];
@@ -96,10 +118,10 @@ export class SpellEngine{
    if(this.orbitTick<=0){this.orbitTick=s.cooldown;for(const t of alive())if(this.petals.some(p=>p.position.distanceTo(center(t))<((t.radius??(t.boss?2:.7))+.3)))hurt(t,baseDamage*s.damage);}
   }
   for(let i=this.projectiles.length-1;i>=0;i--){
-   const p=this.projectiles[i];p.life-=dt;const previous=p.mesh.position.clone();p.mesh.position.addScaledVector(p.velocity,dt);const segment=new T.Line3(previous,p.mesh.position);if(emitTrail)this.feedback.fx?.trail(p.mesh.position,p.burst?'#ffe16a':'#aceb3d',.12);
+   const p=this.projectiles[i];p.life-=dt;const previous=p.mesh.position.clone();p.mesh.position.addScaledVector(p.velocity,dt);const segment=new T.Line3(previous,p.mesh.position);if(emitTrail)this.feedback.fx?.trail(p.mesh.position,p.color??(p.burst?'#ffe16a':'#aceb3d'),.12);
    for(const t of alive()){
     if(p.hit.has(t)||segment.closestPointToPoint(center(t),true,new T.Vector3()).distanceTo(center(t))>(t.radius??(t.boss?2:.85)))continue;
-    p.hit.add(t);hurt(t,p.damage);
+    p.hit.add(t);if(p.explosion){splash(t.mesh.position,p.explosion,p.damage);this.feedback.fx?.burst(center(t),p.color??'#9de8ff',14,4);this.flashes.push({object:this.ring(t.mesh.position,p.explosion,p.color??'#9de8ff'),life:.25});this.feedback.audio?.play('hit');}else hurt(t,p.damage);
     if(p.burst){splash(t.mesh.position,1.3,p.damage*.25);this.flashes.push({object:this.ring(t.mesh.position,1.3,'#ffe592'),life:.22});}
     if(--p.remaining<=0){p.life=0;break;}
    }

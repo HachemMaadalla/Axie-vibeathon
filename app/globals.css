@@ -282,3 +282,4 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 @media(prefers-reduced-motion:reduce){.action-visual{animation:none!important}}
 @media(max-width:600px){.action-popup{width:70px;height:70px}.action-popup>b{font-size:21px}}
 
+.companion-starter{display:flex;align-items:center;gap:7px;margin-top:10px;color:#f0d7a1;font-size:12px}

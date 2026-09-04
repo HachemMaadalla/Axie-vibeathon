@@ -4,6 +4,10 @@ import {toonMaterial} from './toon';
 import type {WeaponId} from './build';
 
 export const SPELL_COLORS:Record<WeaponId,{base:string;evolved:string;trail:string}>={
+ cannon:{base:'#56d3ef',evolved:'#ffd35e',trail:'#98edff'},
+ sword:{base:'#b5eeff',evolved:'#90ffe2',trail:'#e6ffff'},
+ hammer:{base:'#ffbe67',evolved:'#ffd865',trail:'#f7eac9'},
+ axe:{base:'#ffb18e',evolved:'#ffdf79',trail:'#ffedc5'},
  thorn:{base:'#b4ef35',evolved:'#ffdc58',trail:'#68b83e'},
  petal:{base:'#ff62b7',evolved:'#c780ff',trail:'#63edce'},
  spore:{base:'#8dda43',evolved:'#61efc2',trail:'#24a87d'},
@@ -102,6 +106,12 @@ export class SpellVisuals{
  }
  puff(evolved:boolean){return this.cached(evolved?'dream-spore':'green-spore',()=>[{g:new T.IcosahedronGeometry(.22,1),color:evolved?'#60e9bb':'#45b56c'},{g:new T.IcosahedronGeometry(.12,0),color:evolved?'#bdffe3':'#b5ef57',position:[-.07,.12,.08]}]);}
  flame(){return this.cached('burning-flame',()=>[{g:new T.ConeGeometry(.18,.8,5),color:'#ff6230',position:[0,.4,0]},{g:new T.ConeGeometry(.1,.52,4),color:'#ffe17a',position:[.02,.3,.08]}]);}
+ cannonball(evolved:boolean){return this.cached(evolved?'broadside-ball':'cannon-ball',()=>[{g:new T.IcosahedronGeometry(.28,2),color:evolved?'#ffc740':'#376d87'},{g:new T.SphereGeometry(.13,7,5),color:evolved?'#fff0a0':'#b9f5ff',position:[-.1,.12,.16]}]);}
+ slash(point:T.Vector3,radius:number,angle:number,arc:number,color:string){
+  const parts:Part[]=[];
+  for(const [inner,outer,c] of [[.68,1,SPELL_INK],[.72,.96,color],[.89,.94,'#fff9dc']] as [number,number,string][]){const g=new T.RingGeometry(inner*radius,outer*radius,40,1,0,arc);g.rotateX(-Math.PI/2);g.rotateY(angle-Math.PI/2-arc/2);parts.push({g,color:c});}
+  const mesh=new T.Mesh(merge(parts),this.flat);mesh.name='weapon-slash';mesh.userData.transientGeometry=true;mesh.position.copy(point).y+=.7;return mesh;
+ }
  ring(point:T.Vector3,radius:number,color:string,height?:(x:number,z:number)=>number){
   const geo=band(radius,color);geo.rotateX(-Math.PI/2);
   const pos=geo.getAttribute('position');

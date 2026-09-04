@@ -2,7 +2,7 @@
 import {useState,type CSSProperties} from 'react';
 import {Check,Sparkles} from 'lucide-react';
 import {CROPS,type CropId} from '@/lib/game/state';
-import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,type WeaponId} from '@/lib/game/build';
+import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,type WeaponId,type ItemId} from '@/lib/game/build';
 import type {View} from '@/lib/game/scene';
 import {ItemIcon} from './build-ui';
 type Category='All'|'Seeds'|'Crops'|'Supplies'|'Meals';
@@ -51,7 +51,7 @@ export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:
  </div>;
 }
 export function CombatBelt({view:v,onOpen}:{view:View;onOpen:()=>void}){
- const ids=[...WEAPONS,...PASSIVES].filter(id=>itemLevel(v.build,id)>0);
+ const ids=[...(Object.keys(v.build.items) as ItemId[]).filter(id=>WEAPONS.includes(id as WeaponId)),...PASSIVES].filter(id=>itemLevel(v.build,id)>0);
  return <div className="combat-belt panel" aria-label="Equipped spells and items">{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25} evolved={v.build.evolved.includes(id as WeaponId)}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
 }
 

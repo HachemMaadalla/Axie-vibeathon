@@ -1,14 +1,17 @@
 import * as T from 'three';
+import {toonMaterial} from './toon';
+import {inkMaterial,cartoonBandGeometry} from './spell-visuals';
 type Particle={p:T.Vector3;v:T.Vector3;life:number;max:number;color:T.Color;size:number;gravity:number};
 type Ring={mesh:T.Mesh;life:number;max:number;radius:number;warning:boolean};
 export class CombatFX{
  readonly root=new T.Group();shake=0;freeze=0;
  private particles:Particle[]=[];private rings:Ring[]=[];private texts:{sprite:T.Sprite;life:number}[]=[];
- private numbers=new Map<string,T.Texture>();private pool:T.InstancedMesh;
+ private numbers=new Map<string,T.Texture>();private pool:T.InstancedMesh;private outlines:T.InstancedMesh;
  private matrix=new T.Matrix4();private quat=new T.Quaternion();private scale=new T.Vector3();
  private lastNumber=0;private time=0;
  constructor(scene:T.Scene,private reduced=false){
-  this.pool=new T.InstancedMesh(new T.BoxGeometry(1,1,1),new T.MeshBasicMaterial({color:'#ffffff',transparent:true,blending:T.AdditiveBlending,depthWrite:false}),600);
+  this.pool=new T.InstancedMesh(new T.IcosahedronGeometry(1,0),toonMaterial('#ffffff'),600);
+  this.outlines=new T.InstancedMesh(this.pool.geometry,inkMaterial(.16),600);this.outlines.name='particle-ink-outlines';this.outlines.instanceMatrix=this.pool.instanceMatrix;this.outlines.frustumCulled=false;this.outlines.count=0;this.pool.add(this.outlines);
   this.pool.instanceMatrix.setUsage(T.DynamicDrawUsage);this.pool.frustumCulled=false;this.pool.count=0;this.root.add(this.pool);scene.add(this.root);
  }
  burst(point:T.Vector3,color:string,count=10,speed=5){
@@ -23,7 +26,7 @@ export class CombatFX{
  }
  ring(point:T.Vector3,radius:number,color:string,duration=.3,warning=false){
   if(this.rings.length>=40){const old=this.rings.shift()!;this.discard(old.mesh);}
-  const mesh=new T.Mesh(new T.RingGeometry(.88,1,48),new T.MeshBasicMaterial({color,transparent:true,opacity:warning?.5:.8,side:T.DoubleSide,depthWrite:false,blending:warning?T.NormalBlending:T.AdditiveBlending}));
+  const mesh=new T.Mesh(cartoonBandGeometry(.88,1,color),new T.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:warning?.6:.95,side:T.DoubleSide,depthWrite:false}));
   mesh.rotation.x=-Math.PI/2;mesh.position.copy(point);mesh.position.y+=.12;this.root.add(mesh);this.rings.push({mesh,life:duration,max:duration,radius,warning});
  }
  impact(point:T.Vector3,damage:number,color:string,kill=false,boss=false){
@@ -44,13 +47,13 @@ export class CombatFX{
  update(dt:number,camera?:T.Camera){
   this.time+=dt;this.freeze=Math.max(0,this.freeze-dt);this.shake*=Math.exp(-dt*20);
   for(let i=this.particles.length-1;i>=0;i--){const p=this.particles[i];p.life-=dt;if(p.life<=0){this.particles.splice(i,1);continue;}p.v.y-=p.gravity*dt;p.p.addScaledVector(p.v,dt);p.v.multiplyScalar(Math.exp(-dt*2));}
-  this.particles.forEach((p,i)=>{this.scale.setScalar(p.size*Math.min(1,p.life/p.max*2));this.matrix.compose(p.p,this.quat,this.scale);this.pool.setMatrixAt(i,this.matrix);this.pool.setColorAt(i,p.color);});this.pool.count=this.particles.length;this.pool.instanceMatrix.needsUpdate=true;if(this.pool.instanceColor)this.pool.instanceColor.needsUpdate=true;
+  this.particles.forEach((p,i)=>{this.scale.setScalar(p.size*Math.min(1,p.life/p.max*2));this.matrix.compose(p.p,this.quat,this.scale);this.pool.setMatrixAt(i,this.matrix);this.pool.setColorAt(i,p.color);});this.pool.count=this.particles.length;this.outlines.count=this.pool.count;this.pool.instanceMatrix.needsUpdate=true;if(this.pool.instanceColor)this.pool.instanceColor.needsUpdate=true;
   for(let i=this.rings.length-1;i>=0;i--){const r=this.rings[i];r.life-=dt;const t=1-r.life/r.max;r.mesh.scale.setScalar(r.radius*(r.warning?1:.2+t));(r.mesh.material as T.MeshBasicMaterial).opacity=r.warning?.2+.5*t:.8*(1-t);if(r.life<=0){this.discard(r.mesh);this.rings.splice(i,1);}}
   for(let i=this.texts.length-1;i>=0;i--){const t=this.texts[i];t.life-=dt;t.sprite.position.y+=dt*1.5;t.sprite.material.opacity=Math.min(1,t.life*3);if(t.life<=0){t.sprite.removeFromParent();const map=t.sprite.material.map;if(map&&![...this.numbers.values()].includes(map))map.dispose();t.sprite.material.dispose();this.texts.splice(i,1);}}
   if(camera&&!this.reduced&&this.shake>.002){camera.position.x+=(Math.random()-.5)*this.shake;camera.position.y+=(Math.random()-.5)*this.shake*.6;camera.updateMatrixWorld();}
  }
- clear(){this.particles=[];this.pool.count=0;this.rings.forEach(r=>this.discard(r.mesh));this.rings=[];this.texts.forEach(t=>{t.sprite.removeFromParent();const map=t.sprite.material.map;if(map&&![...this.numbers.values()].includes(map))map.dispose();t.sprite.material.dispose();});this.texts=[];this.shake=0;this.freeze=0;}
- dispose(){this.clear();this.numbers.forEach(t=>t.dispose());this.pool.geometry.dispose();(this.pool.material as T.Material).dispose();this.root.removeFromParent();}
+ clear(){this.particles=[];this.pool.count=0;this.outlines.count=0;this.rings.forEach(r=>this.discard(r.mesh));this.rings=[];this.texts.forEach(t=>{t.sprite.removeFromParent();const map=t.sprite.material.map;if(map&&![...this.numbers.values()].includes(map))map.dispose();t.sprite.material.dispose();});this.texts=[];this.shake=0;this.freeze=0;}
+ dispose(){this.clear();this.numbers.forEach(t=>t.dispose());this.pool.geometry.dispose();(this.outlines.material as T.Material).dispose();this.outlines.dispose();this.pool.dispose();(this.pool.material as T.Material).dispose();this.root.removeFromParent();}
 }
 export type CombatSound='cast'|'hit'|'kill'|'hurt'|'storm'|'meteor'|'dash';
 export class CombatAudio{

@@ -53,6 +53,7 @@ export default function Home(){
    {v.nearby&&!modal&&!userPaused&&<button className="island-interact panel" onClick={()=>game.current?.interact()}><kbd>E</kbd>{v.nearby.hero?HEROES[v.nearby.hero].name:v.nearby.label}</button>}
   </>}
   {started&&!isFarm&&<>
+   {v.boss&&<div className={'boss-vitals'+(v.boss.enraged?' enraged':'')} role="group" aria-label={v.boss.name}><strong>{v.boss.name}{v.boss.enraged&&<span aria-label="Enraged"> ◆</span>}</strong><div role="progressbar" aria-label="Boss health" aria-valuenow={Math.ceil(v.boss.hp)} aria-valuemin={0} aria-valuemax={Math.ceil(v.boss.max)}><i style={{width:Math.max(0,v.boss.hp/v.boss.max*100)+'%',background:v.boss.color}}/></div></div>}
    <aside className="vitals panel" aria-label="Expedition status"><img src={'/assets/axie/'+v.farm.hero+'.png'} alt={hero.name}/><div className="vitals-bars"><div><Heart size={14}/><b>{Math.ceil(v.hp)} / {v.maxHp}</b><span title="Level"><Star size={14}/>{v.level}</span></div><Progress value={v.hp/v.maxHp*100} className="health-progress" aria-label="Health"/><Progress value={v.xp/v.xpNext*100} className="xp-progress" aria-label={'Experience: '+v.xp+' / '+v.xpNext}/></div></aside><CombatBelt view={v} onOpen={()=>open('build')}/>
    
   </>}

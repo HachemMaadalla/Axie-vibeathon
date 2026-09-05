@@ -17,22 +17,22 @@ check('Creature rigs have different silhouettes and animated limbs',()=>{
  const sizes=creatures.map(e=>new T.Box3().setFromObject(e.visual).getSize(new T.Vector3()));
  assert.ok(sizes[3].x>sizes[1].x);assert.ok(sizes[4].y>sizes[1].y*2);
  for(const e of creatures){updateEnemy(e,.1,new T.Vector3(0,0,15),.2,()=>0,1,events);assert.ok(Number.isFinite(e.mesh.position.y));disposeEnemy(e);}
- assert.equal(new Set(Array.from({length:7},(_,i)=>enemyKindFor(20,i))).size,4);
+ assert.equal(new Set(Array.from({length:7},(_,i)=>enemyKindFor(20,i))).size,6);
 });
 check('Scarab wind-up is harmless, charge locks direction, and caster fires three bolts',()=>{
  let damage=0,telegraphs=0,shots=0;const ev={...events,damage:()=>damage++,telegraph:()=>telegraphs++,projectile:()=>shots++};
- const e=makeEnemy('beetle');e.cooldown=0;const player=new T.Vector3(0,0,3);
+ const e=makeEnemy('beetle');e.cooldown=0;e.spawnAge=.3;const player=new T.Vector3(0,0,3);
  updateEnemy(e,.01,player,0,()=>0,1,ev);assert.equal(e.state,'windup');assert.equal(telegraphs,1);
  for(let i=0;i<30;i++)updateEnemy(e,.01,player,i*.01,()=>0,1,ev);
  assert.equal(damage,0);const heading=e.heading.clone();
  player.set(8,0,3);for(let i=0;i<60;i++)updateEnemy(e,.01,player,i*.01,()=>0,1,ev);
  assert.ok(e.heading.equals(heading));assert.ok(e.mesh.position.z>2);assert.ok(Math.abs(e.mesh.position.x)<.1);
- const caster=makeEnemy('shaman');caster.cooldown=0;
+ const caster=makeEnemy('shaman');caster.cooldown=0;caster.spawnAge=.3;
  for(let i=0;i<100;i++)updateEnemy(caster,.01,new T.Vector3(0,0,10),i*.01,()=>0,1,ev);
  assert.equal(shots,3);disposeEnemy(e);disposeEnemy(caster);
 });
 check('Boss warns before the expanding ground slam',()=>{
- const e=makeEnemy('guardian');e.cooldown=0;let warnings=0,slams=0;
+ const e=makeEnemy('guardian');e.cooldown=0;e.spawnAge=.3;let warnings=0,slams=0;
  const ev={...events,telegraph:()=>warnings++,slam:()=>slams++};
  for(let i=0;i<60;i++)updateEnemy(e,.01,new T.Vector3(0,0,5),i*.01,()=>0,1,ev);
  assert.equal(warnings,1);assert.equal(slams,0);
@@ -50,8 +50,8 @@ check('Projectile targeting hits flying and tall enemies at elevated terrain hei
 check('Enemy batches follow animated transforms and release killed creatures',()=>{
  const parent=new T.Group(),batch=new EnemyBatch(parent),enemies=Array.from({length:60},(_,i)=>makeEnemy(enemyKindFor(30,i)));
  enemies.forEach((e,i)=>{parent.add(e.mesh);e.mesh.position.set(i,2,0);updateEnemy(e,.1,new T.Vector3(),.5,()=>2,1,events);});
- batch.update(enemies);assert.ok(batch.mesh.count>1000&&batch.mesh.count<4000);
- const first=enemies[0];let part;first.visual.traverse(o=>{if(!part&&o instanceof T.Mesh&&o.geometry instanceof T.BoxGeometry)part=o;});
+ batch.update(enemies);assert.ok(batch.mesh.count>1000&&batch.mesh.count<6000);
+ const first=enemies[0];let part;first.visual.traverse(o=>{if(!part&&o instanceof T.Mesh&&o.userData.enemyShape==='round')part=o;});
  const matrix=new T.Matrix4();batch.mesh.getMatrixAt(0,matrix);
  matrix.elements.forEach((n,i)=>assert.ok(Math.abs(n-part.matrixWorld.elements[i])<1e-5));
  batch.update([]);assert.equal(batch.mesh.count,0);batch.dispose();enemies.forEach(disposeEnemy);
@@ -83,7 +83,7 @@ check('A full mixed-enemy run earns levels and an evolution while traversing the
   while(xp>=xpNeeded(level)){xp-=xpNeeded(level++);const c=eligibleChoices(b);applyChoice(b,c.find(c=>c.kind==='evolution')??c.find(c=>c.id==='thorn')??c.find(c=>c.id==='sun')??c.find(c=>c.id==='storm')??c[0]);}
  }
  assert.ok(level>=6&&level<=12,'Mixed roster should not flood the player with upgrades: '+level);
- assert.equal(kinds.size,4);assert.ok(kills>25,'Kills: '+kills);assert.ok(b.evolved.length>0,'Focused build should evolve');
+ assert.equal(kinds.size,7);assert.ok(kills>25,'Kills: '+kills);assert.ok(b.evolved.length>0,'Focused build should evolve');
  console.log('  Mixed roster: '+kills+' kills, level '+level+', evolved '+b.evolved.join(', '));enemies.forEach(disposeEnemy);engine.dispose();
 });
 console.log(passed+' enemy, terrain, and feedback checks passed.');

@@ -26,7 +26,7 @@ export function JourneyMap({view:v}:{view:View}){
  const entries=[
  ...CROP_IDS.map(id=>({key:'crop:'+id,name:CROPS[id].name,known:seen.has('crop:'+id),art:<LootArt kind="crop" crop={id} size={36}/>,text:FAMILIES[id].name+' · '+CROPS[id].seconds+'s · '+FAMILIES[id].bonus})),
  ...WEAPONS.map(id=>({key:'weapon:'+id,name:ITEMS[id].name,known:seen.has('weapon:'+id)||STARTER_SPELL[v.farm.hero]===id,art:<ItemIcon id={id} size={36}/>,text:EVOLUTIONS[id].name+' · '+ITEMS[EVOLUTIONS[id].passive].name})),
- ...Object.entries(ENEMY_INFO).map(([id,e])=>({key:'enemy:'+id,name:e.name,known:seen.has('enemy:'+id),art:<Swords size={30} color={e.color}/>,text:({beetle:'Charges · melon / pepper seeds',stalker:'Lunges · berry / corn seeds',shaman:'Ranged · glowcap / crystalbean seeds',moth:'Flying · dewleaf / melon seeds',guardian:'Guardian · rare seeds + soil'} as Record<string,string>)[id]})),
+ ...Object.entries(ENEMY_INFO).map(([id,e])=>({key:'enemy:'+id,name:e.name,known:seen.has('enemy:'+id),art:<Swords size={30} color={e.color}/>,text:e.tip})),
  ...CROP_IDS.map(id=>({key:'recipe:'+id,name:CROPS[id].meal,known:seen.has('recipe:'+id),art:<LootArt kind="meal" crop={id} size={36}/>,text:CROPS[id].effect})),
  ...WEAPONS.map(id=>({key:'evolution:'+id,name:EVOLUTIONS[id].name,known:seen.has('evolution:'+id),art:<ItemIcon id={id} size={36}/>,text:'Evolved '+ITEMS[id].name})),
  ...(['growth','yield'] as const).map(id=>({key:'recipe:'+id,name:id==='growth'?'Quick compost':'Rich compost',known:seen.has('recipe:'+id),art:<LootArt kind="fertilizer" size={36}/>,text:id==='growth'?'+35% growth · watered beds':'+1 crop · next 4 harvests'}))

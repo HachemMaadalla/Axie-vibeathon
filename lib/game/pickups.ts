@@ -11,7 +11,7 @@ export type Drop={kind:PickupKind;amount:number};
 export function rollDrops(tier:number,boss=false,random:()=>number=Math.random,kind?:EnemyKind):Drop[]{
  if(boss)return [{kind:tier===2?'crystalbean':'glowcap',amount:1},{kind:'soil',amount:1}];
  const r=random();
- if(r<.08){const pool:CropId[]=tier===2?['embercorn','starpepper','crystalbean','cloudmelon']:['moonberry','cloudmelon','glowcap','dewleaf'];const favored:Record<string,number>={beetle:1,stalker:0,shaman:2,moth:3};const index=kind&&Object.hasOwn(favored,kind)?favored[kind]:Math.min(pool.length-1,Math.floor(r/.08*pool.length));return [{kind:pool[index],amount:1}];}
+ if(r<.08){const pool:CropId[]=tier===2?['embercorn','starpepper','crystalbean','cloudmelon']:['moonberry','cloudmelon','glowcap','dewleaf'];const favored:Record<string,number>={beetle:1,stalker:0,shaman:2,moth:3,bomber:2,crystal:3,brute:1};const index=kind&&Object.hasOwn(favored,kind)?favored[kind]:Math.min(pool.length-1,Math.floor(r/.08*pool.length));return [{kind:pool[index],amount:1}];}
  if(r<.12)return [{kind:'fertilizer',amount:1}];
  if(r<.14)return [{kind:'soil',amount:1}];
  return [];

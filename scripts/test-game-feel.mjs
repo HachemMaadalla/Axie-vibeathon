@@ -37,7 +37,7 @@ check('Melee has a short wind-up and clearing a run cancels pending strikes',()=
 check('Defeated enemies tumble, stay bounded, and release all temporary rigs',()=>{
  const arena=new T.Group(),game=Object.assign(Object.create(WildseedGame.prototype),{defeated:[]});
  let released=0;
- for(let i=0;i<30;i++){const e=makeEnemy('moth');e.spawnAge=1;arena.add(e.mesh);let mesh;e.visual.traverse(o=>{if(!mesh&&o instanceof T.Mesh)mesh=o;});mesh.geometry.addEventListener('dispose',()=>released++);game.leaveDefeated(e,new T.Vector3(1,0,0));}
+ for(let i=0;i<30;i++){const e=makeEnemy('moth');e.spawnAge=1;arena.add(e.mesh);let mesh;e.visual.traverse(o=>{if(!mesh&&o instanceof T.Mesh)mesh=o;});mesh.material.addEventListener('dispose',()=>released++);game.leaveDefeated(e,new T.Vector3(1,0,0));}
  assert.equal(game.defeated.length,24);assert.equal(released,6);
  const e=game.defeated[0].enemy;game.updateDefeated(.1);assert.ok(e.mesh.position.x>0);assert.ok(e.mesh.rotation.z>0);assert.equal(e.bar.visible,false);
  game.updateDefeated(.3);assert.equal(game.defeated.length,0);assert.equal(arena.children.length,0);assert.equal(released,30);

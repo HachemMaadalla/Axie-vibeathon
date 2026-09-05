@@ -62,3 +62,12 @@ M opens the island map, discoveries and mastery collection. Level-up cards use s
 The farm has roaming chickens, butterflies, fireflies, a moving windmill and scarecrow, a four-minute day/night cycle, and seasonal foliage every four in-game days. Tier 1 stays bright and Tier 2 uses dusk lighting. Ambient movement pauses with the game and respects reduced motion.
 
 The roadmap integration suite verifies crop spending, save migration, compost quantities, character mastery, safe island spawns, drop rarity, challenges and bounded atmosphere objects. Visual and full mobile-device QA remain outstanding.
+
+## Enemy and boss expansion
+Seven regular enemies now use rounded, cel-shaded creature rigs with animated shells, legs, wings, mushroom caps and crystal armor. Cinder Puff marks spore blasts; Prism Sentry fires five-shot fans; Stoneback releases a jumpable ground wave. Reavers lunge, scarabs charge along a marked lane, Hexers fire spore volleys, and moths circle before diving.
+
+Bosses rotate with total expedition clears: the Grove alternates Elder Thornwarden and Lumina, Brood Queen; the Hollow cycles Prism Colossus, Lumina and Thornwarden. Each has three attack patterns and intensifies below half health. Boss fights slow regular spawning. Queen summons are capped, and the HUD shows only the boss name and health bar.
+
+Enemy projectiles have different spore, petal, thorn and crystal silhouettes. Marked ground attacks follow terrain and can be jumped. Owner death cancels its remaining attacks. Shared creature geometry uses three rendering pools; attacks and summons are bounded. Existing keys, saves, XP pickups and 8% seed rarity remain compatible.
+
+Run `node --experimental-transform-types scripts/test-enemy-expansion.mjs` for boss phases, warnings, jumping, cover, attack cleanup, population limits and drops. The full combat simulation also exercises all seven regular enemies. Visual/device QA is still outstanding.

@@ -1,4 +1,6 @@
 'use client';
+import {StarBadge} from './quality-ui';
+import type {Stars} from '@/lib/game/quality';
 import {CookingPanel} from './cooking-ui';
 import {JourneyMap,PermanentUpgrades,CompostRecipes} from './progression-ui';
 import {CHALLENGES,type Challenge} from '@/lib/game/progression';
@@ -31,14 +33,14 @@ export default function Home(){
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(!started||v.upgrade||v.result||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;const target=e.target as HTMLElement;if(target?.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName))return;const menu=e.key.toLowerCase()==='i'?'inventory':e.key.toLowerCase()==='b'?'build':e.key.toLowerCase()==='m'?'map':null;if(menu){e.preventDefault();setModal(current=>current===menu?null:menu);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[started,v.upgrade,v.result]);
  const p=v.farm.plots[v.selected],hero=HEROES[v.farm.hero],isFarm=v.mode==='farm';
  const open=(name:typeof modal)=>{setModal(name);};
- const launch=(tier:number,challenge:Challenge='calm',meals:CropId[]=[])=>{if(game.current?.expedition(tier,challenge,meals)){setModal(null);setUserPaused(false);}};
+ const launch=(tier:number,challenge:Challenge='calm',meals:CropId[]=[],stars?:Stars)=>{if(game.current?.expedition(tier,challenge,meals,stars)){setModal(null);setUserPaused(false);}};
  const setMute=()=>{setMuted(!muted);game.current?.setMuted(!muted);try{localStorage.setItem('wildseed-muted',String(!muted));}catch{}};
  return <main className={'game-shell '+(!isFarm?'in-dungeon':'')}>
   <div className="world" ref={mount} aria-label="Interactive 3D Axie farm and survival arena"/>
 
   <header className="topbar quiet-topbar">
    <div className="wordmark"><Sprout/><strong>Wildseed</strong></div>
-   <div className="day-chip" title={!isFarm?CHALLENGES[v.challenge??'calm'].name:undefined} aria-label={isFarm?'Day '+v.farm.day:'Expedition time'}>{isFarm?<Sun size={18}/>:<Moon size={18}/>} {isFarm?'Day '+v.farm.day:v.exitReady?'Cleared':countTime(v.time)+' / 1:30'}</div>
+   <div className="day-chip" title={!isFarm?CHALLENGES[v.challenge??'calm'].name:undefined} aria-label={isFarm?'Day '+v.farm.day:'Expedition time'}>{isFarm?<Sun size={18}/>:<Moon size={18}/>} {isFarm?'Day '+v.farm.day:v.exitReady?'Cleared':countTime(v.time)+' / 1:30'}{!isFarm&&<StarBadge value={v.build.keyStars??1}/>}</div>
    <nav className="utility" aria-label="Game controls">
     {started&&<button title="Inventory · I" aria-label="Inventory · I" onClick={()=>open('inventory')}><Package size={20}/><kbd>I</kbd></button>}
     {started&&<button title="Spells & combinations · B" aria-label="Spells & combinations" onClick={()=>open('build')}><Sparkles size={20}/><kbd>B</kbd></button>}
@@ -75,7 +77,7 @@ export default function Home(){
    {modal==='inventory'&&<><Inventory view={v} onSeed={id=>{game.current?.selectSeed(id);setModal(null);}} onMeal={()=>setModal('travel')} onReturn={()=>{setModal(null);game.current?.escape();}}/>{isFarm&&<PermanentUpgrades farm={v.farm} onBuy={id=>game.current?.permanentUpgrade(id)}/>}</>}
 
    {modal==='kitchen'&&<><CookingPanel farm={v.farm} onCook={(id,hits)=>game.current?.cookMeal(id,hits)??0}/><CompostRecipes farm={v.farm} onMix={kind=>game.current?.mixCompost(kind)}/></>}
-   {modal==='travel'&&<IslandPortal farm={v.farm} onEnter={launch} onCraft={tier=>game.current?.craftDungeonKey(tier)}/>}
+   {modal==='travel'&&<IslandPortal farm={v.farm} onEnter={launch} onCraft={(tier,score)=>game.current?.craftDungeonKey(tier,score)??0}/>}
    {modal==='hero'&&talkHero&&<CompanionTalk farm={v.farm} id={talkHero} onClose={()=>setModal(null)} onChoose={()=>{game.current?.selectHero(talkHero);setModal(null);}}/>}
    {modal==='help'&&<div className="help-content"><ol><li><strong>Grow.</strong> Equip a seed to plant, the watering can (4) to water, or the sickle (5) to harvest. Press E near a bed. Slots 6–7 hold fertilizer and soil. Click any slot on touch screens.</li><li><strong>Look around.</strong> Drag the world to rotate the camera; scroll or pinch to zoom. V resets the view behind your Axie. WASD moves relative to the camera.</li><li><strong>Prepare.</strong> Press E at the campfire to cook. Talk to the other Axies to switch character.</li><li><strong>Explore.</strong> Attacks fire automatically. Move with WASD, arrow keys, or click/tap the ground. Space jumps; press it again for a double jump. Hold Shift to sprint and press Q to dash, even in the air.</li><li><strong>Build your spells.</strong> Collect the XP gems dropped by enemies. Pick a spell or item at each level-up, upgrade it to level 3, and find its partner to unlock an evolution. Press B for recipes, or I to open your inventory. Equipment resets each expedition.</li><li><strong>Bring it home.</strong> Pick up rare seed packets and supplies dropped in battle. After the guardian falls and the timer ends, press E at the return portal to bring them home. Early return or defeat keeps half.</li><li><strong>Go deeper.</strong> Harvest 24 Sunroot and craft a Grove Key at the portal. Every dungeon entry consumes its key.</li></ol><p>Garden progress saves locally in this browser. Farming pauses when this tab is hidden or a menu is open.</p><div className="credits"><strong>Made for Axie Vibeathon</strong><p>Axie Origins sound effects and Axie and Sapidae characters, models, textures and animations belong to Sky Mavis and its licensors. Supplied via the event's Axie 3D asset pack. Terrain and rock generation use GameBlocks by Weihao Cheng (MIT). Crop designs and game systems are original prototype work.</p><a href="/licenses/axie-3d-RIGHTS.md" target="_blank" rel="noreferrer">Axie asset permission ↗</a><a href="/licenses/axie-3d-THIRD_PARTY_NOTICES.md" target="_blank" rel="noreferrer">Third-party notices ↗</a><a href="/licenses/axie-origins-audio-LICENSE.md" target="_blank" rel="noreferrer">Axie audio permission ↗</a><a href="/licenses/GameBlocks-LICENSE.txt" target="_blank" rel="noreferrer">GameBlocks license</a><small>Unofficial work in progress. No wallet needed.</small></div></div>}
   </DialogContent></Dialog>

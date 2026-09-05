@@ -80,3 +80,12 @@ At the campfire, tap Stir or press Space/E when the marker is green, three times
 At the dungeon portal, add up to four meal portions to the food tray, including duplicates. Click a slot to remove it. Combined buffs appear below. Food and the key are consumed together only on successful entry; missing supplies consume neither. Inventory meals open the portal tray. Existing meal inventories and saves remain compatible.
 
 Meals grant health, regeneration, speed, damage, spell area, shorter cooldown, armor and pickup reach. Food bonuses stack with caps: +120% damage, +60% speed, 40% shorter cooldown, 35% damage reduction and +4 pickup reach. Drought disables food regeneration. Consumed meal icons stay on the combat belt for the run.
+
+## Star quality and forging
+Seeds, crops, meals, keys, fertilizer and soil have one to three stars. Existing saves migrate to one star. Inventory totals stay stacked with a selected-item quality breakdown; planting and crafting use the best ingredients first. Sunroot seeds remain unlimited and free.
+
+Forge a key at the portal with three timed strikes. Cooking and forging show live quality probabilities: by default 80% / 18% / 2%, rising to 32% / 48% / 20% after three successful timings before ingredient and luck bonuses. Higher-grade ingredients, greenhouse upgrades, clears and Crystalbean food improve the odds. Canceling before completion spends nothing.
+
+Choose a key's star quality at entry. Two-star keys give 50% more supply-drop chance; three-star keys give 100% more (base seed chance 8% becomes 12% or 16%). Boss supply quantities scale 1/2/3 and better keys improve loot quality. XP is unchanged. Higher-grade food multiplies each portion's buffs by 1 / 1.3 / 1.6 before existing caps; soil and fertilizer improve growth more at higher grades. Physical pickups retain quality through collection and save/load, including partial expedition returns.
+
+Run `node --experimental-transform-types scripts/test-quality.mjs` for quality migration, forging, cooking, exact probability distributions, planting, drops and partial returns.

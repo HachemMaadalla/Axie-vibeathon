@@ -1,4 +1,6 @@
 'use client';
+import {StarBadge} from './quality-ui';
+import {qualityCounts,nextStars} from '@/lib/game/quality';
 import {useState,type CSSProperties} from 'react';
 import {itemSprite} from '@/lib/game/item-art';
 import {Check,Sparkles} from 'lucide-react';
@@ -35,19 +37,21 @@ export function packItems(v:View):PackItem[]{
  rows.push({key:'soil',name:'Rich soil',category:'Supplies',count:farm?v.farm.soil:v.loot.soil,color:'#dbac79',description:'Permanently improves a bed: faster growth and an extra crop per harvest.',art:'soil'});
  return rows;
 }
+const qualityKey=(i:PackItem)=>i.category==='Seeds'?'seed:'+i.crop:i.category==='Crops'?'crop:'+i.crop:i.category==='Meals'?'meal:'+i.crop:i.key==='grove-key'?'key:grove':i.key==='hollow-key'?'key:hollow':i.key;
 export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:CropId)=>void;onMeal:(id:CropId)=>void;onReturn:()=>void}){
  const [selected,setSelected]=useState('seed-'+v.seed);
  const farm=v.mode==='farm',items=packItems(v).filter(i=>i.count>0||i.category==='Seeds'&&i.crop==='sunroot'),item=items.find(i=>i.key===selected)??items[0];
+ const ranks=(i:PackItem):number[]=>farm?qualityCounts(v.farm,qualityKey(i)):[Math.max(0,i.count-(v.lootQuality?.[i.crop??i.key]?.[0]??0)-(v.lootQuality?.[i.crop??i.key]?.[1]??0)),...(v.lootQuality?.[i.crop??i.key]??[0,0])];
  const equipped=item?.crop&&(item.category==='Seeds'?v.held===item.crop:item.category==='Meals'?v.farm.meal===item.crop:false);
  const hint=item?.category==='Seeds'?(farm?'Plant with E':'Bring home to plant'):item?.category==='Meals'?CROPS[item.crop!].effect:item?.category==='Crops'?'Cook at the kitchen':item?.key==='soil'?'Faster growth · +1 crop':'Faster crop growth';
  return <div className="simple-inventory">
   <div className="inventory-grid" aria-label="Inventory items">
-   {items.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+(i.category==='Seeds'&&i.crop==='sunroot'?'unlimited':i.count)} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><b>{i.category==='Seeds'&&i.crop==='sunroot'?'∞':i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.held===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
+   {items.map(i=><button key={i.key} className={'inventory-slot '+(i.key===item?.key?'inspected':'')} style={{'--item-color':i.color} as CSSProperties} aria-label={i.name+', '+(i.category==='Seeds'&&i.crop==='sunroot'?'unlimited':i.count)} aria-pressed={i.key===item?.key} title={i.name} onClick={()=>setSelected(i.key)}><LootArt kind={i.art} crop={i.crop}/><StarBadge value={ranks(i)[2]?3:ranks(i)[1]?2:1}/><b>{i.category==='Seeds'&&i.crop==='sunroot'?'∞':i.count}</b>{farm&&i.crop&&(i.category==='Seeds'&&v.held===i.crop||i.category==='Meals'&&v.farm.meal===i.crop)&&<i><Check size={12}/></i>}</button>)}
    {Array.from({length:Math.max(0,12-items.length)},(_,i)=><div key={'empty-'+i} className="inventory-slot empty-slot" aria-hidden="true"/>)}
   </div>
   {item?<div className="pack-selection" aria-live="polite">
    <LootArt kind={item.art} crop={item.crop} size={48}/>
-   <div><h3 style={{color:item.color}}>{item.name}</h3><p>{hint}</p></div>
+   <div><h3 style={{color:item.color}}>{item.name}</h3><p>{hint}</p><div className="quality-breakdown">{ranks(item).map((n,i)=>n>0&&<span key={i}><StarBadge value={i+1}/> ×{n}</span>)}</div></div>
    {farm&&item.category==='Seeds'&&<button className="primary" onClick={()=>onSeed(item.crop!)}>{equipped?<Check size={16}/>:null}{equipped?'Equipped':'Equip'}</button>}
    {farm&&item.category==='Meals'&&<button className="primary" onClick={()=>onMeal(item.crop!)}>Food tray</button>}
   </div>:<p className="empty-pack">Your pack is empty.</p>}
@@ -56,6 +60,6 @@ export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:
 }
 export function CombatBelt({view:v,onOpen}:{view:View;onOpen:()=>void}){
  const ids=[...(Object.keys(v.build.items) as ItemId[]).filter(id=>WEAPONS.includes(id as WeaponId)),...PASSIVES].filter(id=>itemLevel(v.build,id)>0);
- return <div className="combat-belt panel" aria-label="Equipped spells and items">{(v.build.meals??[]).map((id,i)=><span className="belt-meal" key={'meal-'+i} title={CROPS[id].meal+' · '+CROPS[id].effect} aria-label={CROPS[id].meal+' active'}><LootArt kind="meal" crop={id} size={23}/></span>)}{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25} evolved={v.build.evolved.includes(id as WeaponId)}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
+ return <div className="combat-belt panel" aria-label="Equipped spells and items">{(v.build.meals??[]).map((id,i)=><span className="belt-meal" key={'meal-'+i} title={CROPS[id].meal+' · '+CROPS[id].effect} aria-label={CROPS[id].meal+' active'}><LootArt kind="meal" crop={id} size={23}/><StarBadge value={v.build.mealStars?.[i]??1}/></span>)}{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25} evolved={v.build.evolved.includes(id as WeaponId)}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
 }
 

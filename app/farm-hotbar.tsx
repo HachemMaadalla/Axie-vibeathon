@@ -1,4 +1,6 @@
 'use client';
+import {StarBadge} from './quality-ui';
+import {nextStars} from '@/lib/game/quality';
 import {LootArt} from './inventory-ui';
 import {FARM_SLOTS,FARM_SLOT_KEYS,farmItemName,isSeed,type FarmItem} from '@/lib/game/farm-tools';
 import type {View} from '@/lib/game/scene';
@@ -10,7 +12,7 @@ export function FarmHotbar({view:v,locked,onSelect}:{view:View;locked:boolean;on
   <div className="farm-hotbar panel" role="toolbar" aria-label="Farm inventory bar">
    {FARM_SLOTS.map((id,i)=>{const count=isSeed(id)?id==='sunroot'?null:v.farm.seeds[id]:id==='soil'||id==='fertilizer'?v.farm[id]:null;return <button key={id} className={'farm-slot '+(v.held===id?'active ':'')+(count===0?'depleted':'')} aria-label={farmItemName(id)+(id==='sunroot'?' · unlimited':count!==null?' · '+count:'')+' · '+FARM_SLOT_KEYS[i]} aria-pressed={v.held===id} title={farmItemName(id)+' · '+FARM_SLOT_KEYS[i]} disabled={locked} onClick={()=>onSelect(id)}>
    <kbd>{FARM_SLOT_KEYS[i]}</kbd>{id==='water'||id==='sickle'?<ToolArt item={id}/>:<LootArt kind={isSeed(id)?'seed':id} crop={isSeed(id)?id:undefined} size={44}/>}
-   {(count!==null||id==='sunroot')&&<b>{id==='sunroot'?'∞':count}</b>}</button>;})}
+   <StarBadge value={id==='sunroot'||id==='water'||id==='sickle'?1:nextStars(v.farm,isSeed(id)?'seed:'+id:id)}/>{(count!==null||id==='sunroot')&&<b>{id==='sunroot'?'∞':count}</b>}</button>;})}
   </div>
  </div>;
 }

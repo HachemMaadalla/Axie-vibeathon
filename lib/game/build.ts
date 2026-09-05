@@ -2,7 +2,7 @@ import type {HeroId} from './state';
 export type WeaponId='thorn'|'petal'|'spore'|'storm'|'ember'|'cannon'|'sword'|'hammer'|'axe';
 export type PassiveId='sun'|'wind'|'dew'|'echo'|'heart';
 export type ItemId=WeaponId|PassiveId;
-export type Build={food?:import('./food').FoodBuffs;meals?:import('./state').CropId[];mastery?:WeaponId;heroMastery?:HeroId;items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
+export type Build={mealStars?:number[];keyStars?:import('./quality').Stars;food?:import('./food').FoodBuffs;meals?:import('./state').CropId[];mastery?:WeaponId;heroMastery?:HeroId;items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
 export const WEAPONS:WeaponId[]=['thorn','petal','spore','storm','ember','cannon','sword','hammer','axe'];
 export const PASSIVES:PassiveId[]=['sun','wind','dew','echo','heart'];
 export const SLOT_LIMIT=4;

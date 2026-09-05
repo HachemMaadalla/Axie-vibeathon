@@ -55,7 +55,7 @@ export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:
    {farm&&item.category==='Seeds'&&<button className="primary" onClick={()=>onSeed(item.crop!)}>{equipped?<Check size={16}/>:null}{equipped?'Equipped':'Equip'}</button>}
    {farm&&item.category==='Meals'&&<button className="primary" onClick={()=>onMeal(item.crop!)}>Food tray</button>}
   </div>:<p className="empty-pack">Your pack is empty.</p>}
-  {!farm&&<div className="simple-pack-exit"><span>Early return keeps half.</span><button className="secondary" onClick={onReturn}>Return home</button></div>}
+  {!farm&&<div className="simple-pack-exit"><span>Use the home portal to keep your loot.</span></div>}
  </div>;
 }
 export function CombatBelt({view:v,onOpen}:{view:View;onOpen:()=>void}){

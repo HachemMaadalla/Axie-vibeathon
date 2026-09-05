@@ -89,3 +89,10 @@ Forge a key at the portal with three timed strikes. Cooking and forging show liv
 Choose a key's star quality at entry. Two-star keys give 50% more supply-drop chance; three-star keys give 100% more (base seed chance 8% becomes 12% or 16%). Boss supply quantities scale 1/2/3 and better keys improve loot quality. XP is unchanged. Higher-grade food multiplies each portion's buffs by 1 / 1.3 / 1.6 before existing caps; soil and fertilizer improve growth more at higher grades. Physical pickups retain quality through collection and save/load, including partial expedition returns.
 
 Run `node --experimental-transform-types scripts/test-quality.mjs` for quality migration, forging, cooking, exact probability distributions, planting, drops and partial returns.
+
+## Automatic waves and extraction
+Dungeons now run endless finite waves, starting with 10 enemies and adding four per wave up to 42. The next wave starts automatically four simulation seconds after the final enemy dies. Every fifth wave includes a rotating boss. Health and speed scale with the wave; population remains capped. The HUD shows only the wave and brief countdown.
+
+A home portal opens on entry and stays available during all waves. Press E nearby to return with every collected item and its quality. Death loses all current-run loot without touching existing farm supplies. Clearing a boss and returning earns the existing mastery/challenge completion once per run. Inventory no longer teleports the player out.
+
+Enemy locomotion follows distance traveled, so legs stop when blocked. Heavy enemies brace and slam, casters raise their arms, and reavers twist into their strikes. Impact scaling is subtler. Run scripts/test-waves.mjs with Node's experimental-transform-types flag for wave timing, boss cadence and extraction outcomes. These rules supersede the earlier timed-run and half-loot descriptions above.

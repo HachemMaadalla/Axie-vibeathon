@@ -59,7 +59,7 @@ check('A full pickup pool preserves all XP without crediting or discarding remot
 });
 check('Returning requires E nearby, and only collected loot enters the farm',()=>{
  let exits=0;const portal=new T.Group();portal.position.set(10,0,0);
- const g=Object.assign(Object.create(WildseedGame.prototype),{started:true,result:null,mode:'dungeon',returnPortal:portal,player:new T.Group(),paused:false,upgrade:false,finish:outcome=>{assert.equal(outcome,'won');exits++;}});
+ const g=Object.assign(Object.create(WildseedGame.prototype),{started:true,result:null,mode:'dungeon',returnPortal:portal,player:new T.Group(),paused:false,upgrade:false,finish:outcome=>{assert.equal(outcome,'escaped');exits++;}});
  g.interact();assert.equal(exits,0);g.player.position.set(10,0,0);g.paused=true;g.interact();assert.equal(exits,0);
  g.paused=false;g.upgrade=true;g.interact();assert.equal(exits,0);g.upgrade=false;g.interact();assert.equal(exits,1);
  const f=freshFarm(),before=structuredClone(f.seeds);settleExpedition(f,emptyLoot(),'won',1);assert.deepEqual(f.seeds,before);

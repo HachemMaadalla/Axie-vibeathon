@@ -20,7 +20,7 @@ export function bossKindFor(tier:number,clears=0):EnemyKind{const pool:EnemyKind
 export type EnemyUnit={
  mesh:T.Group;visual:T.Group;kind:EnemyKind;hp:number;max:number;speed:number;boss:boolean;bar:HealthBar;
  phase:number;state:'seek'|'windup'|'attack'|'recover';timer:number;cooldown:number;heading:T.Vector3;push:T.Vector3;
- flash:number;stagger:number;rig:EnemyRig;radius:number;aimHeight:number;xpValue:number;spawnAge:number;
+ stride?:number;travelSpeed?:number;flash:number;stagger:number;rig:EnemyRig;radius:number;aimHeight:number;xpValue:number;spawnAge:number;
  target:T.Vector3;attackIndex:number;attackStyle:number;enraged:boolean;hasHit:boolean;
 };
 export type ShotStyle={color?:string;speed?:number;damage?:number;size?:number;form?:'spore'|'crystal'|'thorn'|'petal'};
@@ -68,18 +68,25 @@ function volley(e:EnemyUnit,events:EnemyEvents,count:number,spread:number,radial
 }
 export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,height:(x:number,z:number)=>number,slow:number,events:EnemyEvents,collisions?:CollisionWorld){
  if(e.hp<=0)return;
- const previous=collisions?e.mesh.position.clone():null,hitStop=e.stagger>0;e.stagger=Math.max(0,e.stagger-dt);const moveDt=hitStop?dt*.12:dt;
+ const previous=e.mesh.position.clone(),hitStop=e.stagger>0;e.stagger=Math.max(0,e.stagger-dt);const moveDt=hitStop?dt*.12:dt;
  e.spawnAge+=dt;e.cooldown-=dt;e.flash=Math.max(0,e.flash-dt);
  if(e.boss&&e.hp<=e.max*.5&&!e.enraged){e.enraged=true;e.flash=.2;}
  const delta=player.clone().sub(e.mesh.position);delta.y=0;const distance=delta.length(),direction=delta.normalize(),flying=e.kind==='moth'||e.kind==='broodqueen';
- const timing=enemyTiming(e.kind),{body,legs,arms,wings,materials}=e.rig,phase=time*(flying?30:15)+e.phase,wind=e.state==='windup',attacking=e.state==='attack';
+ const timing=enemyTiming(e.kind),{body,legs,arms,wings,materials}=e.rig,phase=(flying?time*32:(e.stride??0)*3.8)+e.phase,wind=e.state==='windup',attacking=e.state==='attack';
  const anticipation=wind?Math.min(1,1-e.timer/timing.windup):0,strike=attacking?Math.min(1,1-e.timer/timing.strike):0,recoil=e.state==='recover'?Math.max(0,e.timer/timing.recover):0;
- legs.forEach((leg,i)=>{leg.rotation.x=e.state==='seek'&&distance>(['shaman','bomber','crystal','broodqueen'].includes(e.kind)?8.5:1.5)?Math.sin(phase+i*Math.PI)*.65:attacking?-.45*(1-strike):0;});
- arms.forEach((arm,i)=>{arm.rotation.x=wind?-1.35*(1-Math.pow(1-anticipation,3)):attacking?-1.35+2.5*Math.min(1,strike*4):recoil?1.15*recoil*recoil:Math.sin(phase+i*Math.PI)*.09;});
+ const walking=e.state==='seek'&&(e.travelSpeed??0)>.1,heavy=['brute','guardian','golem','crystal'].includes(e.kind),caster=['shaman','bomber','crystal'].includes(e.kind);
+ legs.forEach((leg,i)=>{const step=Math.sin(phase+i*Math.PI);leg.rotation.x=walking?step*(heavy?.38:.72):attacking?-.45*(1-strike):wind?.18*anticipation:0;leg.rotation.z=e.kind==='beetle'?(i<3?-1:1)*(walking?Math.cos(phase+i*Math.PI)*.22:wind?.18:0):0;});
+ arms.forEach((arm,i)=>{
+  const charge=1-Math.pow(1-anticipation,3),swing=Math.min(1,strike*5),side=i%2===0?-1:1;
+  arm.rotation.x=wind?-(caster?.8:heavy?2.2:1.35)*charge:attacking?(caster?-.8+.65*swing:heavy?-2.2+3.5*swing:-1.35+2.5*swing):recoil?(caster?-.15:1.15)*recoil*recoil:walking?-Math.sin(phase+i*Math.PI)*(heavy?.2:.5):0;
+  arm.rotation.z=wind?side*(caster?.65:.25)*charge:attacking?side*.35*(1-swing):0;
+ });
  wings.forEach((wing,i)=>{wing.rotation.y=(i===0?1:-1)*(attacking?.15:Math.sin(phase)*(wind?.25:.6));});
- body.position.y=wind?-.1*anticipation:attacking?.07*(1-strike):0;body.rotation.x=wind?-.18*anticipation:attacking?.4*(1-strike):.12*recoil*recoil;
+ body.position.y=wind?-(heavy?.2:.12)*anticipation:attacking?(heavy?-.12: .09)*(1-strike):walking&&!flying?Math.abs(Math.sin(phase))*(heavy?.035:.07):0;body.rotation.x=wind?-.18*anticipation:attacking?.4*(1-strike):walking?(e.kind==='stalker'?.22:.06):.12*recoil*recoil;
+ body.rotation.z=walking&&!flying?Math.sin(phase)*(heavy?.045:.065):0;body.rotation.y=e.kind==='stalker'?(wind?-.35*anticipation:attacking?.45*(1-strike):0):0;
+ e.rig.head.rotation.x=wind?.12*anticipation:attacking?-.1*(1-strike):walking?-.04*Math.sin(phase):0;
  const size=ENEMY_INFO[e.kind].scale,spawn=Math.min(1,e.spawnAge*5),flash=Math.min(1,e.flash/.09),squash=wind?.07*anticipation:attacking?-.05*(1-strike):0;
- e.visual.scale.set(size*(1+flash*.12+squash)*spawn,size*(1-flash*.15-squash)*spawn,size*(1+flash*.12+squash)*spawn);
+ e.visual.scale.set(size*(1+flash*.035+squash*.35)*spawn,size*(1-flash*.04-squash*.35)*spawn,size*(1+flash*.035+squash*.35)*spawn);
  for(const m of materials){m.emissive.set(e.flash>0?'#fff4d4':m.userData.glow?(e.enraged?'#ff7748':m.color):'#000000');m.emissiveIntensity=e.flash>0?1.2:m.userData.glow?(wind?1:.65):0;}
  e.bar.visible=e.hp>0&&e.spawnAge>.2;e.bar.update(e.hp,e.max,dt);
  if(e.state==='seek'){
@@ -133,6 +140,7 @@ export function updateEnemy(e:EnemyUnit,dt:number,player:T.Vector3,time:number,h
   if(e.timer<=0){e.state='recover';e.timer=timing.recover;}
  }else{e.timer-=dt;if(e.timer<=0){e.state='seek';e.cooldown=(e.boss?2:['shaman','bomber','crystal'].includes(e.kind)?1.6:.85)*(e.enraged?.75:1);}}
  e.mesh.position.addScaledVector(e.push,dt);e.push.multiplyScalar(Math.exp(-dt*12));
- if(collisions&&previous)collisions.move(previous,e.mesh.position,e.push,e.radius,e.boss?5:1.5);
+ if(collisions)collisions.move(previous,e.mesh.position,e.push,e.radius,e.boss?5:1.5);
+ const travelled=Math.hypot(e.mesh.position.x-previous.x,e.mesh.position.z-previous.z);e.stride=(e.stride??0)+travelled;e.travelSpeed=dt>0?travelled/dt:0;
  e.mesh.position.y=height(e.mesh.position.x,e.mesh.position.z)+(flying?(e.kind==='moth'&&e.state==='attack'?.2:e.kind==='moth'?.55:.65):e.kind==='stalker'&&e.state==='attack'?Math.sin(Math.max(0,e.timer)/timing.strike*Math.PI)*.35:0);
 }

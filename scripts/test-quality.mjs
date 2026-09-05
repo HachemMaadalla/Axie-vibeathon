@@ -40,9 +40,9 @@ check('Free seeds remain free while seed, soil and fertilizer quality affects fa
 check('Higher-star keys improve supply drop rates without affecting XP',()=>{
  for(const s of [1,2,3]){let seeds=0;for(let i=0;i<10000;i++)seeds+=rollDrops(1,false,()=>i/10000,'stalker',s).filter(d=>d.kind==='moonberry').length;assert.equal(seeds,800*(1+(s-1)*.5));assert.equal(rollDrops(1,true,()=>.5,'guardian',s)[0].amount,s);}
 });
-check('Physical pickups keep quality and partial returns never duplicate loot',()=>{
+check('Physical pickups keep quality and safe returns preserve all loot quality',()=>{
  const p=new BattlePickups(new T.Group(),()=>0,30);p.spawn('moonberry',2,new T.Vector3(),3);let rank=0;p.update(1,new T.Vector3(),(_,__,___,s)=>rank=s);assert.equal(rank,3);p.dispose();
- const f=freshFarm(),loot=emptyLoot();loot.moonberry=4;loot.soil=2;const result=settleExpedition(f,loot,'lost',1,{moonberry:[1,2],soil:[0,1]});
- assert.equal(result.moonberry,2);assert.equal(f.seeds.moonberry,5);assert.deepEqual(qualityCounts(f,'seed:moonberry'),[3,0,2]);assert.equal(f.soil,2);assert.deepEqual(qualityCounts(f,'soil'),[1,0,1]);
+ const f=freshFarm(),loot=emptyLoot();loot.moonberry=4;loot.soil=2;const result=settleExpedition(f,loot,'escaped',1,{moonberry:[1,2],soil:[0,1]});
+ assert.equal(result.moonberry,4);assert.equal(f.seeds.moonberry,7);assert.deepEqual(qualityCounts(f,'seed:moonberry'),[4,1,2]);assert.equal(f.soil,3);assert.deepEqual(qualityCounts(f,'soil'),[2,0,1]);
 });
 console.log(n+' star-tier checks passed.');

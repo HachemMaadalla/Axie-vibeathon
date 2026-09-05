@@ -3,14 +3,14 @@ import {toonMaterial} from './toon';
 import type {EnemyKind} from './enemies';
 
 export const ENEMY_GEOMETRY={
- round:new T.SphereGeometry(1,12,8),
+ round:new T.SphereGeometry(1,8,6),
  spike:new T.ConeGeometry(1,1,6),
  block:new T.BoxGeometry(1,1,1)
 };
 export type EnemyRig={legs:T.Group[];arms:T.Group[];wings:T.Group[];head:T.Group;body:T.Group;materials:T.MeshToonMaterial[]};
 export function makeEnemyRig(kind:EnemyKind,visual:T.Group):EnemyRig{
  const materials=new Map<string,T.MeshToonMaterial>();
- const mat=(c:string,glow=false)=>{const key=c+glow;let m=materials.get(key);if(!m){m=toonMaterial(c);m.userData.glow=glow;m.emissive.set(glow?c:'#000000');m.emissiveIntensity=glow?.65:0;materials.set(key,m);}return m;};
+ const mat=(c:string,glow=false)=>{const key=c+glow;let m=materials.get(key);if(!m){const base=new T.Color(c);if(!glow){const hsl={h:0,s:0,l:0};base.getHSL(hsl);base.setHSL(hsl.h,hsl.s*.7,hsl.l*.8);}m=toonMaterial(base);m.userData.glow=glow;m.emissive.set(glow?c:'#000000');m.emissiveIntensity=glow?.65:0;materials.set(key,m);}return m;};
  const shape=(parent:T.Object3D,type:keyof typeof ENEMY_GEOMETRY,c:string,x:number,y:number,z:number,w:number,h:number,d:number,glow=false)=>{
   const m=new T.Mesh(ENEMY_GEOMETRY[type],mat(c,glow));m.userData.enemyShape=type;m.position.set(x,y,z);m.scale.set(w,h,d);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
  };
@@ -19,10 +19,9 @@ export function makeEnemyRig(kind:EnemyKind,visual:T.Group):EnemyRig{
  const pivot=(p:T.Object3D,x:number,y:number,z:number)=>{const g=new T.Group();g.position.set(x,y,z);p.add(g);return g;};
  const body=pivot(visual,0,0,0),head=pivot(body,0,0,0),legs:T.Group[]=[],arms:T.Group[]=[],wings:T.Group[]=[];
  const eyes=(p:T.Object3D,y:number,z:number,spacing=.23,size=.17,color='#ffda69')=>{for(const side of [-1,1]){
-  orb(p,'#152c37',side*spacing,y,z,size*1.32,size*1.12,.1);
-  orb(p,color,side*spacing,y,z+.07,size*.78,size*.65,.07,true);
-  orb(p,'#142735',side*spacing,y,z+.13,size*.2,size*.56,.035);
-  orb(p,'#fffbe4',side*spacing-.04,y+.04,z+.15,.03,.03,.02);
+  shape(p,'block','#15222a',side*spacing,y,z,size*2.1,size*.95,.16).rotation.z=-side*.18;
+  shape(p,'block',color,side*spacing,y,z+.1,size*1.45,size*.38,.05,true).rotation.z=-side*.18;
+  spike(p,'#343c37',side*(spacing+size*.15),y+size*.85,z+.04,size*1.2,size*.45,.13).rotation.z=side*.7;
  }};
  const limb=(side:number,y:number,z:number,c:string,arm=false)=>{const g=pivot(body,side*(arm?.64:.3),y,z);orb(g,c,side*.1,-.28,0,arm?.21:.17,.38,.2);orb(g,'#253a3a',side*.12,-.58,.06,.2,.15,.22);orb(g,c,side*.15,-.68,.19,.24,.15,.36);(arm?arms:legs).push(g);return g;};
  const leaf=(p:T.Object3D,x:number,y:number,z:number,side:number,c='#4a9d55')=>{orb(p,'#234e3e',x,y,z,.42,.14,.3).rotation.z=side*.3;orb(p,c,x,y+.05,z,.35,.13,.25).rotation.z=side*.3;};
@@ -101,6 +100,31 @@ export function makeEnemyRig(kind:EnemyKind,visual:T.Group):EnemyRig{
   spike(body,'#87e9fa',0,1.85,-.12,.34,1.3,.34);spike(body,'#d1fbff',-.11,1.79,.02,.14,.99,.18);
   orb(body,'#223d64',0,.85,.5,.26,.29,.08);orb(body,'#fba85c',0,.85,.56,.16,.2,.08,true);
   if(golem){for(const s of [-1,1]){orb(arms[s<0?0:1],'#477bac',s*.1,-.65,.24,.48,.44,.5);for(let i=0;i<3;i++)spike(arms[s<0?0:1],'#bdedfa',s*.12+(i-1)*.23,-.3,.3,.14,.65,.15);}spike(head,'#ffce76',0,1.74,.26,.1,.42,.12);}
+ }
+ // Angular plates and asymmetrical growths break up the soft base anatomy.
+ if(kind==='beetle'){
+  for(const side of [-1,1])for(let i=0;i<3;i++){
+   const plate=shape(body,'block','#8e6543',side*.36,1.14-i*.035,-.63+i*.46,.56,.16,.38);plate.rotation.z=-side*.25;
+   spike(body,'#c5b790',side*.77,.99,-.6+i*.48,.12,.46,.14).rotation.z=-side*.95;
+  }
+ }else if(kind==='stalker'||kind==='guardian'||kind==='brute'){
+  for(const side of [-1,1]){
+   for(let i=0;i<3;i++)shape(body,'block','#55574a',side*(.35-i*.04),1.43-i*.22,.32,.25,.16,.22).rotation.z=side*.22;
+   spike(arms[side<0?0:1],'#a6a288',side*.24,.25,-.08,.18,.66,.2).rotation.z=-side*.4;
+  }
+  shape(head,'block','#4e5547',0,.04,.4,.26,.3,.14);
+ }else if(kind==='shaman'||kind==='bomber'){
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;spike(head,'#716b65',Math.cos(a)*.72,.3,Math.sin(a)*.58,.12,.42,.13).rotation.z=Math.cos(a)*.5;}
+  for(const side of [-1,1])spike(head,'#c0b49b',side*.15,-.25,.32,.07,.23,.08).rotation.x=Math.PI;
+ }else if(kind==='moth'||kind==='broodqueen'){
+  for(const side of [-1,1]){
+   spike(head,'#abafa2',side*.18,1.07,.42,.085,.44,.09).rotation.x=1.1;
+   for(let i=0;i<3;i++)spike(wings[side<0?0:1],'#536076',side*(1.08+i*.19),-.13+i*.14,-.03,.14,.48,.065).rotation.z=-side*1.1;
+  }
+ }else{
+  for(const side of [-1,1])for(let i=0;i<3;i++){
+   const plate=shape(body,'block','#526578',side*.36,1.18-i*.25,.43,.5,.2,.23);plate.rotation.z=side*.12;
+  }
  }
  return {body,head,legs,arms,wings,materials:[...materials.values()]};
 }

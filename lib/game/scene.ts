@@ -336,7 +336,7 @@ export class WildseedGame {
  private clampEnemy(e:EnemyUnit){const r=Math.hypot(e.mesh.position.x,e.mesh.position.z),limit=WORLD_RADIUS.dungeon-3;if(r>limit){e.mesh.position.x*=limit/r;e.mesh.position.z*=limit/r;}}
  private removeEnemy(e:EnemyUnit){disposeEnemy(e);}
  private hurtEnemy(e:EnemyUnit,damage:number){
- if(e.hp<=0)return;if(!this.reducedMotion&&damage>=25&&this.elapsed-this.impactAt>.18){this.hitStop=.035;this.impactAt=this.elapsed;}e.hp-=damage;e.flash=damage>=12?.11:.055;if(damage>=12)e.stagger=Math.max(e.stagger,e.boss?.018:.055);e.bar.update(e.hp,e.max);
+ if(e.hp<=0)return;if(!this.reducedMotion&&damage>=25&&this.elapsed-this.impactAt>.24){this.hitStop=.018;this.impactAt=this.elapsed;}e.hp-=damage;e.flash=damage>=12?.11:.055;if(damage>=12)e.stagger=Math.max(e.stagger,e.boss?.018:.055);e.bar.update(e.hp,e.max);
  const away=e.mesh.position.clone().sub(this.player.position);away.y=0;if(away.lengthSq())e.push.addScaledVector(away.normalize(),e.boss?1:damage>=18?7:2);
  this.fx.impact(e.mesh.position.clone().add(new T.Vector3(0,e.aimHeight,0)),damage,ENEMY_INFO[e.kind].color,e.hp<=0,e.boss,away);
  this.combatAudio.play(e.hp<=0?'kill':'hit');

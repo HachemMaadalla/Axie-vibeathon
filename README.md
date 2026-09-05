@@ -64,10 +64,12 @@ The farm has roaming chickens, butterflies, fireflies, a moving windmill and sca
 The roadmap integration suite verifies crop spending, save migration, compost quantities, character mastery, safe island spawns, drop rarity, challenges and bounded atmosphere objects. Visual and full mobile-device QA remain outstanding.
 
 ## Enemy and boss expansion
-Seven regular enemies now use rounded, cel-shaded creature rigs with animated shells, legs, wings, mushroom caps and crystal armor. Cinder Puff marks spore blasts; Prism Sentry fires five-shot fans; Stoneback releases a jumpable ground wave. Reavers lunge, scarabs charge along a marked lane, Hexers fire spore volleys, and moths circle before diving.
+Seven regular enemies now use rounded, cel-shaded creature rigs with animated shells, legs, wings, mushroom caps and crystal armor. Cinder Puff marks spore blasts; Prism Sentry fires five-shot fans; Stoneback releases a jumpable ground wave. Reavers lunge, scarabs charge along a marked lane, Hexers fire spore volleys, and moths approach directly before swooping.
 
 Bosses rotate with total expedition clears: the Grove alternates Elder Thornwarden and Lumina, Brood Queen; the Hollow cycles Prism Colossus, Lumina and Thornwarden. Each has three attack patterns and intensifies below half health. Boss fights slow regular spawning. Queen summons are capped, and the HUD shows only the boss name and health bar.
 
 Enemy projectiles have different spore, petal, thorn and crystal silhouettes. Marked ground attacks follow terrain and can be jumped. Owner death cancels its remaining attacks. Shared creature geometry uses three rendering pools; attacks and summons are bounded. Existing keys, saves, XP pickups and 8% seed rarity remain compatible.
 
 Run `node --experimental-transform-types scripts/test-enemy-expansion.mjs` for boss phases, warnings, jumping, cover, attack cleanup, population limits and drops. The full combat simulation also exercises all seven regular enemies. Visual/device QA is still outstanding.
+
+Enemy attacks use brief eased anticipation, fast strikes and short recoil. Regular wind-ups are 0.24–0.5 seconds; bosses keep a 0.7-second warning. Ranged enemies hold a firing position instead of retreating, flyers approach directly without circling or slow bobbing, and hit stagger no longer stretches attack timers. Global impact pauses are shorter and less frequent.

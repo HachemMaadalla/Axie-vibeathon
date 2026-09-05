@@ -81,4 +81,27 @@ check('Scene spawns alternate bosses and caps summons without changing drop rari
  for(let i=0;i<100;i++)g.spawn(false,0,'moth');assert.equal(g.enemies.length,60);g.enemies.forEach(disposeEnemy);
  for(const kind of ['bomber','crystal','brute']){let seeds=0;for(let i=0;i<10000;i++)seeds+=rollDrops(1,false,()=>i/10000,kind).filter(d=>!['soil','fertilizer'].includes(d.kind)).length;assert.equal(seeds,800);}
 });
+check('Flyers approach directly and casters hold their ground without retreating',()=>{
+ for(const kind of ['moth','broodqueen']){
+  const e=makeEnemy(kind);e.cooldown=99;const target=new T.Vector3(0,0,20);
+  for(let i=0;i<100;i++)updateEnemy(e,.01,target,i*.01,()=>0,1,events);
+  assert.ok(Math.abs(e.mesh.position.x)<1e-8);assert.ok(e.mesh.position.z>2);const y=e.mesh.position.y;
+  updateEnemy(e,.1,target,20,()=>0,1,events);assert.equal(e.mesh.position.y,y);disposeEnemy(e);
+ }
+ for(const kind of ['shaman','bomber','crystal']){
+  const e=makeEnemy(kind);e.cooldown=99;for(let i=0;i<100;i++)updateEnemy(e,.01,new T.Vector3(0,0,4),i*.01,()=>0,1,events);
+  assert.equal(e.mesh.position.z,0);assert.equal(e.mesh.position.x,0);disposeEnemy(e);
+ }
+});
+check('Attack poses snap through a short strike and stagger cannot stretch the wind-up',()=>{
+ const e=makeEnemy('shaman');e.spawnAge=1;e.cooldown=0;let shots=0;const ev={...events,projectile:()=>shots++};
+ for(let i=0;i<50;i++){e.stagger=.5;updateEnemy(e,.01,new T.Vector3(0,0,6),i*.01,()=>0,1,ev);}
+ assert.equal(shots,3);assert.equal(e.state,'attack');
+ for(let i=0;i<32;i++)updateEnemy(e,.01,new T.Vector3(0,0,6),i*.01,()=>0,1,ev);
+ assert.equal(e.state,'seek');disposeEnemy(e);
+ const reaver=makeEnemy('stalker');reaver.spawnAge=1;reaver.state='windup';reaver.timer=.24;
+ updateEnemy(reaver,.06,new T.Vector3(0,0,3),0,()=>0,1,events);const first=reaver.rig.arms[0].rotation.x;
+ updateEnemy(reaver,.06,new T.Vector3(0,0,3),.06,()=>0,1,events);
+ assert.notEqual(first,reaver.rig.arms[0].rotation.x);disposeEnemy(reaver);
+});
 console.log(passed+' enemy expansion checks passed.');

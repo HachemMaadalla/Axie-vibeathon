@@ -344,7 +344,7 @@ export class WildseedGame {
  const away=e.mesh.position.clone().sub(this.player.position);away.y=0;if(away.lengthSq())e.push.addScaledVector(away.normalize(),e.boss?1:damage>=18?7:2);
  this.fx.impact(e.mesh.position.clone().add(new T.Vector3(0,e.aimHeight,0)),damage,ENEMY_INFO[e.kind].color,e.hp<=0,e.boss,away);
  this.combatAudio.play(e.hp<=0?'kill':'hit');
- if(e.hp<=0){discover(this.farm,'enemy:'+e.kind);this.kills++;const point=e.mesh.position.clone();this.pickups.spawn('xp',e.xpValue,point);for(const drop of rollDrops(this.tier,e.boss,Math.random,e.kind,this.build?.keyStars??1))this.pickups.spawn(drop.kind,drop.amount*(this.challenge==='bounty'&&drop.kind in CROPS?2:1),point,rollQuality(0,farmLuck(this.farm)+(this.build?.food?.luck??0),this.build?.keyStars??1));if(e.boss&&this.challenge==='elite')this.pickups.spawn('soil',2,point);if(e.boss&&this.challenge==='rush')this.pickups.spawn('fertilizer',4,point);if(e.boss)this.bossDead=true;this.enemyAttacks?.cancel(e);this.leaveDefeated(e,away);this.enemies=this.enemies.filter(x=>x!==e);}
+ if(e.hp<=0){discover(this.farm,'enemy:'+e.kind);this.kills++;const point=e.mesh.position.clone();this.pickups.spawn('xp',e.xpValue,point);for(const drop of rollDrops(this.tier,e.boss,Math.random,e.kind,this.build?.keyStars??1))this.pickups.spawn(drop.kind,drop.amount*(this.challenge==='bounty'&&drop.kind in CROPS?2:1),point,rollQuality(0,farmLuck(this.farm)+(this.build?.food?.luck??0)+modifiers(this.build).luck,this.build?.keyStars??1));if(e.boss&&this.challenge==='elite')this.pickups.spawn('soil',2,point);if(e.boss&&this.challenge==='rush')this.pickups.spawn('fertilizer',4,point);if(e.boss)this.bossDead=true;this.enemyAttacks?.cancel(e);this.leaveDefeated(e,away);this.enemies=this.enemies.filter(x=>x!==e);}
  }
  private leaveDefeated(e:EnemyUnit,direction:T.Vector3){
   e.bar.visible=false;
@@ -383,7 +383,7 @@ export class WildseedGame {
 
  private damagePlayer(amount:number,origin:T.Vector3){
  if(this.invuln>0||this.mode!=='dungeon')return;
- this.hp=Math.max(0,this.hp-amount*(1-(this.build.food?.armor??0)));this.hurtFlash=this.reducedMotion?0:.18;this.invuln=.65;this.fx.hurt(this.player.position.clone().add(new T.Vector3(0,1,0)));this.combatAudio.play('hurt');
+ this.hp=Math.max(0,this.hp-amount*(1-(this.build.food?.armor??0))*(1-modifiers(this.build).armor));this.hurtFlash=this.reducedMotion?0:.18;this.invuln=.65;this.fx.hurt(this.player.position.clone().add(new T.Vector3(0,1,0)));this.combatAudio.play('hurt');
  const away=this.player.position.clone().sub(origin);away.y=0;if(away.lengthSq())this.motor.velocity.addScaledVector(away.normalize(),4);
  }
  private clearHostiles(){this.enemyAttacks?.clear();}
@@ -408,14 +408,14 @@ export class WildseedGame {
  this.enemyAttacks?.update(dt,player,(amount,point)=>this.damagePlayer(amount,point),this.collisions.dungeon);
  if(this.hp<=0){this.finish('lost');return;}
  this.spells.update(dt,player,this.build,this.damage,this.enemies,(target:SpellTarget,damage:number)=>this.hurtEnemy(target as EnemyUnit,damage));
- this.pickups.update(dt,player,(kind,amount,point,stars)=>this.collectDrop(kind,amount,point,stars),this.build.food?.magnet??0);
+ this.pickups.update(dt,player,(kind,amount,point,stars)=>this.collectDrop(kind,amount,point,stars),(this.build.food?.magnet??0)+modifiers(this.build).magnet);
  this.queueUpgrade();
  }
 
  private tick=(t:number)=>{if(this.stopped)return;this.frame=requestAnimationFrame(this.tick);const realDt=this.last?Math.min((t-this.last)/1000,.05):0;this.hitStop=Math.max(0,this.hitStop-realDt);const dt=this.mode==='dungeon'&&this.hitStop>0?realDt*.12:realDt;this.hurtFlash=Math.max(0,this.hurtFlash-realDt);this.container.style.setProperty('--hurt-opacity',String(this.hurtFlash*2));this.last=t;this.elapsed+=realDt;
  const active=this.started&&!this.paused&&!this.upgrade&&!this.result&&!document.hidden;if(active)this.worldTime+=realDt;this.atmosphere?.update(this.worldTime,this.farm.day,this.mode,this.tier,this.reducedMotion,this.scene,this.sunlight,(this.farm.progress?.upgrades.greenhouse??0)>0);
  if(active){grow(this.farm,dt);let dx=Number(this.keys.has('d')||this.keys.has('arrowright'))-Number(this.keys.has('a')||this.keys.has('arrowleft')),dz=Number(this.keys.has('s')||this.keys.has('arrowdown'))-Number(this.keys.has('w')||this.keys.has('arrowup'));let dir=this.followCamera.movement(dx,dz);if(dir.lengthSq()){dir.normalize();this.target=null;}else if(this.target){dir.copy(this.target).sub(this.player.position);dir.y=0;if(dir.length()<.22){dir.set(0,0,0);this.target=null;}else dir.normalize();}
- const wasGrounded=this.motor.grounded,fallSpeed=this.motor.vertical;const jumped=this.motor.step(dt,this.player.position,dir,this.mode==='dungeon'?this.speed:8,this.keys.has('shift'),WORLD_RADIUS[this.mode]-2.5,(x,z)=>terrainHeight(this.mode,x,z),this.collisions[this.mode]);this.dash=this.motor.dashCooldown;if(jumped){this.playerFeel.takeoff();this.combatAudio.play('jump');this.fx.burst(this.player.position,'#e5dfbd',8,2);}if(this.motor.dashing)this.fx.trail(this.player.position.clone().add(new T.Vector3(0,.6,0)),'#bcebd1',.2);const moving=this.motor.velocity.lengthSq()>.1;if(moving)dir.copy(this.motor.velocity).normalize();
+ const wasGrounded=this.motor.grounded,fallSpeed=this.motor.vertical;const jumped=this.motor.step(dt,this.player.position,dir,this.mode==='dungeon'?this.speed*modifiers(this.build).speed:8,this.keys.has('shift'),WORLD_RADIUS[this.mode]-2.5,(x,z)=>terrainHeight(this.mode,x,z),this.collisions[this.mode]);this.dash=this.motor.dashCooldown;if(jumped){this.playerFeel.takeoff();this.combatAudio.play('jump');this.fx.burst(this.player.position,'#e5dfbd',8,2);}if(this.motor.dashing)this.fx.trail(this.player.position.clone().add(new T.Vector3(0,.6,0)),'#bcebd1',.2);const moving=this.motor.velocity.lengthSq()>.1;if(moving)dir.copy(this.motor.velocity).normalize();
  if(!wasGrounded&&this.motor.grounded){this.playerFeel.land(fallSpeed);this.combatAudio.play('land');this.fx.burst(this.player.position,'#e9d7a1',8,2.5);}
  if(moving&&this.motor.grounded&&this.elapsed>this.dustAt){this.dustAt=this.elapsed+.09;this.fx.trail(this.player.position,'#dfc994',.11);}
  const actor=this.actors.get(this.farm.hero);if(actor&&this.elapsed>=this.weaponAttackUntil){if(moving)actor.root.rotation.y=Math.atan2(dir.x,dir.z);this.animate(actor,equippedMotion(actor,this.farm.hero,moving));}

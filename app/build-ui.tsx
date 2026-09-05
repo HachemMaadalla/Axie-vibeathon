@@ -1,9 +1,11 @@
 'use client';
 import {WeaponSpellIcon} from './weapon-icon';
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
-import {Sprout,Flower2,Cloud,Zap,Flame,Sun,Wind,Droplets,Gem,Heart,Sparkles,ArrowRight,Plus,Check} from 'lucide-react';
+import {Snowflake,Orbit,Slice,Sunrise,Mountain,FlaskConical,Shield,Footprints,Magnet,ScanEye,Hourglass,Clover,Sprout,Flower2,Cloud,Zap,Flame,Sun,Wind,Droplets,Gem,Heart,Sparkles,ArrowRight,Plus,Check} from 'lucide-react';
 import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,canEvolve,SLOT_LIMIT,type ItemId,type WeaponId,type Build,type Choice} from '@/lib/game/build';
 export function ItemIcon({id,size=24,evolved=false}:{id:ItemId|'heal';size?:number;evolved?:boolean}){
+ const symbols={frost:Snowflake,void:Orbit,dagger:Slice,beam:Sunrise,quake:Mountain,venom:FlaskConical,armor:Shield,boots:Footprints,magnet:Magnet,focus:ScanEye,duration:Hourglass,fortune:Clover};
+ if(id in symbols){const Icon=symbols[id as keyof typeof symbols];return <Icon size={size} color={ITEMS[id as ItemId].color} strokeWidth={evolved?2.5:1.7} aria-hidden="true"/>;}
  if(['cannon','sword','hammer','axe'].includes(id))return <WeaponSpellIcon id={id} size={size} evolved={evolved}/>;
  return <img src={'/assets/skills/'+id+(evolved&&WEAPONS.includes(id as WeaponId)?'-evolved':'')+'.png'} width={size} height={size} alt="" aria-hidden="true" draggable={false} className={'skill-art-icon '+(evolved?'evolved-art':'')} style={{width:size,height:size}}/>;
 }
@@ -35,4 +37,4 @@ export function UpgradeCards({choices,build,onChoose}:{choices:Choice[];build:Bu
  })}</div>;
 }
 
-function shortEffect(id:ItemId,level:number){const text:Record<ItemId,string>={thorn:'Piercing thorns',petal:'Orbiting petals',spore:'Poison field',storm:'Chain lightning',ember:'Falling meteors',cannon:'Explosive shots',sword:'Straight vertical cut',hammer:'Ground shockwave',axe:'Wide sweeping cleave',sun:'More spell damage',wind:'Faster spells',dew:'Health + regeneration',echo:'Extra projectiles',heart:'Larger spell area'};return text[id]+(level>1?' ↑':'');}
+function shortEffect(id:ItemId,level:number){const text:Record<ItemId,string>={frost:'Chilling pulse',void:'Pull enemies inward',dagger:'Piercing blade fan',beam:'Piercing light beam',quake:'Radial earth rupture',venom:'Poison pools',armor:'Take less damage',boots:'Run faster',magnet:'Collect from farther',focus:'Double-damage crits',duration:'Longer spell fields',fortune:'Better loot quality',thorn:'Piercing thorns',petal:'Orbiting petals',spore:'Poison field',storm:'Chain lightning',ember:'Falling meteors',cannon:'Explosive shots',sword:'Straight vertical cut',hammer:'Ground shockwave',axe:'Wide sweeping cleave',sun:'More spell damage',wind:'Faster spells',dew:'Health + regeneration',echo:'Extra projectiles',heart:'Larger spell area'};return text[id]+(level>1?' ↑':'');}

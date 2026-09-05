@@ -1,12 +1,23 @@
 import type {HeroId} from './state';
-export type WeaponId='thorn'|'petal'|'spore'|'storm'|'ember'|'cannon'|'sword'|'hammer'|'axe';
-export type PassiveId='sun'|'wind'|'dew'|'echo'|'heart';
+export type WeaponId='thorn'|'petal'|'spore'|'storm'|'ember'|'cannon'|'sword'|'hammer'|'axe'|'frost'|'void'|'dagger'|'beam'|'quake'|'venom';
+export type PassiveId='sun'|'wind'|'dew'|'echo'|'heart'|'armor'|'boots'|'magnet'|'focus'|'duration'|'fortune';
 export type ItemId=WeaponId|PassiveId;
 export type Build={mealStars?:number[];keyStars?:import('./quality').Stars;food?:import('./food').FoodBuffs;meals?:import('./state').CropId[];mastery?:WeaponId;heroMastery?:HeroId;items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
-export const WEAPONS:WeaponId[]=['thorn','petal','spore','storm','ember','cannon','sword','hammer','axe'];
-export const PASSIVES:PassiveId[]=['sun','wind','dew','echo','heart'];
+export const WEAPONS:WeaponId[]=['thorn','petal','spore','storm','ember','cannon','sword','hammer','axe','frost','void','dagger','beam','quake','venom'];
+export const PASSIVES:PassiveId[]=['sun','wind','dew','echo','heart','armor','boots','magnet','focus','duration','fortune'];
 export const SLOT_LIMIT=4;
 export const ITEMS:Record<ItemId,{name:string;kind:'spell'|'passive';color:string;levels:string[]}>={
+frost:{"name":"Frost Nova","color":"#8eeaff","kind":"spell","levels":["Freezing pulse","Freezing pulse · stronger","Freezing pulse · maximum power"]},
+void:{"name":"Void Well","color":"#b299ff","kind":"spell","levels":["Pulling gravity field","Pulling gravity field · stronger","Pulling gravity field · maximum power"]},
+dagger:{"name":"Crystal Daggers","color":"#c7e8ff","kind":"spell","levels":["Piercing dagger fan","Piercing dagger fan · stronger","Piercing dagger fan · maximum power"]},
+beam:{"name":"Dawn Beam","color":"#fff1a3","kind":"spell","levels":["Piercing light beam","Piercing light beam · stronger","Piercing light beam · maximum power"]},
+quake:{"name":"Earth Spike","color":"#d3b17b","kind":"spell","levels":["Radial earth rupture","Radial earth rupture · stronger","Radial earth rupture · maximum power"]},
+venom:{"name":"Venom Flask","color":"#a1df63","kind":"spell","levels":["Lingering poison pools","Lingering poison pools · stronger","Lingering poison pools · maximum power"]},armor:{"name":"Iron Shell","color":"#adb7cc","kind":"passive","levels":["8% less damage","16% less damage","24% less damage"]},
+boots:{"name":"Trail Boots","color":"#8ef0bf","kind":"passive","levels":["8% faster movement","16% faster movement","24% faster movement"]},
+magnet:{"name":"Lodestone","color":"#76d8ff","kind":"passive","levels":["+1.5 pickup reach","+3 pickup reach","+4.5 pickup reach"]},
+focus:{"name":"Hunter Eye","color":"#ffc16b","kind":"passive","levels":["10% critical chance","20% critical chance","30% critical chance"]},
+duration:{"name":"Hourglass","color":"#edd396","kind":"passive","levels":["25% longer fields","50% longer fields","75% longer fields"]},
+fortune:{"name":"Lucky Clover","color":"#8ae39c","kind":"passive","levels":["+3% loot quality luck","+6% loot quality luck","+9% loot quality luck"]},
  cannon:{name:'Cannon Shot',kind:'spell',color:'#65d6f0',levels:['Fire an explosive cannonball.','Fire two cannonballs with wider blasts.','Fire three cannonballs with stronger blasts.']},
  sword:{name:'Sword Slash',kind:'spell',color:'#b9eaff',levels:['Cut a straight line through enemies ahead.','A stronger vertical cut with more reach.','A powerful vertical strike through a longer line.']},
  hammer:{name:'Hammer Slam',kind:'spell',color:'#ffc675',levels:['Slam nearby enemies with a shockwave.','A wider, stronger shockwave.','A heavy slam with greater reach.']},
@@ -23,6 +34,12 @@ export const ITEMS:Record<ItemId,{name:string;kind:'spell'|'passive';color:strin
  heart:{name:'Ember Heart',kind:'passive',color:'#ffa694',levels:['Spell areas and petal reach grow by 15%.','Spell areas and petal reach grow by 30%.','Spell areas and petal reach grow by 45%.']}
 };
 export const EVOLUTIONS:Record<WeaponId,{passive:PassiveId;name:string;text:string}>={
+frost:{"passive":"wind","name":"Winter Crown","text":"Repeated pulses slow the whole pack."},
+void:{"passive":"heart","name":"Event Horizon","text":"A wider well drags enemies into its core."},
+dagger:{"passive":"echo","name":"Glass Tempest","text":"A rapid fan of deeply piercing blades."},
+beam:{"passive":"sun","name":"Daybreak","text":"Twin-strength beams burn through enemy lines."},
+quake:{"passive":"armor","name":"Worldsplitter","text":"A huge rupture crushes surrounding enemies."},
+venom:{"passive":"duration","name":"Plague Bloom","text":"Long-lived toxic pools slow their victims."},
  cannon:{passive:'echo',name:'Broadside',text:'A rapid barrage of larger explosive cannonballs.'},
  sword:{passive:'wind',name:'Skybreaker',text:'Three vertical cuts tear through enemies ahead.'},
  hammer:{passive:'heart',name:'Earthshaker',text:'Huge shockwaves crush surrounding enemies.'},
@@ -63,6 +80,7 @@ export function draftChoices(b:Build,rng:()=>number=Math.random):Choice[]{
  take(random(pairedSpells.length?pairedSpells:ownedSpells.length?ownedSpells:owned));
  const partners=pool.filter(c=>c.id!=='heal'&&itemLevel(b,c.id)===0&&WEAPONS.some(w=>itemLevel(b,w)>0&&EVOLUTIONS[w].passive===c.id));
  take(random(partners.length?partners:pool.filter(c=>c.id!=='heal'&&itemLevel(b,c.id)===0)));
+ if(picked.length<3)take(random(pool.filter(c=>c.kind==='spell'&&c.id!=='heal'&&itemLevel(b,c.id)===0)));
  while(picked.length<3&&pool.length)take(random(pool));
  return picked;
 }
@@ -72,7 +90,7 @@ export function applyChoice(b:Build,c:Choice){
  if(c.kind==='evolution')b.evolved.push(c.id as WeaponId);else b.items[c.id]=c.level;
  return true;
 }
-export function modifiers(b:Build){return{damage:1+itemLevel(b,'sun')*.12,cooldown:(1-itemLevel(b,'wind')*.1)*(1-(b.food?.haste??0)),area:1+itemLevel(b,'heart')*.15+(b.food?.area??0),extra:itemLevel(b,'echo'),health:itemLevel(b,'dew')*12,regen:itemLevel(b,'dew')*.5+(b.food?.regen??0)};}
+export function modifiers(b:Build){return{armor:itemLevel(b,'armor')*.08,speed:1+itemLevel(b,'boots')*.08,magnet:itemLevel(b,'magnet')*1.5,crit:itemLevel(b,'focus')*.1,duration:1+itemLevel(b,'duration')*.25,luck:itemLevel(b,'fortune')*.03,damage:1+itemLevel(b,'sun')*.12,cooldown:(1-itemLevel(b,'wind')*.1)*(1-(b.food?.haste??0)),area:1+itemLevel(b,'heart')*.15+(b.food?.area??0),extra:itemLevel(b,'echo'),health:itemLevel(b,'dew')*12,regen:itemLevel(b,'dew')*.5+(b.food?.regen??0)};}
 // Growing costs give each upgrade time in combat.
 export const xpNeeded=(level:number)=>{
  const progress=Math.max(0,Math.floor(level)-1);
@@ -81,6 +99,12 @@ export const xpNeeded=(level:number)=>{
 export function spellStats(b:Build,id:WeaponId){
  const level=itemLevel(b,id),evolved=b.evolved.includes(id),m=modifiers(b);
  const base={
+frost:{damage:0.75+level*.15,cooldown:3.2,count:1,area:3.6+level*.25,pierce:0,duration:2},
+void:{damage:0.16+level*.15,cooldown:4.8,count:1,area:2.4+level*.25,pierce:0,duration:3},
+dagger:{damage:0.55+level*.15,cooldown:0.95,count:2+level,area:0.2,pierce:2,duration:0},
+beam:{damage:1.1+level*.15,cooldown:2.4,count:1,area:14,pierce:99,duration:0},
+quake:{damage:1.35+level*.15,cooldown:3.8,count:1,area:4+level*.25,pierce:0,duration:0},
+venom:{damage:0.22+level*.15,cooldown:3.6,count:1,area:2+level*.25,pierce:0,duration:4},
   cannon:{damage:1+level*.2,cooldown:1.25,count:level,area:1.25+level*.2,pierce:0,duration:0},
   sword:{damage:.95+level*.2,cooldown:.85,count:1,area:3.2+level*.35,pierce:0,duration:0},
   hammer:{damage:1.2+level*.3,cooldown:1.3,count:1,area:2.8+level*.35,pierce:0,duration:0},
@@ -92,6 +116,7 @@ export function spellStats(b:Build,id:WeaponId){
   ember:{damage:1+level*.3,cooldown:3.5,count:level,area:1.1+level*.25,pierce:0,duration:0}
  }[id];
  if(evolved){
+  if(['frost','void','dagger','beam','quake','venom'].includes(id)){base.damage*=1.65;base.area*=1.35;base.cooldown*=.72;base.duration*=1.5;if(id==='dagger'){base.count+=3;base.pierce=6;}}
   if(id==='cannon'){base.count=4;base.area=2.3;base.damage*=1.25;base.cooldown=.85;}
   if(id==='sword'){base.area=4.5;base.damage*=1.35;base.cooldown=.6;}
   if(id==='hammer'){base.area=5;base.damage*=1.5;base.cooldown=1.05;}
@@ -110,7 +135,7 @@ export function spellStats(b:Build,id:WeaponId){
   if(b.heroMastery==='tripp')base.cooldown*=.85;
   if(b.heroMastery==='xia'){base.area*=1.15;base.cooldown*=.9;}
  }
- return {...base,count:base.count+(['spore','sword','hammer','axe'].includes(id)?0:m.extra),area:base.area*m.area,damage:base.damage*m.damage,cooldown:base.cooldown*m.cooldown,level,evolved};
+ return {...base,duration:base.duration*m.duration,count:base.count+(['spore','sword','hammer','axe','frost','void','beam','quake','venom'].includes(id)?0:m.extra),area:base.area*m.area,damage:base.damage*m.damage,cooldown:base.cooldown*m.cooldown,level,evolved};
 }
 
 

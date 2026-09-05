@@ -99,7 +99,7 @@ const {WildseedGame}=await import('../lib/game/scene.ts');
 check('Level-up choices consume queued XP without losing levels or accepting stale clicks',()=>{
  const queuedXp=xpNeeded(1)+xpNeeded(2)+xpNeeded(3)+1;
  const b=freshBuild(),game=Object.assign(Object.create(WildseedGame.prototype),{
-  mode:'dungeon',upgrade:true,build:b,choices:[eligibleChoices(b).find(c=>c.id==='thorn')],
+  farm:{progress:{seen:[],wins:{},upgrades:{},challenges:[],bonusHarvests:0}},mode:'dungeon',upgrade:true,build:b,choices:[eligibleChoices(b).find(c=>c.id==='thorn')],
   xp:queuedXp,level:1,hp:80,maxHp:135,baseMaxHp:135,keys:new Set(),sound:()=>{},emit:()=>{},toast:()=>{}
  });
  game.chooseUpgrade('heal');assert.equal(b.items.thorn,1);assert.equal(game.xp,queuedXp);
@@ -109,3 +109,18 @@ check('Level-up choices consume queued XP without losing levels or accepting sta
  const dew=eligibleChoices(b).find(c=>c.id==='dew');if(dew){game.choices=[dew];game.upgrade=true;const oldHp=game.hp,oldMax=game.maxHp;game.chooseUpgrade('dew');assert.equal(game.maxHp,oldMax+12);assert.equal(game.hp,oldHp+12);}
 });
 
+
+check('New weapons appear in drafts and passive buffs reach their live modifiers',()=>{
+ const b=freshBuild();
+ for(let i=0;i<30;i++){const choices=draftChoices(b,()=>i/30);assert.ok(choices.some(c=>c.kind==='spell'&&c.id!=='thorn'));}
+ b.items={thorn:1,armor:3,boots:3,magnet:3,focus:3,duration:3,fortune:3};
+ const m=modifiers(b);assert.equal(m.armor,.24);assert.equal(m.speed,1.24);assert.equal(m.magnet,4.5);assert.ok(Math.abs(m.crit-.3)<1e-9);assert.equal(m.duration,1.75);assert.equal(m.luck,.09);
+});
+check('Frost chills temporarily, void pulls, and clearing removes status effects',()=>{
+ const scene=new T.Scene(),engine=new SpellEngine(scene),p=new T.Vector3(),target={mesh:new T.Group(),hp:10000,boss:false,radius:.5};target.mesh.position.set(2,0,0);
+ engine.update(.05,p,{items:{frost:1},evolved:[]},10,[target],()=>{});assert.equal(engine.speedMultiplier(target),.45);
+ engine.clear();assert.equal(engine.speedMultiplier(target),1);
+ const second={mesh:new T.Group(),hp:10000,boss:false,radius:.5};second.mesh.position.set(3,0,0);
+ engine.update(.05,p,{items:{void:1},evolved:[]},10,[target,second],()=>{});assert.ok(second.mesh.position.x<3);
+ engine.dispose();assert.equal(scene.children.length,0);
+});

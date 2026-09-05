@@ -4,6 +4,12 @@ import {toonMaterial} from './toon';
 import type {WeaponId} from './build';
 
 export const SPELL_COLORS:Record<WeaponId,{base:string;evolved:string;trail:string}>={
+frost:{base:'#8eeaff',evolved:'#8eeaff',trail:'#8eeaff'},
+void:{base:'#b299ff',evolved:'#b299ff',trail:'#b299ff'},
+dagger:{base:'#c7e8ff',evolved:'#c7e8ff',trail:'#c7e8ff'},
+beam:{base:'#fff1a3',evolved:'#fff1a3',trail:'#fff1a3'},
+quake:{base:'#d3b17b',evolved:'#d3b17b',trail:'#d3b17b'},
+venom:{base:'#a1df63',evolved:'#a1df63',trail:'#a1df63'},
  cannon:{base:'#56d3ef',evolved:'#ffd35e',trail:'#98edff'},
  sword:{base:'#65dfff',evolved:'#90ffe2',trail:'#e6ffff'},
  hammer:{base:'#ffbe67',evolved:'#ffd865',trail:'#f7eac9'},
@@ -61,6 +67,19 @@ export class SpellVisuals{
   if(!this.geometries.has(key))this.geometries.set(key,merge(build()));
   const geo=this.geometries.get(key)!,mesh=new T.Mesh(geo,this.toon),border=new T.Mesh(geo,this.ink);
   mesh.name=key;border.name='ink-outline';mesh.add(border);return mesh;
+ }
+ sigil(id:'frost'|'void'|'dagger'|'beam'|'quake'|'venom',evolved=false){
+  const color=SPELL_COLORS[id][evolved?'evolved':'base'];
+  return this.cached(id+'-sigil-'+evolved,()=>id==='void'?[
+   {g:new T.TorusGeometry(.38,.09,5,12),color,rotation:[Math.PI/2,0,0]},
+   {g:new T.OctahedronGeometry(.24),color:'#35234f'}
+  ]:id==='venom'?[
+   {g:new T.SphereGeometry(.3,8,6),color},
+   {g:new T.SphereGeometry(.16,6,4),color:'#e0ff9b',position:[.13,.25,0]}
+  ]:[
+   {g:new T.ConeGeometry(id==='quake'?.35:.13,id==='beam'?1.8:1,4),color,rotation:id==='dagger'||id==='beam'?[Math.PI/2,0,0]:[0,0,0]},
+   {g:new T.OctahedronGeometry(.16),color:'#f5ffff'}
+  ]);
  }
  thorn(evolved:boolean){
   return this.cached(evolved?'sunlance':'thorn-bolt',()=>{

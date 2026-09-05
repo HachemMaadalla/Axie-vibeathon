@@ -1,12 +1,12 @@
 import * as T from 'three';
 import {SpellVisuals,SPELL_COLORS} from './spell-visuals';
 import type {CombatFX,CombatAudio} from './combat-fx';
-import {WEAPONS,ITEMS,itemLevel,spellStats,type Build,type WeaponId} from './build';
+import {WEAPONS,ITEMS,modifiers,itemLevel,spellStats,type Build,type WeaponId} from './build';
 export type SpellTarget={mesh:T.Group;hp:number;boss:boolean;radius?:number;aimHeight?:number};
 const center=(t:SpellTarget)=>t.mesh.position.clone().add(new T.Vector3(0,t.aimHeight??.7,0));
 type Melee={id:'sword'|'axe'|'hammer';direction:T.Vector3;delay:number;radius:number;damage:number;arc:number;color:string;evolved:boolean;width:number};
 type Projectile={mesh:T.Mesh;velocity:T.Vector3;life:number;damage:number;remaining:number;hit:Set<SpellTarget>;burst:boolean;explosion?:number;color?:string};
-type Zone={mesh:T.Group;radius:number;life:number;max:number;damage:number;slow:boolean;heal:boolean;tick:number;motes:T.Mesh[];fire:boolean};
+type Zone={mesh:T.Group;radius:number;life:number;max:number;damage:number;slow:boolean;heal:boolean;tick:number;motes:T.Mesh[];fire:boolean;style?:'frost'|'void'|'venom'};
 type Meteor={mesh:T.Mesh;marker:T.Mesh;point:T.Vector3;life:number;radius:number;damage:number;burn:boolean};
 export class SpellEngine{
  private root=new T.Group();
@@ -19,6 +19,7 @@ export class SpellEngine{
  private flashes:{object:T.Object3D;life:number}[]=[];
  private cuts:{object:T.Group;age:number;max:number;kind:"sword"|"axe";angle:number}[]=[];
  private clock=0;private melee:Melee[]=[];private previousTargets=new WeakMap<SpellTarget,T.Vector3>();
+ private chilled=new WeakMap<SpellTarget,number>();
  private orbitTick=0;private trailAt=0;
  constructor(scene:T.Scene,private feedback:{fx?:CombatFX;audio?:CombatAudio;height?:(x:number,z:number)=>number;cast?:(id:WeaponId,target:T.Vector3)=>void;collision?:(from:T.Vector3,to:T.Vector3)=>T.Vector3|null}={}){scene.add(this.root);}
  private discard(object:T.Object3D){this.visuals.release(object);}
@@ -28,21 +29,21 @@ export class SpellEngine{
  private line(from:T.Vector3,to:T.Vector3,evolved:boolean){
   const bolt=this.visuals.lightning(from,to,evolved);this.root.add(bolt);this.flashes.push({object:bolt,life:.19});
  }
- private zone(point:T.Vector3,radius:number,life:number,damage:number,slow:boolean,heal:boolean,color:string,fire=false){
+ private zone(point:T.Vector3,radius:number,life:number,damage:number,slow:boolean,heal:boolean,color:string,fire=false,style?:'frost'|'void'|'venom'){
   const mesh=new T.Group();mesh.name=fire?'solar-burning-ground':heal?'dream-garden':'spore-cloud';mesh.position.copy(point);
   const boundary=this.visuals.ring(point,radius,color,this.feedback.height);boundary.position.set(0,0,0);mesh.add(boundary);
   const motes:T.Mesh[]=[];
-  if(!fire)for(let i=0;i<(heal?3:2);i++){
+  if(!fire&&!style)for(let i=0;i<(heal?3:2);i++){
    const a=i*2.4,offset=radius*(heal?.45:.32),m=this.visuals.mushroom(heal),x=Math.cos(a)*offset,z=Math.sin(a)*offset;
    m.position.set(x,(this.feedback.height?.(point.x+x,point.z+z)??point.y)-point.y,z);m.scale.setScalar(heal?1.05:.9);mesh.add(m);
   }
   for(let i=0;i<(fire?7:5);i++){
-   const a=i/(fire?7:5)*Math.PI*2,m=fire?this.visuals.flame():this.visuals.puff(heal);
+   const a=i/(fire?7:5)*Math.PI*2,m=style?this.visuals.sigil(style):fire?this.visuals.flame():this.visuals.puff(heal);
    m.position.set(Math.cos(a)*radius*.64,.35,Math.sin(a)*radius*.64);m.scale.setScalar(fire?1:1.4);mesh.add(m);motes.push(m);
   }
-  this.root.add(mesh);this.zones.push({mesh,radius,life,max:life,damage,slow,heal,tick:0,motes,fire});
+  this.root.add(mesh);this.zones.push({mesh,radius,life,max:life,damage,slow,heal,tick:0,motes,fire,style});
  }
- speedMultiplier(target:SpellTarget){return this.zones.some(z=>z.slow&&z.mesh.position.distanceTo(target.mesh.position)<z.radius)? .65:1;}
+ speedMultiplier(target:SpellTarget){return (this.chilled.get(target)??0)>this.clock?.45:this.zones.some(z=>z.slow&&z.mesh.position.distanceTo(target.mesh.position)<z.radius)? .65:1;}
  healingAt(position:T.Vector3){return this.zones.some(z=>z.heal&&z.mesh.position.distanceTo(position)<z.radius)?3:0;}
  update(dt:number,player:T.Vector3,build:Build,baseDamage:number,targets:SpellTarget[],hit:(target:SpellTarget,damage:number)=>void){
   this.clock+=dt;this.trailAt-=dt;const emitTrail=this.trailAt<=0;if(emitTrail)this.trailAt=.03;
@@ -51,7 +52,7 @@ export class SpellEngine{
   const aimAt=(t:SpellTarget,origin:T.Vector3,speed:number)=>center(t).addScaledVector(velocity.get(t)??new T.Vector3(),Math.min(.35,origin.distanceTo(center(t))/speed)*.75);
   const alive=()=>live;
   const near=(origin:T.Vector3)=>live.filter(t=>t.hp>0).sort((a,b)=>a.mesh.position.distanceToSquared(origin)-b.mesh.position.distanceToSquared(origin));
-  const hurt=(t:SpellTarget,n:number)=>{if(t.hp>0)hit(t,n);};
+  const hurt=(t:SpellTarget,n:number)=>{if(t.hp>0)hit(t,n*(Math.random()<modifiers(build).crit?2:1));};
   const splash=(p:T.Vector3,r:number,n:number)=>{for(const t of alive())if(t.mesh.position.distanceTo(p)<r+(t.boss?1.3:.4))hurt(t,n);};
   for(const id of WEAPONS){
    if(!itemLevel(build,id)||id==='petal')continue;
@@ -60,8 +61,27 @@ export class SpellEngine{
    const candidates=near(player),origin=player.clone().add(new T.Vector3(0,.9,0));
    const list=id==="thorn"||id==="cannon"?candidates.filter(t=>!this.feedback.collision?.(origin,center(t))):candidates,target=list[0];if(!target||target.mesh.position.distanceTo(player)>17)continue;
    const s=spellStats(build,id),damage=baseDamage*s.damage*(build.mastery===id&&s.evolved?1.15:1),color=s.evolved?SPELL_COLORS[id].evolved:SPELL_COLORS[id].base;
-   if(['sword','axe','hammer'].includes(id)&&(Math.hypot(target.mesh.position.x-player.x,target.mesh.position.z-player.z)>s.area+(target.radius??.6)||Math.abs(target.mesh.position.y-player.y)>2.2))continue;
+   if(['sword','axe','hammer','frost','quake'].includes(id)&&(Math.hypot(target.mesh.position.x-player.x,target.mesh.position.z-player.z)>s.area+(target.radius??.6)||Math.abs(target.mesh.position.y-player.y)>2.2))continue;
    this.timers[id]=s.cooldown;this.feedback.cast?.(id,target.mesh.position);this.feedback.audio?.play(id==='storm'?'storm':id==='cannon'?'cannon':id==='sword'?'sword':id==='axe'?'axe':'cast');
+   if(id==='frost'){
+    for(const t of live)if(t.mesh.position.distanceTo(player)<s.area+(t.radius??.6)){this.chilled.set(t,this.clock+s.duration);hurt(t,damage);}
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,p=this.visuals.sigil('frost',s.evolved);p.position.copy(player).add(new T.Vector3(Math.cos(a)*s.area,.4,Math.sin(a)*s.area));this.root.add(p);this.flashes.push({object:p,life:.35});}
+    this.flashes.push({object:this.ring(player,s.area,color),life:.35});
+   }
+   if(id==='void'||id==='venom')this.zone(target.mesh.position,s.area,s.duration,damage,id==='venom'&&s.evolved,false,color,false,id);
+   if(id==='quake'){
+    splash(player,s.area,damage);
+    for(let i=0;i<10;i++){const a=i*Math.PI/5,p=this.visuals.sigil('quake',s.evolved);p.position.copy(player).add(new T.Vector3(Math.cos(a)*s.area*.7,.3,Math.sin(a)*s.area*.7));p.scale.y=1.6;this.root.add(p);this.flashes.push({object:p,life:.45});}
+    this.flashes.push({object:this.ring(player,s.area,color),life:.35});this.feedback.audio?.play('hammer');
+   }
+   if(id==='dagger'||id==='beam'){
+    const count=id==='beam'?1:s.count;
+    for(let i=0;i<count;i++){
+     const aim=aimAt(target,origin,id==='beam'?65:30).sub(origin).normalize().applyAxisAngle(new T.Vector3(0,1,0),(i-(count-1)/2)*.13);
+     const mesh=this.visuals.sigil(id,s.evolved);mesh.position.copy(origin);mesh.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),aim);if(id==='beam')mesh.scale.set(2,2,3);this.root.add(mesh);
+     this.projectiles.push({mesh,velocity:aim.multiplyScalar(id==='beam'?65:30),life:id==='beam'?.4:1.1,damage,remaining:s.pierce+1,hit:new Set(),burst:false,color});
+    }
+   }
    if(id==='cannon'){
     for(let i=0;i<s.count;i++){
      const aimed=list[i%Math.min(list.length,3)],origin=player.clone().add(new T.Vector3(0,.95,0)),aim=aimAt(aimed,origin,24).sub(origin).normalize();
@@ -149,6 +169,7 @@ export class SpellEngine{
   }
   for(let i=this.zones.length-1;i>=0;i--){
    const z=this.zones[i];z.life-=dt;z.tick-=dt;if(emitTrail){const a=this.clock*3+i*2;this.feedback.fx?.trail(z.mesh.position.clone().add(new T.Vector3(Math.cos(a)*z.radius*.7,.3+Math.sin(a)*.15,Math.sin(a)*z.radius*.7)),z.fire?'#ff7136':z.heal?'#63efc6':'#8ddb46',.12);}
+   if(z.style==='void')for(const t of live){const offset=z.mesh.position.clone().sub(t.mesh.position);offset.y=0;const d=offset.length();if(t.hp>0&&d<z.radius&&d>.3){const next=t.mesh.position.clone().addScaledVector(offset.normalize(),Math.min(d-.3,dt*(t.boss?.7:3.8)));if(!this.feedback.collision?.(t.mesh.position,next))t.mesh.position.copy(next);}}
    if(z.tick<=0){z.tick=.5;splash(z.mesh.position,z.radius,z.damage);}
    z.motes.forEach((m,j)=>{const angle=j/z.motes.length*Math.PI*2+(z.fire?0:this.clock*.45),x=Math.cos(angle)*z.radius*.64,zp=Math.sin(angle)*z.radius*.64;m.position.set(x,(this.feedback.height?.(z.mesh.position.x+x,z.mesh.position.z+zp)??z.mesh.position.y)-z.mesh.position.y+(z.fire?.05:.38+Math.sin(this.clock*3+j)*.15),zp);m.rotation.y=this.clock*(z.fire?1.5:.5)+j;m.scale.setScalar(Math.min(1,(z.max-z.life)*8,z.life*4)*(z.fire?.8+Math.sin(this.clock*10+j)*.16:1.25));});
    if(z.life<=0){this.discard(z.mesh);this.zones.splice(i,1);}
@@ -156,7 +177,7 @@ export class SpellEngine{
   for(let i=this.cuts.length-1;i>=0;i--){const c=this.cuts[i];c.age+=dt;const t=c.age/c.max;if(t>=1){this.discard(c.object);this.cuts.splice(i,1);continue;}const tail=Math.min(1,(1-t)*4);if(c.kind==="sword"){c.object.scale.set(tail,tail,.45+.55*Math.min(1,c.age/.055));}else{c.object.rotation.y=c.angle+(t-.25)*.55;const grow=.55+.45*Math.min(1,c.age/.045);c.object.scale.set(grow*tail,1,grow*tail);}}
   for(let i=this.flashes.length-1;i>=0;i--){const f=this.flashes[i];f.life-=dt;if(f.life<=0){this.discard(f.object);this.flashes.splice(i,1);}}
  }
- clear(){for(const child of [...this.root.children])this.discard(child);this.timers={};this.projectiles=[];this.zones=[];this.meteors=[];this.petals=[];this.flashes=[];this.clock=0;this.orbitTick=0;this.trailAt=0;this.petalEvolved=false;this.melee=[];this.cuts=[];this.previousTargets=new WeakMap();}
+ clear(){for(const child of [...this.root.children])this.discard(child);this.timers={};this.projectiles=[];this.zones=[];this.meteors=[];this.petals=[];this.flashes=[];this.clock=0;this.orbitTick=0;this.trailAt=0;this.petalEvolved=false;this.melee=[];this.cuts=[];this.previousTargets=new WeakMap();this.chilled=new WeakMap();}
  dispose(){this.clear();this.visuals.dispose();this.root.removeFromParent();}
 }
 

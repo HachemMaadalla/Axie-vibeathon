@@ -2,7 +2,7 @@ import type {HeroId} from './state';
 export type WeaponId='thorn'|'petal'|'spore'|'storm'|'ember'|'cannon'|'sword'|'hammer'|'axe';
 export type PassiveId='sun'|'wind'|'dew'|'echo'|'heart';
 export type ItemId=WeaponId|PassiveId;
-export type Build={mastery?:WeaponId;heroMastery?:HeroId;items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
+export type Build={food?:import('./food').FoodBuffs;meals?:import('./state').CropId[];mastery?:WeaponId;heroMastery?:HeroId;items:Partial<Record<ItemId,number>>;evolved:WeaponId[]};
 export const WEAPONS:WeaponId[]=['thorn','petal','spore','storm','ember','cannon','sword','hammer','axe'];
 export const PASSIVES:PassiveId[]=['sun','wind','dew','echo','heart'];
 export const SLOT_LIMIT=4;
@@ -72,7 +72,7 @@ export function applyChoice(b:Build,c:Choice){
  if(c.kind==='evolution')b.evolved.push(c.id as WeaponId);else b.items[c.id]=c.level;
  return true;
 }
-export function modifiers(b:Build){return{damage:1+itemLevel(b,'sun')*.12,cooldown:1-itemLevel(b,'wind')*.1,area:1+itemLevel(b,'heart')*.15,extra:itemLevel(b,'echo'),health:itemLevel(b,'dew')*12,regen:itemLevel(b,'dew')*.5};}
+export function modifiers(b:Build){return{damage:1+itemLevel(b,'sun')*.12,cooldown:(1-itemLevel(b,'wind')*.1)*(1-(b.food?.haste??0)),area:1+itemLevel(b,'heart')*.15+(b.food?.area??0),extra:itemLevel(b,'echo'),health:itemLevel(b,'dew')*12,regen:itemLevel(b,'dew')*.5+(b.food?.regen??0)};}
 // Growing costs give each upgrade time in combat.
 export const xpNeeded=(level:number)=>{
  const progress=Math.max(0,Math.floor(level)-1);

@@ -49,13 +49,13 @@ export function Inventory({view:v,onSeed,onMeal,onReturn}:{view:View;onSeed:(id:
    <LootArt kind={item.art} crop={item.crop} size={48}/>
    <div><h3 style={{color:item.color}}>{item.name}</h3><p>{hint}</p></div>
    {farm&&item.category==='Seeds'&&<button className="primary" onClick={()=>onSeed(item.crop!)}>{equipped?<Check size={16}/>:null}{equipped?'Equipped':'Equip'}</button>}
-   {farm&&item.category==='Meals'&&<button className="primary" onClick={()=>onMeal(item.crop!)}>{equipped?'Unpack':'Pack'}</button>}
+   {farm&&item.category==='Meals'&&<button className="primary" onClick={()=>onMeal(item.crop!)}>Food tray</button>}
   </div>:<p className="empty-pack">Your pack is empty.</p>}
   {!farm&&<div className="simple-pack-exit"><span>Early return keeps half.</span><button className="secondary" onClick={onReturn}>Return home</button></div>}
  </div>;
 }
 export function CombatBelt({view:v,onOpen}:{view:View;onOpen:()=>void}){
  const ids=[...(Object.keys(v.build.items) as ItemId[]).filter(id=>WEAPONS.includes(id as WeaponId)),...PASSIVES].filter(id=>itemLevel(v.build,id)>0);
- return <div className="combat-belt panel" aria-label="Equipped spells and items">{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25} evolved={v.build.evolved.includes(id as WeaponId)}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
+ return <div className="combat-belt panel" aria-label="Equipped spells and items">{(v.build.meals??[]).map((id,i)=><span className="belt-meal" key={'meal-'+i} title={CROPS[id].meal+' · '+CROPS[id].effect} aria-label={CROPS[id].meal+' active'}><LootArt kind="meal" crop={id} size={23}/></span>)}{ids.map(id=><button key={id} onClick={onOpen} style={{'--item-color':ITEMS[id].color} as CSSProperties} title={(v.build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name)} aria-label={ITEMS[id].name+' level '+itemLevel(v.build,id)}><ItemIcon id={id} size={25} evolved={v.build.evolved.includes(id as WeaponId)}/><span>{v.build.evolved.includes(id as WeaponId)?'✦':'●'.repeat(itemLevel(v.build,id))}</span></button>)}<button onClick={onOpen} className="belt-book" title="Spellbook · B" aria-label="Open spellbook"><Sparkles size={21}/><kbd>B</kbd></button></div>;
 }
 

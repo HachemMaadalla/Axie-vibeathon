@@ -74,11 +74,11 @@ export class BattlePickups{
   }
   this.items.push(item);this.render();
  }
- update(dt:number,player:T.Vector3,collect:(kind:PickupKind,amount:number,point:T.Vector3)=>void){
+ update(dt:number,player:T.Vector3,collect:(kind:PickupKind,amount:number,point:T.Vector3)=>void,bonusReach=0){
   if(dt<=0)return;this.clock+=dt;
   for(let i=this.items.length-1;i>=0;i--){
    const item=this.items[i];item.age+=dt;
-   const dx=player.x-item.position.x,dz=player.z-item.position.z,reach=item.kind==='xp'?4.5:3;
+   const dx=player.x-item.position.x,dz=player.z-item.position.z,reach=(item.kind==='xp'?4.5:3)+Math.max(0,Math.min(4,bonusReach));
    if(item.age>.3&&dx*dx+dz*dz<reach*reach&&Math.abs(player.y-item.ground)<5.5)item.pulling=true;
    if(item.pulling){
     item.pullAge+=dt;

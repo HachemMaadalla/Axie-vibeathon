@@ -1,3 +1,4 @@
+import {FOODS,foodBuffs,foodLabels,MEAL_SLOTS} from './food';
 import {freshProgress,hydrateProgress,progress,discover,type Progress} from './progression';
 export type CropId='sunroot'|'moonberry'|'embercorn'|'cloudmelon'|'glowcap'|'starpepper'|'dewleaf'|'crystalbean';
 export type HeroId='pomodoro'|'bing'|'kotaro'|'kibo'|'paladill'|'tripp'|'xia';
@@ -14,6 +15,7 @@ starpepper:{name:'Starpepper',color:'#ff665b',seconds:100,description:'A bright 
 dewleaf:{name:'Dewleaf',color:'#63c99c',seconds:65,description:'Crisp leaves that hold sparkling morning dew.',meal:'Dewleaf salad',effect:'+25 health · +15% speed'},
 crystalbean:{name:'Crystalbean',color:'#72a7ff',seconds:110,description:'A hard blue pod grown from deep-dungeon seeds.',meal:'Crystalbean bowl',effect:'+20% health, speed and damage'}
 } as const;
+for(const id of Object.keys(CROPS) as CropId[])(CROPS[id] as {effect:string}).effect=foodLabels(FOODS[id]).join(' · ');
 export const CROP_IDS=Object.keys(CROPS) as CropId[];
 export const HEROES={
 pomodoro:{name:'Pomodoro',role:'The gentle gardener',perk:'Harvests have a 25% chance to return a seed.',shortPerk:'Bonus harvest seeds',color:'#f68d83',health:0,damage:1,speed:1},
@@ -45,7 +47,7 @@ export function tend(farm:FarmState,index:number,seed:CropId,random=Math.random)
  if(!p.watered){p.watered=true;return 'Watered! Your crop is growing.';}return 'Growing happily. Explore while your garden grows.';
 }
 export function improve(farm:FarmState,index:number,kind:'fertilizer'|'soil'):string{const p=farm.plots[index];if(!p)return 'Choose a garden bed.';if(kind==='soil'){if(p.rich)return 'This bed already has rich soil.';if(farm.soil<1)return 'Find rich soil in a dungeon.';farm.soil--;p.rich=true;return 'Rich soil: faster growth and +1 crop per harvest.';}if(!p.crop||p.growth>=1)return 'Plant a crop before adding fertilizer.';if(p.fertilized)return 'This crop is already fertilized.';if(farm.fertilizer<1)return 'Find fertilizer in a dungeon.';farm.fertilizer--;p.fertilized=true;return 'Fertilized! This crop now grows 80% faster.';}
-export function cook(farm:FarmState,id:CropId):string{if(!Object.hasOwn(CROPS,id))return 'Choose a recipe.';if(farm.crops[id]<2)return 'You need 2 '+CROPS[id].name+'.';farm.crops[id]-=2;farm.meals[id]++;discover(farm,'recipe:'+id);return CROPS[id].meal+' prepared!';}
+export function cook(farm:FarmState,id:CropId,hits=0):string{if(!Object.hasOwn(CROPS,id))return 'Choose a recipe.';if(farm.crops[id]<2)return 'You need 2 '+CROPS[id].name+'.';farm.crops[id]-=2;farm.meals[id]+=hits===3?2:1;discover(farm,'recipe:'+id);return CROPS[id].meal+' prepared!';}
 export const KEY_RECIPES={1:{name:'Grove Key',cost:{sunroot:24}},2:{name:'Hollow Key',cost:{moonberry:12,glowcap:6}}} as const;
 const keyId=(tier:DungeonTier)=>tier===1?'grove':'hollow';
 export function canCraftKey(farm:FarmState,tier:DungeonTier){return Object.entries(KEY_RECIPES[tier].cost).every(([id,n])=>farm.crops[id as CropId]>=n);}
@@ -53,5 +55,15 @@ export function craftKey(farm:FarmState,tier:DungeonTier){const recipe=KEY_RECIP
 export function offerHarvest(farm:FarmState):string{return craftKey(farm,2);}
 export type Loot=Record<CropId,number>&{fertilizer:number;soil:number};
 export const emptyLoot=():Loot=>({...cropCounts(),fertilizer:0,soil:0});
-export function beginExpedition(farm:FarmState,tier:number){if(tier!==1&&tier!==2)throw new Error('Unknown expedition');const key=keyId(tier),name=KEY_RECIPES[tier].name;if(farm.keys[key]<1)throw new Error('Craft a '+name+' first');farm.keys[key]--;let meal:CropId|null=null;if(farm.meal&&farm.meals[farm.meal]>0){meal=farm.meal;farm.meals[meal]--;}farm.meal=null;const hpMeal=meal==='sunroot'?35:meal==='cloudmelon'?45:meal==='dewleaf'?25:meal==='crystalbean'?20:0,damageMeal=meal==='embercorn'?1.4:meal==='starpepper'?1.5:meal==='crystalbean'?1.2:1,speedMeal=meal==='moonberry'?1.25:meal==='glowcap'?1.3:meal==='dewleaf'?1.15:meal==='crystalbean'?1.2:1;const u=progress(farm).upgrades;return{hp:100+HEROES[farm.hero].health+hpMeal+u.vigor*10,damage:18*HEROES[farm.hero].damage*damageMeal*(1+u.power*.05),speed:6*HEROES[farm.hero].speed*speedMeal*(1+u.stride*.03),meal};}
+export function beginExpedition(farm:FarmState,tier:number,selected?:CropId[]){
+ if(tier!==1&&tier!==2)throw new Error('Unknown expedition');
+ const meals=selected??(farm.meal&&farm.meals[farm.meal]>0?[farm.meal]:[]);
+ if(!Array.isArray(meals)||meals.length>MEAL_SLOTS||meals.some(id=>!Object.hasOwn(CROPS,id)))throw new Error('Choose up to 4 meals');
+ const needed:Partial<Record<CropId,number>>={};for(const id of meals)needed[id]=(needed[id]??0)+1;
+ for(const [id,n] of Object.entries(needed))if(farm.meals[id as CropId]<n!)throw new Error('Not enough prepared meals');
+ const key=keyId(tier);if(farm.keys[key]<1)throw new Error('Craft a '+KEY_RECIPES[tier].name+' first');
+ const buffs=foodBuffs(meals),u=progress(farm).upgrades;
+ farm.keys[key]--;for(const id of meals)farm.meals[id]--;farm.meal=null;
+ return {hp:100+HEROES[farm.hero].health+buffs.health+u.vigor*10,damage:18*HEROES[farm.hero].damage*(1+buffs.damage)*(1+u.power*.05),speed:6*HEROES[farm.hero].speed*(1+buffs.speed)*(1+u.stride*.03),meal:meals[0]??null,meals:[...meals],buffs};
+}
 export function settleExpedition(farm:FarmState,loot:Loot,outcome:'won'|'escaped'|'lost',tier:number):Loot{const result={...emptyLoot(),...loot};if(outcome==='won')farm.clears++;else for(const k of Object.keys(result) as (keyof Loot)[])result[k]=Math.ceil(result[k]/2);for(const id of CROP_IDS)farm.seeds[id]+=result[id];farm.fertilizer+=result.fertilizer;farm.soil+=result.soil;farm.runs++;farm.day++;return result;}

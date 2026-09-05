@@ -73,3 +73,10 @@ Enemy projectiles have different spore, petal, thorn and crystal silhouettes. Ma
 Run `node --experimental-transform-types scripts/test-enemy-expansion.mjs` for boss phases, warnings, jumping, cover, attack cleanup, population limits and drops. The full combat simulation also exercises all seven regular enemies. Visual/device QA is still outstanding.
 
 Enemy attacks use brief eased anticipation, fast strikes and short recoil. Regular wind-ups are 0.24–0.5 seconds; bosses keep a 0.7-second warning. Ranged enemies hold a firing position instead of retreating, flyers approach directly without circling or slow bobbing, and hit stagger no longer stretches attack timers. Global impact pauses are shorter and less frequent.
+
+## Cooking and dungeon feast
+At the campfire, tap Stir or press Space/E when the marker is green, three times. Two crops produce one meal; three successful timings produce two portions. Misses still produce a meal. Canceling before completion spends no crops, and hidden-tab time does not advance cooking.
+
+At the dungeon portal, add up to four meal portions to the food tray, including duplicates. Click a slot to remove it. Combined buffs appear below. Food and the key are consumed together only on successful entry; missing supplies consume neither. Inventory meals open the portal tray. Existing meal inventories and saves remain compatible.
+
+Meals grant health, regeneration, speed, damage, spell area, shorter cooldown, armor and pickup reach. Food bonuses stack with caps: +120% damage, +60% speed, 40% shorter cooldown, 35% damage reduction and +4 pickup reach. Drought disables food regeneration. Consumed meal icons stay on the combat belt for the run.

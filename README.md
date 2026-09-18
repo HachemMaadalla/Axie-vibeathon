@@ -105,3 +105,8 @@ Import HachemMaadalla/Axie-vibeathon in Vercel with the repository root as the r
 
 ## Battle polish
 A compact enemy count includes queued spawns, and the wave indicator changes color during the breather. A camera-relative home arrow and visible portal beacon guide extraction. Low health gets a distinct border and text color. Movement controls hide while menus, results or level-ups are open. Projectile collisions resolve from nearest to farthest along their path, transient spells taper out, and void-field trails match their purple effect. Validated with combat/wave tests and the Vercel static build; no browser visual QA was performed.
+
+## Beginner farming and portal UI
+The main hotbar now shows 1 Seeds, 2 Water and 3 Harvest with labels; More reveals all other seeds and supplies. First-time farmers get a skippable action-driven tutorial, persisted locally and replayable from Help. It tracks the planted bed through watering and harvesting, without consuming extra materials or pausing growth.
+
+The portal shows both dungeon destinations together with generated art and a moss-and-brass panel frame, one shared four-meal tray, selected key quality and a single Enter/Forge action. Challenge modifiers and extra forging are under Options. Food remains optional and is only consumed on successful entry. Generated image prompts are documented in portal-art-prompts.md; optimized assets live in public/assets/portal.

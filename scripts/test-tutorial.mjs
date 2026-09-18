@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {advanceLesson} from '../lib/game/tutorial.ts';
+const plots=[{crop:null,watered:false},{crop:'sunroot',watered:false},{crop:'sunroot',watered:true}];
+let state={step:'plant',plot:null};
+state=advanceLesson(state,{kind:'plant',plot:1},plots);assert.deepEqual(state,{step:'water',plot:1});
+assert.deepEqual(advanceLesson(state,{kind:'water',plot:2},plots),state);
+plots[1].watered=true;state=advanceLesson(state,{kind:'water',plot:1},plots);assert.equal(state.step,'grow');
+plots[1].crop=null;state=advanceLesson(state,{kind:'harvest',plot:1},plots);assert.equal(state.step,'done');
+assert.equal(advanceLesson({step:'off',plot:null},{kind:'plant',plot:1},plots).step,'off');
+assert.equal(advanceLesson({step:'water',plot:2},undefined,plots).step,'grow');
+assert.equal(advanceLesson({step:'grow',plot:0},undefined,plots).step,'plant');
+console.log('PASS Tutorial follows the same crop, survives reload and missing beds, and respects skip.');

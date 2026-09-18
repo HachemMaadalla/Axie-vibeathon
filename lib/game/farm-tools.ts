@@ -1,5 +1,5 @@
 import {CROPS,type FarmState,type CropId} from './state';
-export const FARM_SLOTS=['sunroot','moonberry','embercorn','water','sickle','fertilizer','soil','cloudmelon','glowcap','starpepper','dewleaf','crystalbean'] as const;
+export const FARM_SLOTS=['sunroot','water','sickle','moonberry','embercorn','fertilizer','soil','cloudmelon','glowcap','starpepper','dewleaf','crystalbean'] as const;
 export const FARM_SLOT_KEYS=['1','2','3','4','5','6','7','8','9','0','-','='] as const;
 export type FarmItem=typeof FARM_SLOTS[number];
 export const isSeed=(item:FarmItem):item is CropId=>Object.hasOwn(CROPS,item);

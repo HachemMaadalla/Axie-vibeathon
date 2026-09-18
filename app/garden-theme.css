@@ -265,3 +265,31 @@
 @keyframes loading-sweep{0%,100%{transform:translateX(0)}50%{transform:translateX(185%)}}
 @keyframes loading-breathe{50%{transform:translateY(-6px)}}
 @media(prefers-reduced-motion:reduce){.loading-axie,.loading-meter>.indeterminate{animation:none}.loading-meter>span{transition:none}}
+
+/* Three clear actions first; the full inventory is expandable. */
+.beginner-hotbar .farm-hotbar{display:flex;max-width:min(92vw,760px);flex-wrap:wrap;justify-content:center;gap:7px;padding:9px}
+.beginner-hotbar .farm-slot{flex:0 0 66px;width:66px!important;height:78px!important;position:relative}
+.beginner-hotbar .farm-slot>.loot-art{margin-top:-9px}
+.farm-tool-label{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:11px;font-weight:800;color:#f9e7bb}
+.beginner-hotbar .farm-slot>b{bottom:21px!important}
+.farm-more{display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;min-width:48px;color:#f1d89f;font-size:11px}
+.tutorial-target{outline:3px solid #ffe499!important;outline-offset:2px;box-shadow:0 0 15px #ffc65455!important}
+.farm-tutorial{position:absolute;left:50%;top:92px;transform:translateX(-50%);z-index:12;display:flex;align-items:center;gap:12px;padding:13px 16px;max-width:min(520px,92vw);width:max-content}
+.farm-tutorial>svg{flex-shrink:0;color:#38846e}.farm-tutorial strong{font-size:15px}.farm-tutorial p{font-size:12px;margin:4px 0 0;line-height:1.5}
+.farm-tutorial button{padding:8px;font-size:12px;flex-shrink:0}.farm-tutorial progress{display:block;width:100%;height:7px;margin-top:7px;accent-color:#59b588}
+.portal-board{border:22px solid transparent;border-image:url('/assets/portal/frame.webp') 110 fill stretch;padding:5px;color:#fff0c9}
+.dungeon-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:15px}
+.dungeon-card{min-width:0;overflow:hidden;border:2px solid #526d64;border-radius:12px;background:#092c31;color:#fff0c9;text-align:left;padding:0 0 10px;transition:border-color .15s,transform .15s}
+.dungeon-card.selected{border-color:#ffe5a5;box-shadow:0 0 0 2px #b8965350}.dungeon-card:hover{transform:translateY(-2px)}
+.dungeon-card img{display:block;width:100%;height:150px;object-fit:contain;background:#05282d}
+.dungeon-card strong{display:block;font:700 16px Georgia,serif;padding:8px 10px 5px}.dungeon-card>span{display:flex;justify-content:space-between;padding:0 10px;font-size:12px;color:#b9d6c7}.dungeon-card b{display:flex;align-items:center;gap:4px;color:#eed49a}
+.portal-board .food-tray{padding:10px;margin-bottom:12px;background:#0a3032aa;border:1px solid #6c8b7155}
+.portal-board .food-heading strong{font-size:14px}.portal-board .meal-slots{margin:10px 0}.portal-board .food-buffs{gap:4px}.portal-board .food-buffs span{font-size:11px;padding:3px 5px}
+.meal-pantry summary{cursor:pointer;color:#e9d49f;font-size:12px;padding:6px;text-align:center}.meal-pantry .pantry-meals{padding:8px 0}
+.portal-departure{display:flex;align-items:center;justify-content:space-between;gap:10px}.departure-key,.forge-cost{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.departure-key button{display:flex;gap:5px;align-items:center;border:1px solid #698378;border-radius:7px;padding:7px}.departure-key button[aria-pressed=true]{border-color:#ffe0a0;background:#58705655}
+.departure-key small,.forge-cost b{font-size:11px}.forge-cost span{display:flex;align-items:center;gap:4px}
+.depart-button{white-space:nowrap;font-size:14px!important;padding:11px 18px!important;min-height:46px}.portal-options{margin-top:12px;font-size:12px}.portal-options summary{cursor:pointer;color:#b8c7b8;padding:5px}.portal-options .secondary{margin-top:8px}.portal-options .challenge-options{margin-top:8px;flex-wrap:wrap}
+@media(max-width:600px){.portal-board{border-width:14px;padding:1px}.dungeon-cards{gap:8px}.dungeon-card img{height:105px}.dungeon-card strong{font-size:13px;padding:7px}.portal-departure{flex-wrap:wrap}.depart-button{width:100%}.farm-tutorial{top:105px;padding:10px;gap:7px}.beginner-hotbar .farm-slot{flex-basis:58px;width:58px!important}}
+@media(prefers-reduced-motion:reduce){.dungeon-card{transition:none}.dungeon-card:hover{transform:none}}
+
+.portal-board .meal-slots>button{width:76px;height:94px;display:flex;flex-direction:column;justify-content:flex-start;padding-top:5px;gap:8px}.portal-board .meal-slots .item-stars{top:40px;bottom:auto}.meal-slot-name{font-size:10px;line-height:1.2;color:#fff0ce;text-align:center;padding:0 3px}.portal-board .empty-meal{height:94px;width:76px}@media(max-width:420px){.portal-board .meal-slots{gap:5px}.portal-board .meal-slots>button,.portal-board .empty-meal{width:57px}.meal-slot-name{font-size:9px}}

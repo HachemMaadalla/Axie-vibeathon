@@ -1,7 +1,9 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 export type Surface='grass'|'soil'|'stone'|'wood'|'leaves'|'water'|'tile';
-export {toonMaterial} from './toon';
+import {toonMaterial as baseToonMaterial} from './toon';
+import {pixelSurfaceMaterial} from './pixel-style';
+export function toonMaterial(color:T.ColorRepresentation){return pixelSurfaceMaterial(baseToonMaterial(color));}
 
 export function batchTrees(world:T.Group){
  world.updateMatrixWorld(true);

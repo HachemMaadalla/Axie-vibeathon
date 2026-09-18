@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {toonMaterial} from './toon';
+import {toonMaterial} from './environment';
 import {windMaterial,waterMaterial,setGardenMotionTime} from './garden-motion';
 import {terrainHeight} from './terrain';
 import type {CropId} from './state';

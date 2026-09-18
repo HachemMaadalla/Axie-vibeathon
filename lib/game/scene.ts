@@ -30,6 +30,7 @@ import {freshBuild,STARTER_SPELL,draftChoices,applyChoice,modifiers,xpNeeded,typ
 import {SpellEngine,type SpellTarget} from './spell-engine';
 import {toonMaterial,batchTrees,type Surface} from './environment';
 import {CartoonRenderer,toonify,addCartoonSky} from './toon';
+import {crispTexture} from './pixel-style';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {WaveDirector} from './waves';
 import { CROPS, PLOT_COUNT, HERO_IDS, freshFarm, hydrateFarm, grow, tend, improve, cook, offerHarvest, craftKey, beginExpedition, emptyLoot, settleExpedition, type FarmState, type CropId, type HeroId, type Loot } from './state';
@@ -62,7 +63,7 @@ export class WildseedGame {
  this.build=freshBuild(this.farm.hero);this.scene.background=new T.Color('#8fd9f5');this.scene.fog=new T.Fog('#8fd9f5',85,210);
  this.camera=new T.PerspectiveCamera(62,container.clientWidth/container.clientHeight,.1,250);
  this.camera.position.set(18,24,29);this.camera.lookAt(0,0,0);
- this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.setSize(container.clientWidth,container.clientHeight);
+ this.renderer=new T.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setSize(container.clientWidth,container.clientHeight);
  this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=T.PCFSoftShadowMap;this.renderer.toneMapping=T.NeutralToneMapping;this.renderer.toneMappingExposure=1;this.cartoon=new CartoonRenderer(this.renderer);this.cartoon.resize(container.clientWidth,container.clientHeight);container.appendChild(this.renderer.domElement);
  this.scene.add(new T.HemisphereLight('#fff6dc','#514277',.85));
  const sun=this.sunlight=new T.DirectionalLight('#fff0cc',2.8);sun.position.set(-12,25,14);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-25,right:25,top:25,bottom:-25});sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.045;sun.shadow.bias=-.0003;this.scene.add(sun,sun.target);
@@ -75,14 +76,14 @@ export class WildseedGame {
  this.ring=new T.Mesh(new T.RingGeometry(.8,1,48),new T.MeshBasicMaterial({color:'#ffedac',side:T.DoubleSide,transparent:true,opacity:.85}));this.ring.rotation.x=-Math.PI/2;this.ring.position.y=.22;this.farmWorld.add(this.ring);
  this.portal=this.farmWorld.getObjectByName('portal') as T.Mesh;
  this.refreshPlants();
- this.resizeObserver=new ResizeObserver(()=>{if(this.stopped)return;this.camera.aspect=container.clientWidth/container.clientHeight;this.camera.updateProjectionMatrix();this.renderer.setSize(container.clientWidth,container.clientHeight);this.cartoon.resize(container.clientWidth,container.clientHeight);});this.resizeObserver.observe(container);
+ this.resizeObserver=new ResizeObserver(()=>{if(this.stopped)return;this.camera.aspect=container.clientWidth/container.clientHeight;this.camera.updateProjectionMatrix();this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));this.renderer.setSize(container.clientWidth,container.clientHeight);this.cartoon.resize(container.clientWidth,container.clientHeight);});this.resizeObserver.observe(container);
  window.addEventListener('keydown',this.keyDown);window.addEventListener('keyup',this.keyUp);window.addEventListener('blur',this.blur);document.addEventListener('visibilitychange',this.visibility);this.renderer.domElement.addEventListener('webglcontextlost',this.contextLost);
  this.abortTools=registerGameTools(()=>this.farm,(i,seed)=>{if(this.mode!=='farm'||!this.started)throw Error('Enter the garden before tending plots');this.syncNearbyPlot();if(i!==this.selected||!this.inReach)throw Error('Move next to this bed first');if(isSeed(this.held)&&seed!==this.held)throw Error('Equip these seeds in the hotbar first');return this.tendPlot();});
  this.loadActors();this.emit();this.frame=requestAnimationFrame(this.tick);
  }
  private mat(color:string,surface:Surface='stone'){const key=color+surface;let m=this.materialCache.get(key);if(!m){m=toonMaterial(color);this.materialCache.set(key,m);}return m;}
  private shape(parent:T.Object3D,geo:T.BufferGeometry,color:string,x:number,y:number,z:number,sx=1,sy=1,sz=1){const m=new T.Mesh(geo,this.mat(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;m.userData.solid=geo!==this.sharedSphere;parent.add(m);return m;}
- private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new RoundedBoxGeometry(w,h,d,1,Math.min(w,h,d)*.14),c,x,y,z);}
+ private box(p:T.Object3D,c:string,x:number,y:number,z:number,w:number,h:number,d:number){return this.shape(p,new RoundedBoxGeometry(w,h,d,1,Math.min(w,h,d)*.035),c,x,y,z);}
  private blob(p:T.Object3D,c:string,x:number,y:number,z:number,sx:number,sy=sx,sz=sx){return this.shape(p,this.sharedSphere,c,x,y,z,sx,sy,sz);}
  private tree(p:T.Object3D,x:number,z:number,s:number){
   if(p===this.farmWorld&&Math.abs(x)<7&&z>-3&&z<16)return;
@@ -131,7 +132,7 @@ export class WildseedGame {
  for(const service of ISLAND_SERVICES){
   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=80;const ctx=canvas.getContext('2d');if(!ctx)continue;
   ctx.fillStyle='#183440';ctx.beginPath();ctx.roundRect(4,4,248,72,18);ctx.fill();ctx.strokeStyle='#e6c17a';ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#fff0ce';ctx.font='bold 32px Trebuchet MS';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(service.kind==='forge'?'FORGE':service.kind==='kitchen'?'COOK':'PORTAL',128,42);
-  const material=new T.SpriteMaterial({map:new T.CanvasTexture(canvas),depthTest:false,depthWrite:false});const sign=new T.Sprite(material);sign.name='station-'+service.kind;sign.userData.cameraIgnore=true;sign.position.set(service.x,3.8,service.kind==='travel'?-6:service.kind==='kitchen'?.5:service.z);sign.scale.set(2.5,.78,1);sign.renderOrder=10;p.add(sign);
+  const material=new T.SpriteMaterial({map:crispTexture(new T.CanvasTexture(canvas)),depthTest:false,depthWrite:false});const sign=new T.Sprite(material);sign.name='station-'+service.kind;sign.userData.cameraIgnore=true;sign.position.set(service.x,3.8,service.kind==='travel'?-6:service.kind==='kitchen'?.5:service.z);sign.scale.set(2.5,.78,1);sign.renderOrder=10;p.add(sign);
  }
  // Pond, lily pads and stepping stones.
  const pond=this.shape(p,new T.CircleGeometry(1,48),'#12b8d8',8,.065,5,2.6,2.9,1);pond.rotation.x=-Math.PI/2;for(let i=0;i<9;i++)this.box(p,'#c5ffeb',6.4+i%3*1.3,.089,3.7+Math.floor(i/3)*1.1,.6,.012,.1);

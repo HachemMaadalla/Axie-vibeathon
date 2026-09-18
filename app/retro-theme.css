@@ -60,3 +60,6 @@ body :is(.game-shell,.game-dialog) svg.lucide{stroke-linecap:square;stroke-linej
 @media(max-width:600px){body .game-dialog.game-dialog{border-width:10px!important;padding:12px!important}body .quiet-topbar .wordmark strong{font-size:25px!important}body .game-shell .day-chip{font-size:13px}body .game-dialog .dialog-title{font-size:25px!important}body .game-dialog .card-name{font-size:19px!important}body .loading-content h1{font-size:46px!important}}
 
 body .game-dialog .level-art:before{display:none!important}body .game-dialog :is(.level-card:before,.card-selected:after,.card-topline kbd){border-radius:0!important}body .game-dialog .level-card{animation:none!important}body .game-dialog .pack-selection{border-color:#858a74!important}body .game-dialog .pack-selection p{color:#d2d8c0!important}
+
+/* Crisp sampling also applies to world prompts and action popups. */
+body :is(.skill-art-icon,.loot-art,.retro-art,.crop-art){image-rendering:pixelated!important;filter:none!important}

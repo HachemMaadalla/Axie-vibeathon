@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {pixelModelMaterial} from './pixel-style';
 const gradient=new T.DataTexture(new Uint8Array([75,169,255]),3,1,T.RedFormat);
 gradient.minFilter=gradient.magFilter=T.NearestFilter;gradient.generateMipmaps=false;gradient.needsUpdate=true;
 export function toonMaterial(color:T.ColorRepresentation){
@@ -16,7 +17,7 @@ export function toonify(root:T.Object3D,cache=new Map<T.Material,T.MeshToonMater
    material.transparent=source.transparent;material.opacity=source.opacity;material.alphaTest=source.alphaTest;
    material.side=source.side;material.depthWrite=source.depthWrite;material.vertexColors=lit.vertexColors;
    material.emissive.copy(lit.emissive??new T.Color(0));material.emissiveMap=lit.emissiveMap??null;material.emissiveIntensity=lit.emissiveIntensity??1;
-   material.name=source.name;cache.set(source,material);return material;
+   pixelModelMaterial(material);material.name=source.name;cache.set(source,material);return material;
   };
   o.material=Array.isArray(o.material)?o.material.map(convert):convert(o.material);
  });
@@ -28,7 +29,7 @@ export class CartoonRenderer{
  readonly material:T.ShaderMaterial;
  private scene=new T.Scene();private camera=new T.OrthographicCamera(-1,1,1,-1,0,1);private quad:T.Mesh;
  constructor(private renderer:T.WebGLRenderer){
-  this.target=new T.WebGLRenderTarget(1,1,{type:T.HalfFloatType,depthBuffer:true,samples:2});
+  this.target=new T.WebGLRenderTarget(1,1,{type:T.HalfFloatType,depthBuffer:true,samples:2,minFilter:T.NearestFilter,magFilter:T.NearestFilter});
   this.target.depthTexture=new T.DepthTexture(1,1,T.UnsignedIntType);
   this.material=new T.ShaderMaterial({
    uniforms:{tColor:{value:this.target.texture},tDepth:{value:this.target.depthTexture},texel:{value:new T.Vector2(1,1)},near:{value:.1},far:{value:250},ink:{value:new T.Color('#172d44')}},
@@ -53,7 +54,7 @@ export class CartoonRenderer{
  }
  resize(width:number,height:number){
   const ratio=this.renderer.getPixelRatio();this.target.setSize(Math.max(1,Math.round(width*ratio)),Math.max(1,Math.round(height*ratio)));
-  this.material.uniforms.texel.value.set(.9/width,.9/height);
+  this.material.uniforms.texel.value.set(1/this.target.width,1/this.target.height);
  }
  render(scene:T.Scene,camera:T.PerspectiveCamera){
   this.material.uniforms.near.value=camera.near;this.material.uniforms.far.value=camera.far;

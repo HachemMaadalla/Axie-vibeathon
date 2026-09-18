@@ -1,5 +1,6 @@
 import type {Stars} from './quality';
 import * as T from 'three';
+import {crispTexture} from './pixel-style';
 import type {EnemyKind} from './enemies';
 import {CROPS,type CropId,type Loot} from './state';
 import {inkMaterial} from './spell-visuals';
@@ -40,13 +41,13 @@ export class BattlePickups{
   const loader=typeof document!=='undefined'?new T.TextureLoader():null;
   for(const id of Object.keys(CROPS) as CropId[]){
    const texture=loader?.load('/assets/crops/'+id+'-seed.png')??null;
-   if(texture){texture.colorSpace=T.SRGBColorSpace;this.textures.push(texture);}
+   if(texture){crispTexture(texture);texture.colorSpace=T.SRGBColorSpace;this.textures.push(texture);}
    this.materials.set(id,new T.SpriteMaterial({map:texture,color:texture?'#ffffff':CROPS[id].color,transparent:true,depthWrite:false}));
   }
   this.supplyGeometry.set('soil',new T.BoxGeometry(.62,.72,.45));this.shapes.push(...this.supplyGeometry.values());
   this.materials.set('soil',toonMaterial('#bf8953'));
   const fertilizer=loader?.load(itemSprite('fertilizer')!)??null;
-  if(fertilizer){fertilizer.colorSpace=T.SRGBColorSpace;this.textures.push(fertilizer);}
+  if(fertilizer){crispTexture(fertilizer);fertilizer.colorSpace=T.SRGBColorSpace;this.textures.push(fertilizer);}
   this.materials.set('fertilizer',new T.SpriteMaterial({map:fertilizer,color:fertilizer?'#ffffff':'#67e6bc',transparent:true,depthWrite:false}));
  }
  spawn(kind:PickupKind,amount:number,at:T.Vector3,stars:Stars=1){

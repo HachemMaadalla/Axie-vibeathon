@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {crispTexture} from './pixel-style';
 import {toonMaterial} from './toon';
 import {inkMaterial,cartoonBandGeometry} from './spell-visuals';
 type Particle={p:T.Vector3;v:T.Vector3;life:number;max:number;color:T.Color;size:number;gravity:number};
@@ -37,8 +38,8 @@ export class CombatFX{
    this.lastNumber=this.time;const label=String(Math.ceil(damage)),key=label+':'+(kill?'gold':'white');let map=this.numbers.get(key);
    if(!map){
     const canvas=document.createElement('canvas');canvas.width=128;canvas.height=64;const ctx=canvas.getContext('2d')!;
-    ctx.font='bold 40px Trebuchet MS';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=7;ctx.strokeStyle='#263635';ctx.strokeText(label,64,32);ctx.fillStyle=kill?'#ffe8a0':'#ffffff';ctx.fillText(label,64,32);
-    map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;if(this.numbers.size<120)this.numbers.set(key,map);
+    ctx.font='bold 40px WildseedPixel, monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=7;ctx.strokeStyle='#263635';ctx.strokeText(label,64,32);ctx.fillStyle=kill?'#ffe8a0':'#ffffff';ctx.fillText(label,64,32);
+    map=crispTexture(new T.CanvasTexture(canvas));map.colorSpace=T.SRGBColorSpace;if(this.numbers.size<120)this.numbers.set(key,map);
    }
    const sprite=new T.Sprite(new T.SpriteMaterial({map,transparent:true,depthTest:false,depthWrite:false}));sprite.position.copy(point).add(new T.Vector3((Math.random()-.5)*.4,.6,0));sprite.scale.set(kill?1.2:.95,kill?.6:.475,1);this.root.add(sprite);this.texts.push({sprite,life:.6});
   }

@@ -1,10 +1,12 @@
 import * as T from 'three';
-import {toonMaterial} from './toon';
+import {toonMaterial} from './environment';
 type AnimatedMaterial=T.Material&{userData:{motionTime?:{value:number};motionStrength?:{value:number}}};
 const animated=new Set<AnimatedMaterial>();
 function track<M extends AnimatedMaterial>(material:M,strength:number,fall=false){
  const time={value:0},power={value:strength};material.userData.motionTime=time;material.userData.motionStrength=power;animated.add(material);
- material.onBeforeCompile=shader=>{
+ const previousCompile=material.onBeforeCompile.bind(material),previousKey=material.customProgramCacheKey();
+ material.onBeforeCompile=(shader,renderer)=>{
+  previousCompile(shader,renderer);
   shader.uniforms.motionTime=time;shader.uniforms.motionStrength=power;
   shader.vertexShader='uniform float motionTime; uniform float motionStrength;\n'+shader.vertexShader;
   shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
@@ -13,7 +15,7 @@ function track<M extends AnimatedMaterial>(material:M,strength:number,fall=false
    transformed.z += cos(motionPhase*0.77)*motionStrength*0.42;
    ${fall?'transformed.z += sin(position.y*1.4-motionTime*5.0)*motionStrength*0.55;':''}`);
  };
- material.customProgramCacheKey=()=>fall?'garden-fall-v1':'garden-wind-v1';return material;
+ material.customProgramCacheKey=()=>previousKey+(fall?'garden-fall-v1':'garden-wind-v1');return material;
 }
 let currentSeason=-1;
 export function setGardenSeason(season:number){if(season===currentSeason)return;currentSeason=season;for(const m of windCache.values()){const original=m.userData.originalColor as T.Color|undefined;if(!original)continue;m.color.copy(original);const hsl={h:0,s:0,l:0};original.getHSL(hsl);if(hsl.h>.16&&hsl.h<.48){if(season===2)m.color.lerp(new T.Color('#e9ae46'),.38);if(season===3)m.color.lerp(new T.Color('#b7d4cc'),.3);}}}

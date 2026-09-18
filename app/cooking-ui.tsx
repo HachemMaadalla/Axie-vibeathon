@@ -1,7 +1,6 @@
 'use client';
 import {StarBadge} from './quality-ui';
-import {mealStars,nextStars,ingredientStars,farmLuck} from '@/lib/game/quality';
-import {KitchenGame} from './kitchen-game';
+import {mealStars,nextStars} from '@/lib/game/quality';
 import {useState} from 'react';
 import {Check,Plus,X} from 'lucide-react';
 import {CROPS,CROP_IDS,type FarmState,type CropId} from '@/lib/game/state';
@@ -20,8 +19,7 @@ export function FoodTray({farm,meals,onChange,drought=false}:{farm:FarmState;mea
  {drought&&meals.some(id=>foodBuffs([id]).regen>0)&&<small>Drought: healing disabled</small>}
  </section>;
 }
-export function CookingPanel({farm,onCook}:{farm:FarmState;onCook:(id:CropId,hits:number)=>number}){
- const [selected,setSelected]=useState<CropId|null>(null);
- if(selected)return <KitchenGame id={selected} onCook={onCook} onBack={()=>setSelected(null)} quality={ingredientStars(farm,{[selected]:2})} luck={farmLuck(farm)} craftedStars={farm.lastCraft?.stars??1}/>;
- return <><small className="cook-note">Harvests return seeds · 85+ score makes 2 meals</small><div className="cook-recipes">{CROP_IDS.map(id=><button key={id} disabled={farm.crops[id]<2} onClick={()=>setSelected(id)}><LootArt kind="meal" crop={id} size={52}/><strong>{CROPS[id].meal}</strong><small>{CROPS[id].effect}</small>{MEAL_PAIRS.filter(pair=>pair.meals.includes(id)).map(pair=>{const partner=pair.meals.find(m=>m!==id)!;return <span className="cook-pair" key={pair.name} title={CROPS[partner].meal+" + "+CROPS[id].meal+": "+foodLabels(pair.bonus).join(" · ")}><Plus size={12}/><LootArt kind="meal" crop={partner} size={24}/><small>{pair.name}</small></span>;})}<span><LootArt kind="crop" crop={id} size={23}/><StarBadge value={nextStars(farm,'crop:'+id)}/>{farm.crops[id]}/2</span></button>)}</div></>;
+export function CookingPanel({farm,onCook}:{farm:FarmState;onCook:(id:CropId)=>number}){
+ const [cooked,setCooked]=useState<CropId|null>(null);
+ return <><small className="cook-note">2 crops → 1 meal</small><div className="cook-recipes">{CROP_IDS.map(id=><button key={id} disabled={farm.crops[id]<2} aria-label={'Cook '+CROPS[id].meal} data-feedback-anchor={'cook-'+id} onClick={()=>{if(onCook(id)>0)setCooked(id);}}><LootArt kind="meal" crop={id} size={52}/><strong>{CROPS[id].meal}</strong><small>{CROPS[id].effect}</small>{MEAL_PAIRS.filter(pair=>pair.meals.includes(id)).map(pair=>{const partner=pair.meals.find(m=>m!==id)!;return <span className="cook-pair" key={pair.name} title={CROPS[partner].meal+" + "+CROPS[id].meal+": "+foodLabels(pair.bonus).join(" · ")}><Plus size={12}/><LootArt kind="meal" crop={partner} size={24}/><small>{pair.name}</small></span>;})}<span><LootArt kind="crop" crop={id} size={23}/><StarBadge value={nextStars(farm,'crop:'+id)}/>{farm.crops[id]}/2</span></button>)}</div>{cooked&&<p role="status"><StarBadge value={farm.lastCraft?.stars??1}/>{CROPS[cooked].meal} cooked</p>}</>;
 }

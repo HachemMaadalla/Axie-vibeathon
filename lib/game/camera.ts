@@ -7,12 +7,12 @@ export function cameraMovement(x:number,z:number,yaw:number){
 }
 
 export class FollowCamera {
- yaw=0;pitch=.48;distance=10;
+ yaw=0;pitch=.48;readonly distance=18;
  private focus=new T.Vector3();
  private ray=new T.Raycaster();
  private pointers=new Map<number,{x:number;y:number;startX:number;startY:number;dragged:boolean;button:number}>();
  private abort=new AbortController();
- private zoomDistance=10;private collisionDistance=10;
+ private collisionDistance=18;
  constructor(private camera:T.PerspectiveCamera,private canvas:HTMLCanvasElement,private active:()=>boolean,private tap:(e:PointerEvent)=>void){
   const signal=this.abort.signal;
   canvas.addEventListener('pointerdown',this.down,{signal});
@@ -25,11 +25,10 @@ export class FollowCamera {
  }
  rotate(dx:number,dy:number){
   this.yaw=T.MathUtils.euclideanModulo(this.yaw-dx*.005,Math.PI*2);
-  this.pitch=T.MathUtils.clamp(this.pitch+dy*.004,.16,1.22);
+  this.pitch=T.MathUtils.clamp(this.pitch+dy*.004,.08,1.48);
  }
- zoom(delta:number){this.distance=T.MathUtils.clamp(this.distance*Math.exp(delta*.001),4.5,42);}
- snap(player:T.Vector3){this.focus.copy(player).y+=1.1;this.zoomDistance=this.distance;this.place([]);}
- reset(yaw=0){this.yaw=yaw;this.pitch=.48;this.distance=10;}
+ snap(player:T.Vector3){this.focus.copy(player).y+=1.1;this.place([]);}
+ reset(yaw=0){this.yaw=yaw;this.pitch=.48;}
  movement(x:number,z:number){return cameraMovement(x,z,this.yaw);}
  update(dt:number,player:T.Vector3,obstacles:T.Object3D[],height?:(x:number,z:number)=>number){
   if(!this.active())this.cancel();
@@ -37,15 +36,14 @@ export class FollowCamera {
   // interpolate through the Axie when the view changes by 180 degrees.
   const target=player.clone();target.y+=1.1;
   this.focus.lerp(target,1-Math.exp(-dt*16));
-  this.zoomDistance=T.MathUtils.lerp(this.zoomDistance,this.distance,1-Math.exp(-dt*12));
   this.place(obstacles,dt);
   if(height){this.camera.position.y=Math.max(this.camera.position.y,height(this.camera.position.x,this.camera.position.z)+1);this.camera.lookAt(this.focus);this.camera.updateMatrixWorld();}
  }
  private place(obstacles:T.Object3D[],dt=0){
   const offset=new T.Vector3(Math.sin(this.yaw)*Math.cos(this.pitch),Math.sin(this.pitch),Math.cos(this.yaw)*Math.cos(this.pitch));
-  this.ray.set(this.focus,offset);this.ray.near=0;this.ray.far=this.zoomDistance+.4;
+  this.ray.set(this.focus,offset);this.ray.near=0;this.ray.far=this.distance+.4;
   const hit=this.ray.intersectObjects(obstacles,false)[0];
-  const distance=hit?Math.max(3,Math.min(this.zoomDistance,hit.distance-.45)):this.zoomDistance;
+  const distance=hit?Math.max(3,Math.min(this.distance,hit.distance-.45)):this.distance;
   this.collisionDistance=dt<=0||distance<this.collisionDistance?distance:T.MathUtils.lerp(this.collisionDistance,distance,1-Math.exp(-dt*9));
   this.camera.position.copy(this.focus).addScaledVector(offset,this.collisionDistance);
   this.camera.lookAt(this.focus);this.camera.updateMatrixWorld();
@@ -61,8 +59,7 @@ export class FollowCamera {
   const dx=e.clientX-p.x,dy=e.clientY-p.y;
   const other=[...this.pointers.entries()].find(([id])=>id!==e.pointerId)?.[1];
   if(other){
-   const before=Math.hypot(p.x-other.x,p.y-other.y),after=Math.hypot(e.clientX-other.x,e.clientY-other.y);
-   if(before>1&&after>1)this.zoom(Math.log(before/after)*1000);
+   // Multi-touch cannot change distance or trigger click-to-walk.
    p.dragged=true;
   }else{
    if(Math.hypot(e.clientX-p.startX,e.clientY-p.startY)>5)p.dragged=true;
@@ -81,7 +78,7 @@ export class FollowCamera {
  };
  private wheel=(e:WheelEvent)=>{
   if(!this.active())return;
-  e.preventDefault();this.zoom(e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?this.canvas.clientHeight:1));
+  e.preventDefault();
  };
  dispose(){this.cancel();this.abort.abort();}
 }

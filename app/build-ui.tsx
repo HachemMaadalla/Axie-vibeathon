@@ -1,13 +1,10 @@
 'use client';
-import {WeaponSpellIcon} from './weapon-icon';
+import {skillSprite} from '@/lib/game/item-art';
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
-import {Snowflake,Orbit,Slice,Sunrise,Mountain,FlaskConical,Shield,Footprints,Magnet,ScanEye,Hourglass,Clover,Sprout,Flower2,Cloud,Zap,Flame,Sun,Wind,Droplets,Gem,Heart,Sparkles,ArrowRight,Plus,Check} from 'lucide-react';
+import {Plus,Check} from 'lucide-react';
 import {ITEMS,WEAPONS,PASSIVES,EVOLUTIONS,itemLevel,canEvolve,SLOT_LIMIT,type ItemId,type WeaponId,type Build,type Choice} from '@/lib/game/build';
 export function ItemIcon({id,size=24,evolved=false}:{id:ItemId|'heal';size?:number;evolved?:boolean}){
- const symbols={frost:Snowflake,void:Orbit,dagger:Slice,beam:Sunrise,quake:Mountain,venom:FlaskConical,armor:Shield,boots:Footprints,magnet:Magnet,focus:ScanEye,duration:Hourglass,fortune:Clover};
- if(id in symbols){const Icon=symbols[id as keyof typeof symbols];return <Icon size={size} color={ITEMS[id as ItemId].color} strokeWidth={evolved?2.5:1.7} aria-hidden="true"/>;}
- if(['cannon','sword','hammer','axe'].includes(id))return <WeaponSpellIcon id={id} size={size} evolved={evolved}/>;
- return <img src={'/assets/skills/'+id+(evolved&&WEAPONS.includes(id as WeaponId)?'-evolved':'')+'.png'} width={size} height={size} alt="" aria-hidden="true" draggable={false} className={'skill-art-icon '+(evolved?'evolved-art':'')} style={{width:size,height:size}}/>;
+ return <img src={skillSprite(id,evolved)} width={size} height={size} alt="" aria-hidden="true" draggable={false} className={'skill-art-icon '+(evolved?'evolved-art':'')} style={{width:size,height:size}}/>;
 }
 export function BuildSummary({build}:{build:Build}){
  return <div className="build-summary">{[WEAPONS,PASSIVES].map((ids,index)=><div key={index}><h3>{index===0?'Spells':'Items'} <small>{ids.filter(id=>itemLevel(build,id)>0).length}/{SLOT_LIMIT}</small></h3><div className="equipped-items">{ids.filter(id=>itemLevel(build,id)>0).map(id=><span key={id} style={{borderColor:ITEMS[id].color}} title={ITEMS[id].levels[itemLevel(build,id)-1]}><ItemIcon id={id} size={28} evolved={build.evolved.includes(id as WeaponId)}/><span>{build.evolved.includes(id as WeaponId)?EVOLUTIONS[id as WeaponId].name:ITEMS[id].name}<small>{build.evolved.includes(id as WeaponId)?'Evolved':'Lv. '+itemLevel(build,id)+' / 3'}</small></span></span>)}{Array.from({length:SLOT_LIMIT-ids.filter(id=>itemLevel(build,id)>0).length},(_,i)=><span className="empty-item" key={'empty'+i} aria-label="Empty equipment slot"><Plus size={18}/></span>)}</div></div>)}</div>;

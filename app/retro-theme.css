@@ -1,0 +1,62 @@
+@font-face{font-family:WildseedPixel;src:url('/assets/fonts/PixelifySans.ttf') format('truetype');font-weight:400 700;font-style:normal;font-display:swap}
+/* Final UI layer: original block-game textures and crisp, recessed controls. */
+:root{--game-text:#f3efd9;--game-muted:#c8c8bd;--game-brass:#898a86;--game-gold:#ffdf72;--game-panel:#303135;--retro-edge:#171719;--retro-light:#cacbc4;--retro-slot:#666763}
+body :is(.game-shell,.game-dialog){font-family:WildseedPixel,var(--font-geist-mono),monospace!important;color:var(--game-text);font-smooth:never;-webkit-font-smoothing:none}
+body :is(.game-shell,.game-dialog) :is(button,input,select,kbd){font-family:inherit!important}
+body :is(.game-shell,.game-dialog) :is(h1,h2,h3,.dialog-title,.card-name,.wordmark strong,.dungeon-card strong,.inventory-name){font-family:WildseedPixel,monospace!important;letter-spacing:0!important;-webkit-text-stroke:0!important;text-shadow:2px 2px #161719!important}
+body :is(.game-shell,.game-dialog) :is(button,.panel,input,progress,[role=progressbar]){border-radius:0!important}
+body .game-shell .panel,body .game-dialog.game-dialog{background:#303135!important;color:#f3efd9!important;border:3px solid #111214!important;box-shadow:inset 3px 3px #b1b2ac,inset -3px -3px #555653,4px 4px 0 #101114aa!important;backdrop-filter:none!important}
+body .game-dialog.game-dialog{border:16px solid transparent!important;border-image:url('/assets/retro/ui/panel.png') 12.5% fill stretch!important;padding:18px!important;max-height:94dvh}
+body .game-dialog .dialog-title{color:#fff1bd!important;font-size:28px!important;text-transform:none!important}
+body :is(.game-shell,.game-dialog) .primary{border:3px solid #171b12!important;border-top-color:#bedb8b!important;border-left-color:#bedb8b!important;border-radius:0!important;background:#527638!important;color:#fff8dc!important;box-shadow:inset -3px -3px #2e4723,inset 2px 2px #7a9b4c,3px 3px 0 #10120ddd!important;font-weight:600;text-shadow:2px 2px #243b1a!important;transition:none!important}
+body :is(.game-shell,.game-dialog) .primary:hover:not(:disabled){background:#6a9347!important;border-top-color:#e0f3ad!important}
+body :is(.game-shell,.game-dialog) .secondary,body .quiet-topbar .utility button{border:3px solid #1c1d20!important;border-top-color:#dedfd8!important;border-left-color:#dedfd8!important;border-radius:0!important;background:#82847f!important;color:#fffbe3!important;box-shadow:inset -3px -3px #4c4e4c,inset 2px 2px #a7a9a1,3px 3px 0 #151617aa!important;text-shadow:2px 2px #383a38!important;transition:none!important}
+body .quiet-topbar .utility button:hover{background:#9b9d95!important;transform:none!important}
+body :is(.game-shell,.game-dialog) button:active:not(:disabled){translate:2px 2px!important;box-shadow:inset 2px 2px #15171588!important}
+body :is(.game-shell,.game-dialog) button:focus-visible{outline:3px solid #ffe48a!important;outline-offset:3px!important}
+body :is(.game-shell,.game-dialog) button:disabled{opacity:.5;filter:grayscale(.5)}
+body .game-shell .day-chip{border:3px solid #202021;background:#55574f;color:#fff5cd;border-radius:0;box-shadow:inset 2px 2px #b4b7a4,inset -2px -2px #31352d,3px 3px #111a!important;font-size:16px;padding:9px 13px}
+body .quiet-topbar .wordmark{filter:none;color:#fff0c0}body .quiet-topbar .wordmark strong{font-size:36px!important}body .quiet-topbar .utility kbd{color:#fff4c8}
+body .game-shell .farm-hotbar{background:#363831!important;border:3px solid #161b15!important;box-shadow:inset 3px 3px #b7baa8,inset -3px -3px #636853,4px 4px #101810bb!important;padding:9px;gap:5px}
+body :is(.game-shell,.game-dialog) :is(.farm-slot,.inventory-slot,.pack-slot,.item-slot,.empty-item,.meal-slots>button,.empty-meal,.pantry-meals>button,.spell-slot,.combat-slot){border:3px solid #363b32!important;border-right-color:#a3a893!important;border-bottom-color:#a3a893!important;border-radius:0!important;background:#5e6356!important;box-shadow:inset 2px 2px #3e4338!important;color:#fff5d8!important}
+body .game-shell .farm-slot.active,body .game-dialog [aria-pressed=true],body .inventory-slot.selected{outline:2px solid #f5df91;outline-offset:1px;border-color:#e5d381!important;background:#77734c!important}
+body :is(.game-shell,.game-dialog) :is(.farm-slot>b,.farm-slot>kbd,.item-count,.item-stars){text-shadow:2px 2px #151712}
+body .game-shell .farm-tool-label{font-size:12px;color:#f4efce}body .game-shell .farm-more{border:2px solid #969d83!important;padding:3px;background:#454d39;color:#fff0bd}
+body :is(.game-shell,.game-dialog) :is(.skill-art-icon,.loot-art,.retro-art,.crop-art){image-rendering:pixelated;object-fit:contain;filter:none}
+body .game-dialog .portal-board{border:0!important;border-image:none!important;padding:0;background:none}
+body .game-dialog :is(.dungeon-card,.level-card,.cook-recipes>button,.forge-recipes>div,.companion-talk,.inventory-detail,.inventory-character,.equipped-items>span,.recipe-evolved){border:3px solid #141616!important;border-top-color:#929889!important;border-left-color:#929889!important;background:#383e35!important;border-radius:0!important;box-shadow:inset -3px -3px #23271f!important}
+body .game-dialog .dungeon-card.selected,body .game-dialog .level-card:hover{border-color:#e4cb74!important;background:#484b36!important}
+body .game-dialog :is(.dungeon-card strong,.card-name){color:#ffe29a!important}
+body .game-dialog .level-art{background:#232a22!important;border-radius:0!important;box-shadow:inset 3px 3px #111710,inset -2px -2px #56624b!important}
+body .game-dialog :is(.card-topline,.card-synergy,.card-level,.card-effect,.food-buffs span,.meal-combos>span,.cook-pair,.quality-odds>span){border-radius:0!important}
+body .game-dialog :is(.card-topline,.card-synergy,.food-buffs span,.cook-pair){background:#252c24!important;color:#dbdfbd!important;border-color:#6e795e!important}
+body .game-dialog .card-name{font-size:23px!important}body .game-dialog .card-effect{font-size:14px!important;color:#e3e4d4!important}
+body .game-dialog .dungeon-card img{background:#252c24;image-rendering:pixelated}
+body .game-dialog :is(.food-tray,.portal-board .food-tray,.meal-pantry,.recipe,.inventory-grid,.pack-grid){background:#282b26!important;border-color:#6f7664!important;border-radius:0!important}
+body .game-dialog :is(.food-heading strong,.inventory-section-title,.inventory-name){color:#f8e5ae!important}
+body .game-dialog :is(.food-buffs span,.meal-variety,.cook-note,.arcade-footer,.arcade-rules,.meal-slot-name){color:#dbe0c3!important}
+body .game-dialog :is(.meal-slot-name,.arcade-footer>span){font-size:11px!important}
+body .game-dialog :is(.forge-toolbox button,.arcade-score button,.challenge-options button){border-radius:0!important;background:#60665a;color:#fff2c5;border:2px solid #b2b8a4;border-right-color:#30352b;border-bottom-color:#30352b}
+body .game-dialog :is(.skillet-board,.smith-board,.quench-tank,.arcade-meter,.forge-temperature,.forge-aim){border-radius:0!important;border-color:#909c7f;box-shadow:inset 3px 3px #101813}
+body .game-dialog .arcade-cover{background:#232c25f5}
+body .game-dialog :is(.smith-grid button,.plated-food>span,.arcade-float){border-radius:0!important}
+body .game-dialog .arcade-cover h3{font-size:28px!important}
+body .game-dialog :is(.arcade-cover>svg,.smith-hammer){color:#e5ce92}
+body .game-shell :is(.health-progress,.xp-progress,.loading-meter),body .game-dialog progress{border-radius:0!important;border:2px solid #171d15!important;box-shadow:inset 2px 2px #080d0780!important;background:#222a22!important}
+body .game-shell .health-progress>div{background:repeating-linear-gradient(90deg,#c34838 0 12px,#81312c 12px 14px)!important}
+body .game-shell .xp-progress>div{background:repeating-linear-gradient(90deg,#97d047 0 12px,#648933 12px 14px)!important}
+body .boss-vitals{border-radius:0!important;background:#292326ee!important;border:3px solid #82756b!important;box-shadow:3px 3px #151013!important}
+body .boss-vitals>div,body .boss-vitals i{border-radius:0!important}
+body .game-loading{background:radial-gradient(ellipse at 50% 40%,#4a6042,#20291f 70%)!important}
+body .loading-content{border:16px solid transparent;border-image:url('/assets/retro/ui/panel.png') 12.5% fill stretch;padding:24px;max-width:min(92vw,450px)}
+body .loading-content h1{font-family:WildseedPixel,monospace!important;font-size:60px!important;letter-spacing:0!important;text-shadow:4px 4px #171c12!important}
+body .loading-emblem{color:#c2df85!important}body .loading-meter{border-radius:0!important;background:#1c251b!important;box-shadow:inset 2px 2px #10160c;border:2px solid #9ca38b}
+body .loading-meter>span{background:repeating-linear-gradient(90deg,#93c95d 0 14px,#628b3d 14px 16px)!important;border-radius:0!important}
+body :is(.plot-prompt,.action-popup,.action-visual,.home-bearing,.island-interact){border-radius:0!important;font-family:WildseedPixel,monospace!important}
+body .plot-prompt{background:#262d24f5!important;border:3px solid #b6b49a!important;box-shadow:4px 4px #11170ecc!important}
+body .plot-prompt kbd{border-radius:0!important;background:#c9c4a8!important;color:#22291e!important}
+body .action-visual{background:#303a2be8!important;border:2px solid #adb68e!important;box-shadow:3px 3px #162015aa}
+body :is(.game-shell,.game-dialog) svg.lucide{stroke-linecap:square;stroke-linejoin:miter;stroke-width:2.5}
+@media(max-width:600px){body .game-dialog.game-dialog{border-width:10px!important;padding:12px!important}body .quiet-topbar .wordmark strong{font-size:25px!important}body .game-shell .day-chip{font-size:13px}body .game-dialog .dialog-title{font-size:25px!important}body .game-dialog .card-name{font-size:19px!important}body .loading-content h1{font-size:46px!important}}
+
+body .game-dialog .level-art:before{display:none!important}body .game-dialog :is(.level-card:before,.card-selected:after,.card-topline kbd){border-radius:0!important}body .game-dialog .level-card{animation:none!important}body .game-dialog .pack-selection{border-color:#858a74!important}body .game-dialog .pack-selection p{color:#d2d8c0!important}

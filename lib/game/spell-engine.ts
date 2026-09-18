@@ -155,7 +155,8 @@ export class SpellEngine{
   }
   for(let i=this.projectiles.length-1;i>=0;i--){
    const p=this.projectiles[i];p.life-=dt;const previous=p.mesh.position.clone();p.mesh.position.addScaledVector(p.velocity,dt);const wall=this.feedback.collision?.(previous,p.mesh.position);if(wall){p.mesh.position.copy(wall);p.life=0;this.feedback.fx?.burst(wall,p.color??"#b8e96a",4,2);}const segment=new T.Line3(previous,p.mesh.position);if(emitTrail)this.feedback.fx?.trail(p.mesh.position,p.color??(p.burst?'#ffe16a':'#aceb3d'),.12);
-   for(const t of alive()){
+   const crossed=alive().filter(t=>t.hp>0&&!p.hit.has(t)&&segment.closestPointToPoint(center(t),true,new T.Vector3()).distanceTo(center(t))<=(t.radius??(t.boss?2:.85))).sort((a,b)=>segment.closestPointToPoint(center(a),true,new T.Vector3()).distanceToSquared(previous)-segment.closestPointToPoint(center(b),true,new T.Vector3()).distanceToSquared(previous));
+   for(const t of crossed){
     if(t.hp<=0||p.hit.has(t)||segment.closestPointToPoint(center(t),true,new T.Vector3()).distanceTo(center(t))>(t.radius??(t.boss?2:.85)))continue;
     p.hit.add(t);if(p.explosion){splash(t.mesh.position,p.explosion,p.damage);this.feedback.fx?.burst(center(t),p.color??'#9de8ff',14,4);this.flashes.push({object:this.ring(t.mesh.position,p.explosion,p.color??'#9de8ff'),life:.25});this.feedback.audio?.play('hit');}else hurt(t,p.damage);
     if(p.burst){splash(t.mesh.position,1.3,p.damage*.25);this.flashes.push({object:this.ring(t.mesh.position,1.3,'#ffe592'),life:.22});}
@@ -168,14 +169,14 @@ export class SpellEngine{
    if(m.life<=0){this.feedback.fx?.burst(m.point.clone().add(new T.Vector3(0,.3,0)),'#ffc578',28,7);this.feedback.fx?.ring(m.point,m.radius*1.2,'#ffe7ab',.4);this.feedback.audio?.play('meteor');splash(m.point,m.radius,m.damage);this.discard(m.mesh);this.discard(m.marker);this.flashes.push({object:this.ring(m.point,m.radius,'#ffe2a1'),life:.3});if(m.burn)this.zone(m.point,m.radius,4,m.damage*.15,false,false,'#ff933d',true);this.meteors.splice(i,1);}
   }
   for(let i=this.zones.length-1;i>=0;i--){
-   const z=this.zones[i];z.life-=dt;z.tick-=dt;if(emitTrail){const a=this.clock*3+i*2;this.feedback.fx?.trail(z.mesh.position.clone().add(new T.Vector3(Math.cos(a)*z.radius*.7,.3+Math.sin(a)*.15,Math.sin(a)*z.radius*.7)),z.fire?'#ff7136':z.heal?'#63efc6':'#8ddb46',.12);}
+   const z=this.zones[i];z.life-=dt;z.tick-=dt;if(emitTrail){const a=this.clock*3+i*2;this.feedback.fx?.trail(z.mesh.position.clone().add(new T.Vector3(Math.cos(a)*z.radius*.7,.3+Math.sin(a)*.15,Math.sin(a)*z.radius*.7)),z.style==='void'?'#b299ff':z.style==='frost'?'#8eeaff':z.fire?'#ff7136':z.heal?'#63efc6':'#8ddb46',.12);}
    if(z.style==='void')for(const t of live){const offset=z.mesh.position.clone().sub(t.mesh.position);offset.y=0;const d=offset.length();if(t.hp>0&&d<z.radius&&d>.3){const next=t.mesh.position.clone().addScaledVector(offset.normalize(),Math.min(d-.3,dt*(t.boss?.7:3.8)));if(!this.feedback.collision?.(t.mesh.position,next))t.mesh.position.copy(next);}}
    if(z.tick<=0){z.tick=.5;splash(z.mesh.position,z.radius,z.damage);}
    z.motes.forEach((m,j)=>{const angle=j/z.motes.length*Math.PI*2+(z.fire?0:this.clock*.45),x=Math.cos(angle)*z.radius*.64,zp=Math.sin(angle)*z.radius*.64;m.position.set(x,(this.feedback.height?.(z.mesh.position.x+x,z.mesh.position.z+zp)??z.mesh.position.y)-z.mesh.position.y+(z.fire?.05:.38+Math.sin(this.clock*3+j)*.15),zp);m.rotation.y=this.clock*(z.fire?1.5:.5)+j;m.scale.setScalar(Math.min(1,(z.max-z.life)*8,z.life*4)*(z.fire?.8+Math.sin(this.clock*10+j)*.16:1.25));});
    if(z.life<=0){this.discard(z.mesh);this.zones.splice(i,1);}
   }
   for(let i=this.cuts.length-1;i>=0;i--){const c=this.cuts[i];c.age+=dt;const t=c.age/c.max;if(t>=1){this.discard(c.object);this.cuts.splice(i,1);continue;}const tail=Math.min(1,(1-t)*4);if(c.kind==="sword"){c.object.scale.set(tail,tail,.45+.55*Math.min(1,c.age/.055));}else{c.object.rotation.y=c.angle+(t-.25)*.55;const grow=.55+.45*Math.min(1,c.age/.045);c.object.scale.set(grow*tail,1,grow*tail);}}
-  for(let i=this.flashes.length-1;i>=0;i--){const f=this.flashes[i];f.life-=dt;if(f.life<=0){this.discard(f.object);this.flashes.splice(i,1);}}
+  for(let i=this.flashes.length-1;i>=0;i--){const f=this.flashes[i];f.life-=dt;if(f.life>0&&f.life<.1){f.object.userData.finishScale??=f.object.scale.clone();f.object.scale.copy(f.object.userData.finishScale).multiplyScalar(Math.max(.01,f.life/.1));}if(f.life<=0){this.discard(f.object);this.flashes.splice(i,1);}}
  }
  clear(){for(const child of [...this.root.children])this.discard(child);this.timers={};this.projectiles=[];this.zones=[];this.meteors=[];this.petals=[];this.flashes=[];this.clock=0;this.orbitTick=0;this.trailAt=0;this.petalEvolved=false;this.melee=[];this.cuts=[];this.previousTargets=new WeakMap();this.chilled=new WeakMap();}
  dispose(){this.clear();this.visuals.dispose();this.root.removeFromParent();}

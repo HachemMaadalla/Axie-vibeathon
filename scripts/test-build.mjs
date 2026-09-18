@@ -124,3 +124,10 @@ check('Frost chills temporarily, void pulls, and clearing removes status effects
  engine.update(.05,p,{items:{void:1},evolved:[]},10,[target,second],()=>{});assert.ok(second.mesh.position.x<3);
  engine.dispose();assert.equal(scene.children.length,0);
 });
+
+check('Fast projectiles hit the closest crossed enemy regardless of spawn order',()=>{
+ const scene=new T.Scene(),engine=new SpellEngine(scene),near={mesh:new T.Group(),hp:100,boss:false,radius:.5},far={mesh:new T.Group(),hp:100,boss:false,radius:.5};
+ near.mesh.position.set(0,0,3);far.mesh.position.set(0,0,6);const hits=[];
+ engine.update(.3,new T.Vector3(),{items:{cannon:1},evolved:[]},10,[far,near],t=>hits.push(t));
+ assert.deepEqual(hits,[near]);engine.dispose();
+});

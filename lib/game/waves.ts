@@ -1,6 +1,7 @@
 // Simulation-time only: pauses and hidden tabs do not advance a wave.
 export class WaveDirector{
  number=1;remaining=10;breakLeft=0;completed=0;private spawnIn=.8;private bossPending=false;
+ get pending(){return this.remaining+(this.bossPending?1:0);}
  reset(){this.number=1;this.remaining=10;this.breakLeft=0;this.completed=0;this.spawnIn=.8;this.bossPending=false;}
  tick(dt:number,alive:number,spawn:(boss:boolean)=>void){
   if(this.breakLeft>0){

@@ -102,3 +102,6 @@ Frost Nova, Void Well, Crystal Daggers, Dawn Beam, Earth Spike and Venom Flask b
 
 ## Hosting on Vercel
 Import HachemMaadalla/Axie-vibeathon in Vercel with the repository root as the root directory. The checked-in vercel.json selects Other, runs npm ci and npm run build:vercel, and serves dist/client. Select Node.js 24.x. No environment variables, database or server are required. Sites metadata integration is disabled for the Vercel build. Saves remain local to each browser and domain; existing Sites saves do not automatically transfer to a new Vercel domain.
+
+## Battle polish
+A compact enemy count includes queued spawns, and the wave indicator changes color during the breather. A camera-relative home arrow and visible portal beacon guide extraction. Low health gets a distinct border and text color. Movement controls hide while menus, results or level-ups are open. Projectile collisions resolve from nearest to farthest along their path, transient spells taper out, and void-field trails match their purple effect. Validated with combat/wave tests and the Vercel static build; no browser visual QA was performed.

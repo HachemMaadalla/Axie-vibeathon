@@ -63,3 +63,66 @@ body .game-dialog .level-art:before{display:none!important}body .game-dialog :is
 
 /* Crisp sampling also applies to world prompts and action popups. */
 body :is(.skill-art-icon,.loot-art,.retro-art,.crop-art){image-rendering:pixelated!important;filter:none!important}
+
+/* Unified compact HUD: dark slate, warm wood rims, clear gold selection. */
+body .game-shell .panel{background:#252d2af5!important;border-color:#161b18!important;box-shadow:inset 2px 2px #89917b,inset -2px -2px #111914,3px 3px #10171199!important}
+body .quiet-topbar .wordmark strong{font-size:28px!important}
+body .quiet-topbar .wordmark>svg{width:28px;height:28px}
+body .quiet-topbar .utility{gap:8px;padding:4px}
+body .quiet-topbar .utility button{width:50px;height:52px;display:flex;flex-direction:column;gap:4px;justify-content:center;background:#35423b!important;border-color:#151e18!important;border-top-color:#899782!important;border-left-color:#899782!important;box-shadow:inset -2px -2px #1c2821,3px 3px #101811aa!important}
+body .quiet-topbar .utility button:hover{background:#4b6050!important;border-top-color:#e0cb8c!important}
+body .quiet-topbar .utility button>span{font-size:11px;line-height:1;color:#eee4bc}
+body .quiet-topbar .utility kbd{top:2px;right:3px;bottom:auto;font-size:9px;color:#b7c2a4}
+body .game-shell .day-chip{background:#29382ef5!important;border-color:#17211b!important;box-shadow:inset 2px 2px #8a9c74,inset -2px -2px #142017,3px 3px #111a!important}
+body .game-shell .farm-hotbar{background:#4d3d2f!important;border:3px solid #211b15!important;box-shadow:inset 2px 2px #baa375,inset -2px -2px #30271e,4px 4px #10181099!important;padding:8px;gap:6px}
+body .game-shell .farm-slot{width:64px;height:76px;background:#29332a!important;border-color:#172118!important;border-right-color:#786e51!important;border-bottom-color:#786e51!important;box-shadow:inset 2px 2px #0c170e66!important}
+body .game-shell .farm-slot.active{outline:2px solid #ffdf87;outline-offset:1px;background:#526242!important;border-color:#d4c583!important;box-shadow:inset 0 -4px #e5c26b!important}
+body .game-shell .farm-slot>kbd{font-size:11px;left:5px;top:3px;color:#c3cbb5}
+body .game-shell .farm-slot>b{font-size:15px;right:5px;bottom:17px}
+body .game-shell .farm-tool-label{font-size:12px;line-height:1.15}
+body .game-shell .farm-more{background:#2d352b!important;border:2px solid #887d59!important;width:36px;align-self:stretch;color:#ecd59b}
+body .game-shell .combat-belt{gap:6px;padding:8px;background:#4d3d2ff5!important;border-color:#211b15!important}
+body .combat-belt button{width:52px;height:58px;background:#29332a;border:2px solid #172118;border-bottom:3px solid var(--item-color,#baa375);box-shadow:inset 1px 1px #78836a;border-radius:0}
+body .combat-belt .skill-art-icon{width:36px!important;height:36px!important;border-radius:0}
+body .combat-belt button>span{color:#ead28b;letter-spacing:3px}
+body .game-shell .vitals{padding:10px;gap:10px}
+body .vitals>img{border:2px solid #b5a470;border-radius:0;background:#4a5740;image-rendering:pixelated}
+body .vitals-bars>div:first-child{font-size:14px;color:#f5d6c9}
+body .game-shell .health-progress{height:12px}
+body .game-shell .xp-progress{height:7px;margin-top:5px}
+body .game-dialog.game-dialog{background:#252d28!important;border-radius:0!important;border:8px solid #665b43!important;border-image:none!important;box-shadow:inset 2px 2px #c3ae7e,inset -2px -2px #342f23,0 0 0 3px #151c15,8px 8px #10181099!important;padding:22px!important;gap:18px}
+body .game-dialog .dialog-title{font-size:26px!important;padding:0 36px 14px 0;border-bottom:2px solid #647252;margin:0!important}
+body .game-dialog>button[data-slot=dialog-close]{top:12px;right:12px;width:28px;height:28px;opacity:1;background:#414f3d;color:#f5e6bb;border:2px solid #899b75;border-radius:0}
+body .game-dialog .inventory-grid{gap:8px;padding:12px;background:#171f1a!important;border:2px solid #526048!important}
+body .game-dialog .inventory-slot{background:#384537!important;border-color:#172117!important;border-right-color:#738267!important;border-bottom-color:#738267!important;position:relative}
+body .game-dialog .inventory-slot.inspected{background:#566345!important;outline:2px solid #f6d784;outline-offset:1px;box-shadow:inset 0 -4px #d4b263!important}
+body .game-dialog .inventory-slot.empty-slot{background:#242e25!important;opacity:.65}
+body .game-dialog .inventory-slot>b{font-size:15px;color:#fff2cf;text-shadow:2px 2px #151b13}
+body .game-dialog .pack-selection{background:#1d271f;border:2px solid #536047;padding:12px;min-height:96px}
+body .game-dialog .pack-selection h3{font-size:21px}
+body .game-dialog .pack-selection p{font-size:13px;line-height:1.4}
+body .game-dialog :is(.cook-recipes>button,.forge-recipes>div,.dungeon-card,.level-card){background:#334131!important;border-top-color:#80916b!important;border-left-color:#80916b!important}
+body .game-dialog :is(.cook-recipes>button,.level-card,.dungeon-card):hover:not(:disabled){background:#43553b!important;border-color:#d8c181!important}
+body .game-dialog .cook-recipes>button{padding:16px 10px;gap:8px}
+body .game-dialog .cook-recipes>button>strong{font-size:17px;line-height:1.2;color:#ffe3a1}
+body .game-dialog .cook-recipes>button>small{font-size:12px;line-height:1.4;color:#d0d9bd}
+body .pause-card{min-width:min(330px,90vw);padding:24px}
+body .pause-card h2{font-size:28px;color:#ffe3a1}
+.pause-tools{display:flex;gap:8px;margin:12px 0}
+.pause-tools button{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-height:42px;font-size:12px}
+body .game-shell .traversal-actions button{width:52px;height:54px;opacity:.85}
+@media(max-width:600px){
+ body .quiet-topbar .utility{gap:5px;padding:0}
+ body .quiet-topbar .utility button{width:40px;height:45px}
+ body .quiet-topbar .utility button>span{font-size:10px}
+ body .game-shell .farm-slot{width:54px;height:70px}
+ body .game-shell .farm-hotbar{gap:4px;padding:7px;max-width:calc(100vw - 20px);flex-wrap:wrap;justify-content:center}
+ body .game-dialog.game-dialog{padding:14px!important;border-width:6px!important;gap:12px}
+ body .game-dialog .dialog-title{font-size:23px!important;padding-bottom:10px}
+ body .game-dialog .inventory-grid{padding:8px;gap:6px}
+ body .game-dialog .pack-selection{padding:9px;gap:8px}
+ body .game-dialog .pack-selection p{font-size:12px}
+ body .combat-belt{gap:3px!important;padding:5px!important}
+ body .combat-belt button{width:32px;height:46px}
+ body .combat-belt .skill-art-icon{width:26px!important;height:26px!important}
+}

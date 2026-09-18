@@ -186,7 +186,8 @@ export class WildseedGame {
 
  private makeArena(){this.terrainChunks=makeLandscape(this.arena);}
  private expandWorld(p:T.Group,mode:'farm'|'dungeon'){
- const count=mode==='farm'?6:12;
+ if(mode==='dungeon')return;
+ const count=6;
  for(let i=0;i<count;i++){
   const a=i*2.39996,r=18+(i%9)/9*10;
   const x=Math.cos(a)*r,z=Math.sin(a)*r;

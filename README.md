@@ -99,3 +99,6 @@ Enemy locomotion follows distance traveled, so legs stop when blocked. Heavy ene
 
 ## Expanded battle builds
 Frost Nova, Void Well, Crystal Daggers, Dawn Beam, Earth Spike and Venom Flask bring the roster to 15 weapons. Each has three levels and a paired evolution. Iron Shell, Trail Boots, Lodestone, Hunter Eye, Hourglass and Lucky Clover bring the passive roster to 11, adding armor, movement speed, pickup reach, double-damage critical hits, field duration and loot-quality luck. Builds retain four weapon and four passive slots. Drafts prioritize a new weapon when a slot and card are available. New cards use compact symbol icons and short effect labels.
+
+## Hosting on Vercel
+Import HachemMaadalla/Axie-vibeathon in Vercel with the repository root as the root directory. The checked-in vercel.json selects Other, runs npm ci and npm run build:vercel, and serves dist/client. Select Node.js 24.x. No environment variables, database or server are required. Sites metadata integration is disabled for the Vercel build. Saves remain local to each browser and domain; existing Sites saves do not automatically transfer to a new Vercel domain.

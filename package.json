@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "node scripts/build.mjs",
+    "build:vercel": "node scripts/build.mjs --vercel",
     "start": "vinext start",
     "lint": "oxlint",
     "format": "oxfmt",

@@ -2,6 +2,7 @@
 // Windows. Use the same build/prerender APIs and let Node exit naturally.
 import fs from 'node:fs';
 process.env.NODE_ENV='production';
+if(process.argv.includes('--vercel'))process.env.WILDSEED_HOST='vercel';
 const {createBuilder}=await import('vite');
 const {runPrerender}=await import('vinext/internal/build/run-prerender');
 try{

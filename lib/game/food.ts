@@ -28,7 +28,3 @@ export function foodLabels(b:Partial<FoodBuffs>){return [
  b.haste?Math.round(b.haste*100)+'% shorter cooldown':'',b.armor?Math.round(b.armor*100)+'% less damage':'',b.regen?'+'+Number(b.regen.toFixed(1))+' HP/s':'',
  b.loot?'+'+Math.round(b.loot*100)+'% supply drops':'',b.magnet?'+'+b.magnet+' pickup range':'',b.luck?'+'+Math.round(b.luck*100)+'% luck':'',b.area?'+'+Math.round(b.area*100)+'% spell size':''
 ].filter(Boolean);}
-export const COOK_TARGETS=[.32,.67,.46];
-export const COOK_ROUND_MS=2800;
-export function cookingPosition(ms:number){const t=Math.max(0,ms)/900;return 1-Math.abs(t%2-1);}
-export function cookingHit(ms:number,round:number){return ms>=120&&ms<COOK_ROUND_MS&&Math.abs(cookingPosition(ms)-COOK_TARGETS[round])<=.12;}

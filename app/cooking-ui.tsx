@@ -1,10 +1,11 @@
 'use client';
-import {StarBadge,QualityOdds} from './quality-ui';
-import {mealStars,nextStars,ingredientStars,farmLuck,type Stars} from '@/lib/game/quality';
-import {useEffect,useRef,useState} from 'react';
-import {Check,Flame,Hammer,Plus,Star,X} from 'lucide-react';
+import {StarBadge} from './quality-ui';
+import {mealStars,nextStars,ingredientStars,farmLuck} from '@/lib/game/quality';
+import {KitchenGame} from './kitchen-game';
+import {useState} from 'react';
+import {Check,Plus,X} from 'lucide-react';
 import {CROPS,CROP_IDS,type FarmState,type CropId} from '@/lib/game/state';
-import {COOK_TARGETS,COOK_ROUND_MS,cookingHit,cookingPosition,foodBuffs,foodLabels,MEAL_SLOTS,MEAL_PAIRS,activeMealPairs} from '@/lib/game/food';
+import {foodBuffs,foodLabels,MEAL_SLOTS,MEAL_PAIRS,activeMealPairs} from '@/lib/game/food';
 import {LootArt} from './inventory-ui';
 export function FoodTray({farm,meals,onChange,drought=false}:{farm:FarmState;meals:CropId[];onChange:(ids:CropId[])=>void;drought?:boolean}){
  const remaining=(id:CropId)=>farm.meals[id]-meals.filter(m=>m===id).length;
@@ -19,28 +20,8 @@ export function FoodTray({farm,meals,onChange,drought=false}:{farm:FarmState;mea
  {drought&&meals.some(id=>foodBuffs([id]).regen>0)&&<small>Drought: healing disabled</small>}
  </section>;
 }
-export function CookingGame({id,onCook,onBack,forgeTitle,quality=1,luck=0,craftedStars=1}:{id:CropId;onCook:(id:CropId,hits:number)=>number;onBack:()=>void;forgeTitle?:string;quality?:number;luck?:number;craftedStars?:Stars}){
- const [round,setRound]=useState(0),[marks,setMarks]=useState<boolean[]>([]),[result,setResult]=useState<number|null>(null);
- const cursor=useRef<HTMLSpanElement>(null),elapsed=useRef(0),locked=useRef(true),scores=useRef<boolean[]>([]),handler=useRef<()=>void>(()=>{}),cook=useRef(onCook);cook.current=onCook;
- const finish=(hit:boolean)=>{if(locked.current)return;locked.current=true;const next=[...scores.current,hit];scores.current=next;setMarks(next);if(next.length===3)setResult(cook.current(id,next.filter(Boolean).length));else setRound(next.length);};
- handler.current=()=>{if(elapsed.current>=120)finish(cookingHit(elapsed.current,round));};
- useEffect(()=>{
-  if(result!==null)return;let frame=0,last=0;elapsed.current=0;locked.current=false;
-  const tick=(now:number)=>{const dt=last?Math.min(50,now-last):0;last=now;if(!document.hidden)elapsed.current+=dt;
-   if(cursor.current)cursor.current.style.left=(cookingPosition(elapsed.current)*100)+'%';
-   if(elapsed.current>=COOK_ROUND_MS){finish(false);return;}frame=requestAnimationFrame(tick);
-  };frame=requestAnimationFrame(tick);
-  const key=(e:KeyboardEvent)=>{if((e.code==='Space'||e.key.toLowerCase()==='e')&&!e.repeat){e.preventDefault();e.stopPropagation();handler.current();}};
-  window.addEventListener('keydown',key,true);return()=>{cancelAnimationFrame(frame);window.removeEventListener('keydown',key,true);locked.current=true;};
- },[round,result]);
- return <div className="cooking-game"><div className="simmer-art"><LootArt kind={forgeTitle?'key':'meal'} crop={id} size={100}/>{forgeTitle?<Hammer size={30}/>:<Flame size={30}/>}</div><strong>{forgeTitle??CROPS[id].meal}</strong>
- <QualityOdds score={marks.filter(Boolean).length} input={quality} luck={luck}/>
- <div className="cook-marks" aria-label={marks.filter(Boolean).length+' good timings'}>{[0,1,2].map(i=><span key={i} className={marks[i]?'good':i<marks.length?'miss':''}>{marks[i]?<Check size={18}/>:i<marks.length?<X size={18}/>:<Star size={18}/>}</span>)}</div>
- {result===null?<><div className="cook-meter" aria-hidden="true"><i style={{left:(COOK_TARGETS[round]-.12)*100+'%',width:'24%'}}/><span ref={cursor}/></div><button className="primary" onClick={()=>handler.current()}>{forgeTitle?'Strike':'Stir'} <kbd>Space / E</kbd></button><small>{forgeTitle?'Strike in the green · better odds with each hit':'3 hits = 2 meals · best crops used first'}</small><button className="cook-cancel" onClick={onBack}>Cancel</button></>:<><p role="status">{result>0?<><StarBadge value={craftedStars}/> {forgeTitle?'+1 key':result===2?'Perfect! +2 meals':'+1 meal'}</>:'Not enough crops'}</p><button className="primary" onClick={onBack}>Done</button></>}
- </div>;
-}
 export function CookingPanel({farm,onCook}:{farm:FarmState;onCook:(id:CropId,hits:number)=>number}){
  const [selected,setSelected]=useState<CropId|null>(null);
- if(selected)return <CookingGame id={selected} onCook={onCook} onBack={()=>setSelected(null)} quality={ingredientStars(farm,{[selected]:2})} luck={farmLuck(farm)} craftedStars={farm.lastCraft?.stars??1}/>;
- return <><small className="cook-note">Harvests return seeds · Perfect cooking makes 2 meals</small><div className="cook-recipes">{CROP_IDS.map(id=><button key={id} disabled={farm.crops[id]<2} onClick={()=>setSelected(id)}><LootArt kind="meal" crop={id} size={52}/><strong>{CROPS[id].meal}</strong><small>{CROPS[id].effect}</small>{MEAL_PAIRS.filter(pair=>pair.meals.includes(id)).map(pair=>{const partner=pair.meals.find(m=>m!==id)!;return <span className="cook-pair" key={pair.name} title={CROPS[partner].meal+" + "+CROPS[id].meal+": "+foodLabels(pair.bonus).join(" · ")}><Plus size={12}/><LootArt kind="meal" crop={partner} size={24}/><small>{pair.name}</small></span>;})}<span><LootArt kind="crop" crop={id} size={23}/><StarBadge value={nextStars(farm,'crop:'+id)}/>{farm.crops[id]}/2</span></button>)}</div></>;
+ if(selected)return <KitchenGame id={selected} onCook={onCook} onBack={()=>setSelected(null)} quality={ingredientStars(farm,{[selected]:2})} luck={farmLuck(farm)} craftedStars={farm.lastCraft?.stars??1}/>;
+ return <><small className="cook-note">Harvests return seeds · 85+ score makes 2 meals</small><div className="cook-recipes">{CROP_IDS.map(id=><button key={id} disabled={farm.crops[id]<2} onClick={()=>setSelected(id)}><LootArt kind="meal" crop={id} size={52}/><strong>{CROPS[id].meal}</strong><small>{CROPS[id].effect}</small>{MEAL_PAIRS.filter(pair=>pair.meals.includes(id)).map(pair=>{const partner=pair.meals.find(m=>m!==id)!;return <span className="cook-pair" key={pair.name} title={CROPS[partner].meal+" + "+CROPS[id].meal+": "+foodLabels(pair.bonus).join(" · ")}><Plus size={12}/><LootArt kind="meal" crop={partner} size={24}/><small>{pair.name}</small></span>;})}<span><LootArt kind="crop" crop={id} size={23}/><StarBadge value={nextStars(farm,'crop:'+id)}/>{farm.crops[id]}/2</span></button>)}</div></>;
 }

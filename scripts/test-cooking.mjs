@@ -3,15 +3,13 @@ import {registerHooks} from 'node:module';
 import * as T from 'three';
 registerHooks({resolve(s,c,next){try{return next(s,c);}catch(e){if(s.startsWith('.')&&!/\.[a-z]+$/i.test(s))return next(s+'.ts',c);throw e;}}});
 const {freshFarm,hydrateFarm,cook,beginExpedition,tend}=await import('../lib/game/state.ts');
-const {foodBuffs,foodLabels,cookingHit,cookingPosition,COOK_TARGETS}=await import('../lib/game/food.ts');
+const {foodBuffs,foodLabels}=await import('../lib/game/food.ts');
 const {freshBuild,modifiers,spellStats}=await import('../lib/game/build.ts');
 const {WildseedGame}=await import('../lib/game/scene.ts');
 const {qualityCounts}=await import('../lib/game/quality.ts');
 const {BattlePickups,rollDrops}=await import('../lib/game/pickups.ts');
 let n=0;const check=(s,fn)=>{fn();console.log('PASS '+s);n++;};
-check('Three timing targets are reachable; misses and perfect cooks have exact costs',()=>{
- for(let round=0;round<3;round++){assert.ok(cookingHit(COOK_TARGETS[round]*900,round));assert.equal(cookingHit(0,round),false);assert.equal(cookingHit(2800,round),false);}
- for(let ms=0;ms<2800;ms+=15)assert.ok(cookingPosition(ms)>=0&&cookingPosition(ms)<=1);
+check('Cooking grades have exact resource costs and masterful batches give two meals',()=>{
  for(const hits of [0,1,2,3]){const f=freshFarm();f.crops.sunroot=2;cook(f,'sunroot',hits);assert.equal(f.crops.sunroot,0);assert.equal(f.meals.sunroot,hits===3?2:1);cook(f,'sunroot',3);assert.equal(f.meals.sunroot,hits===3?2:1);}
 });
 check('Four portions including duplicate meals are consumed once with the key',()=>{

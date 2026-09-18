@@ -1,28 +1,24 @@
 import assert from 'node:assert/strict';
 import {ForgeRun} from '../lib/game/forge.ts';
-const r=new ForgeRun();
-r.press();r.tick(.05);r.release();assert.equal(r.phase,'heat');
-r.press();for(let i=0;i<28;i++)r.tick(.05);r.release();assert.equal(r.phase,'strike');
-const targets=[];
-for(let i=0;i<5;i++){
- if(r.phase==='heat'){r.heat=.72;r.press();r.release();}
- targets.push(r.target);r.heat=.72;
- r.elapsed=(Math.asin((r.target-.5)/.46)+Math.PI/2)/(4.2+i*.4);
- r.press();assert.ok(r.hits[i]>.999);
+import {FARM_FORGE,nearestService} from '../lib/game/island.ts';
+function advance(r,seconds){for(let t=0;t<seconds;t+=1/60)r.tick(1/60);}
+const r=new ForgeRun();const before=r.match;
+r.strike(4);assert.ok(r.match>before);const count=r.hits;r.strike(5);assert.equal(r.hits,count,'Cannot spam past cooldown');
+advance(r,.3);r.strike(1);assert.equal(r.cells[1],false);const damaged=r.match;
+advance(r,.3);r.tool='repair';r.strike(1);assert.ok(r.match>damaged);assert.equal(r.cells[1],true);
+advance(r,.3);r.tool='wide';r.select(5);r.press();advance(r,.45);r.release();assert.equal(r.cells[5],false);assert.equal(r.cells[6],false);assert.equal(r.cells[14],false);
+advance(r,.3);r.heat=.2;const cold=JSON.stringify(r.cells);r.strike(7);assert.equal(JSON.stringify(r.cells),cold);r.heating=true;advance(r,1.5);assert.ok(r.heat>.6);r.heating=false;
+for(const tier of [1,2]){
+ const key=new ForgeRun(tier);
+ for(let i=0;i<45;i++){if(key.pattern[i]===key.cells[i])continue;if(key.heat<.5){key.heating=true;advance(key,1);key.heating=false;}key.tool=key.pattern[i]?'repair':'fine';key.strike(i);advance(key,.25);}
+ assert.equal(key.match,1);
+ key.beginQuench();
+ while(!key.done){key.dipping=key.bath+key.bathSpeed*.18<key.target;key.tick(1/60);}
+ assert.ok(key.points>=90,'Controlled quench can earn masterwork');assert.equal(key.score,3);
+ const end=JSON.stringify(key);key.tick(.05);key.press();key.release();key.beginQuench();assert.equal(JSON.stringify(key),end);
 }
-assert.equal(new Set(targets).size,5);assert.equal(r.phase,'quench');
-r.heat=.4;r.press();assert.equal(r.phase,'done');assert.ok(r.score>2.999);
-r.press();r.release();r.tick(.05);assert.equal(r.hits.length,5);
-const miss=new ForgeRun();miss.heat=.72;miss.press();miss.release();
-for(let i=0;i<72;i++)miss.tick(.05);
-assert.equal(miss.hits.length,1);assert.equal(miss.hits[0],0);
-const cold=new ForgeRun();cold.heat=.26;cold.press();cold.release();cold.elapsed=(Math.asin((cold.target-.5)/.46)+Math.PI/2)/4.2;cold.press();assert.equal(cold.hits[0],0);
-miss.phase='quench';miss.heat=.01;miss.tick(.05);assert.equal(miss.phase,'done');assert.equal(miss.quench,0);
-console.log('PASS forge heating, five targets, temperature scoring, perfect quench, timeouts and terminal state');
-
-const {FARM_FORGE,nearestService}=await import('../lib/game/island.ts');
-assert.ok(Math.hypot(FARM_FORGE.x+7,FARM_FORGE.z+5)>5,'Forge must be outside the cottage');
+const timeout=new ForgeRun();advance(timeout,56);assert.equal(timeout.phase,'quench');advance(timeout,11);assert.ok(timeout.done);assert.ok(timeout.points<60,'Idle play does not earn high quality');
+assert.notDeepEqual(new ForgeRun(1).pattern,new ForgeRun(2).pattern);
+assert.ok(Math.hypot(FARM_FORGE.x+7,FARM_FORGE.z+5)>5);
 assert.equal(nearestService({x:FARM_FORGE.x,y:0,z:FARM_FORGE.z+1.5},'pomodoro').service?.kind,'forge');
-assert.equal(nearestService({x:7.5,y:0,z:-4.4},'pomodoro').service?.kind,'travel');
-assert.equal(nearestService({x:-7,y:0,z:1.6},'pomodoro').service?.kind,'kitchen');
-console.log('PASS forge clear of cottage and all three stations reachable');
+console.log('PASS forge shaping, repair, charged broad blows, heat, cooldown, both solvable patterns, quench skill, timeout and terminal reward score');

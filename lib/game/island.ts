@@ -1,4 +1,5 @@
 import type {HeroId} from './state';
+export const FARM_FORGE={x:0,z:-6};
 export type IslandService={kind:'kitchen'|'travel'|'hero'|'forge';label:string;x:number;z:number;hero?:HeroId};
 export const HERO_SPOTS:Record<HeroId,{x:number;z:number}>={
  pomodoro:{x:-3.5,z:-7.5},bing:{x:0,z:-8.5},kotaro:{x:3.5,z:-7.5},
@@ -16,7 +17,7 @@ export const RESIDENTS=[
  {id:'sapidae-m-d',file:'sapidae-m-d',x:-8,z:15,walk:1.6,facing:0},
  {id:'sapidae-m-e',file:'sapidae-m-e',x:7,z:15,walk:1.8,facing:0}
 ];
-export const ISLAND_SERVICES:IslandService[]=[{kind:'forge',label:'Forge keys',x:-7,z:-5},{kind:'kitchen',label:'Cook',x:-7,z:1.6},{kind:'travel',label:'Enter portal',x:7.5,z:-4.4}];
+export const ISLAND_SERVICES:IslandService[]=[{kind:'forge',label:'Forge keys',...FARM_FORGE},{kind:'kitchen',label:'Cook',x:-7,z:1.6},{kind:'travel',label:'Enter portal',x:7.5,z:-4.4}];
 export function nearestService(p:{x:number;y:number;z:number},active:HeroId){
  const list=[...ISLAND_SERVICES,...Object.entries(HERO_SPOTS).filter(([id])=>id!==active).map(([hero,pos])=>({kind:'hero' as const,label:'Talk',hero:hero as HeroId,...pos}))];
  let nearest:IslandService|null=null,distance=Infinity;

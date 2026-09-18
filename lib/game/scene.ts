@@ -24,7 +24,7 @@ import {EnemyBatch} from './enemy-batch';
 import {EnemyAttacks} from './enemy-attacks';
 import {HealthBar} from './health-bar';
 import {plotPosition,nearestPlot} from './farming';
-import {nearestService,HERO_SPOTS,RESIDENTS,type IslandService} from './island';
+import {nearestService,FARM_FORGE,ISLAND_SERVICES,HERO_SPOTS,RESIDENTS,type IslandService} from './island';
 import {CombatFX,CombatAudio} from './combat-fx';
 import {freshBuild,STARTER_SPELL,draftChoices,applyChoice,modifiers,xpNeeded,type Build,type Choice,type WeaponId} from './build';
 import {SpellEngine,type SpellTarget} from './spell-engine';
@@ -93,8 +93,7 @@ export class WildseedGame {
 
  private makeFarm(){
  const p=this.farmWorld;makeFarmLandscape(p);
- // A winding footpath connects the cottage, beds, and expedition gate.
- for(let i=0;i<24;i++){const x=-8+i*.7,z=-2.5+Math.sin(i*.22)*1.7;const tile=this.box(p,'#d1c38a',Math.round(x*2)/2,.055,Math.round(z*2)/2,1,.07,1);tile.material=this.mat('#d1c38a','tile');}
+ // Clear paths keep the work area easy to read.
  for(let i=0;i<PLOT_COUNT;i++){const pos=plotPosition(i);const b=this.box(p,'#776049',pos.x,.10,pos.z,1.94,.21,1.94);b.userData.plot=i;this.plots.push(b);const plant=new T.Group();plant.position.copy(pos);this.plants.push(plant);p.add(plant);
  for(const dx of [-1,1])this.box(p,'#bca479',pos.x+dx*.97,.22,pos.z,.1,.16,2.04);for(const dz of [-1,1])this.box(p,'#bca479',pos.x,.22,pos.z+dz*.97,2.04,.16,.1);}
  // Cottage and open-air cooking nook.
@@ -111,7 +110,7 @@ export class WildseedGame {
  const pot=this.shape(fire,new T.SphereGeometry(.46,12,8),'#344c57',0,1.12,0,1,.7,1);
  this.shape(fire,new T.CylinderGeometry(.4,.4,.06,12),'#9cc694',0,1.32,0);
 
- const forge=new T.Group();forge.name='key-forge';forge.position.set(-7,terrainHeight('farm',-7,-5),-5);p.add(forge);
+ const forge=new T.Group();forge.name='key-forge';forge.position.set(FARM_FORGE.x,terrainHeight('farm',FARM_FORGE.x,FARM_FORGE.z),FARM_FORGE.z);p.add(forge);
  const base=this.box(forge,'#645447',0,.42,0,1.5,.84,1.15);base.userData.solid=true;
  this.box(forge,'#344654',0,1.02,0,.65,.45,.6);
  this.box(forge,'#7d939e',0,1.31,0,1.7,.22,.85);
@@ -124,12 +123,16 @@ export class WildseedGame {
  this.box(forge,'#ffd577',0,2.05,-.5,.11,.44,.11);this.box(forge,'#ffd577',.12,1.9,-.5,.3,.1,.11);
  this.box(forge,'#6a4935',.65,1.3,-.62,.12,2.6,.12);this.box(forge,'#6a4935',.25,2.64,-.62,.9,.12,.12);
  this.addFarmDetails(p);
- // Wide, uncluttered paths to the island services.
- for(const [tx,tz] of [[-7,-5],[-7,1.6],[-11,5.1],[7.5,-4.4],[0,-8.5]]){
-  const start=new T.Vector3(tx<0?-4.8:5,0,tz<-7?-4.4:5.7),end=new T.Vector3(tx,0,tz),steps=Math.ceil(start.distanceTo(end)/1.1);
-  for(let i=0;i<steps;i++){const pos=start.clone().lerp(end,i/steps);this.shape(p,new T.CylinderGeometry(.48,.5,.06,7),'#d5bf88',pos.x,.025,pos.z);}
+ // One service lane above the fields, with a branch to the campfire.
+ for(const [ax,az,bx,bz] of [[-7,-3.5,7.5,-3.5],[-7,-3.5,-7,1.6],[0,-3.5,0,-4.5],[7.5,-3.5,7.5,-4.4]]){
+  const steps=Math.ceil(Math.hypot(bx-ax,bz-az)/.8);
+  for(let i=0;i<=steps;i++){const t=i/steps,x=ax+(bx-ax)*t,z=az+(bz-az)*t;this.shape(p,new T.CylinderGeometry(.5,.52,.06,7),'#d5bf88',x,terrainHeight('farm',x,z)+.06,z);}
  }
- for(const [sx,sz,tx,tz] of [[-10,-7,-12,-9],[10,-9,12,-10],[-11,9,-13,12.5],[11,9,13,12]]){const steps=6;for(let i=0;i<=steps;i++){const x=sx+(tx-sx)*i/steps,z=sz+(tz-sz)*i/steps;this.shape(p,new T.CylinderGeometry(.42,.45,.06,7),'#d5bf88',x,terrainHeight('farm',x,z)+.025,z);}}
+ for(const service of ISLAND_SERVICES){
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=80;const ctx=canvas.getContext('2d');if(!ctx)continue;
+  ctx.fillStyle='#183440';ctx.beginPath();ctx.roundRect(4,4,248,72,18);ctx.fill();ctx.strokeStyle='#e6c17a';ctx.lineWidth=4;ctx.stroke();ctx.fillStyle='#fff0ce';ctx.font='bold 32px Trebuchet MS';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(service.kind==='forge'?'FORGE':service.kind==='kitchen'?'COOK':'PORTAL',128,42);
+  const material=new T.SpriteMaterial({map:new T.CanvasTexture(canvas),depthTest:false,depthWrite:false});const sign=new T.Sprite(material);sign.name='station-'+service.kind;sign.userData.cameraIgnore=true;sign.position.set(service.x,3.8,service.kind==='travel'?-6:service.kind==='kitchen'?.5:service.z);sign.scale.set(2.5,.78,1);sign.renderOrder=10;p.add(sign);
+ }
  // Pond, lily pads and stepping stones.
  const pond=this.shape(p,new T.CircleGeometry(1,48),'#12b8d8',8,.065,5,2.6,2.9,1);pond.rotation.x=-Math.PI/2;for(let i=0;i<9;i++)this.box(p,'#c5ffeb',6.4+i%3*1.3,.089,3.7+Math.floor(i/3)*1.1,.6,.012,.1);
  for(let i=0;i<14;i++){const a=i/14*Math.PI*2;this.blob(p,'#bec5a0',8+Math.cos(a)*2.8,.1,5+Math.sin(a)*3.15,.4,.25,.38);}
@@ -138,9 +141,9 @@ export class WildseedGame {
  this.box(p,'#8c9b87',6,1.5,-6,.8,3,1);this.box(p,'#8c9b87',9,1.5,-6,.8,3,1);this.box(p,'#a4b09a',7.5,3.2,-6,4,.8,1.1);
  const portal=new T.Mesh(new T.CircleGeometry(1.32,48),new T.MeshBasicMaterial({color:'#b8b1ff',transparent:true,opacity:.62,side:T.DoubleSide}));portal.name='portal';portal.position.set(7.5,1.6,-5.8);p.add(portal);const portalRim=new T.Mesh(new T.TorusGeometry(1.4,.095,8,40),this.mat('#84f2d0'));portalRim.position.copy(portal.position);p.add(portalRim);
  for(const dx of [-1.4,1.4])this.box(p,'#d9cdff',7.5+dx,1.6,-5.7,.1,2.9,.1);for(const dy of [.2,3])this.box(p,'#d9cdff',7.5,dy,-5.7,2.9,.1,.1);
- for(let i=0;i<8;i++){const a=i/8*Math.PI*2,x=Math.cos(a)*12.6,z=Math.sin(a)*12.6;if(z>0&&Math.abs(x)<7)continue;this.tree(p,x,z,.65+(i%4)*.13);}
+ for(let i=0;i<4;i++){const a=i/4*Math.PI*2,x=Math.cos(a)*15,z=Math.sin(a)*15;if(z>0&&Math.abs(x)<7)continue;this.tree(p,x,z,.65+(i%4)*.13);}
  const geo=new T.ConeGeometry(.09,.4,5),grass=new T.InstancedMesh(geo,this.mat('#699d4f'),450);const matrix=new T.Matrix4();let count=0;for(let i=0;i<850&&count<450;i++){const x=Math.sin(i*127.1)*13,z=Math.sin(i*311.7)*13;if(x*x+z*z>170||Math.abs(x)<6&&z>-3&&z<14||x<-4&&z<2||x>5&&z>-8&&z<9)continue;matrix.compose(new T.Vector3(x,.18,z),new T.Quaternion(),new T.Vector3(1,1+(i%3)*.2,1));grass.setMatrixAt(count++,matrix);}grass.count=count;p.add(grass);
- for(let i=0;i<55;i++){const x=Math.sin(i*51.9)*12,z=Math.cos(i*37.7)*12;if(x*x+z*z>165||Math.abs(x)<6&&z>-3&&z<14)continue;this.blob(p,i%3===0?'#fff0a9':i%3===1?'#e8adbb':'#c2b4e7',x,.22,z,.13,.17,.13);}
+ for(let i=0;i<24;i++){const x=Math.sin(i*51.9)*12,z=Math.cos(i*37.7)*12;if(x*x+z*z>165||Math.abs(x)<6&&z>-3&&z<14)continue;this.blob(p,i%3===0?'#fff0a9':i%3===1?'#e8adbb':'#c2b4e7',x,.22,z,.13,.17,.13);}
  this.gardenArt=new GardenArt(p);
  }
  private addFarmDetails(p:T.Group){
@@ -182,27 +185,12 @@ export class WildseedGame {
 
  private makeArena(){this.terrainChunks=makeLandscape(this.arena);}
  private expandWorld(p:T.Group,mode:'farm'|'dungeon'){
- const count=mode==='farm'?14:12;
+ const count=mode==='farm'?6:12;
  for(let i=0;i<count;i++){
   const a=i*2.39996,r=18+(i%9)/9*10;
   const x=Math.cos(a)*r,z=Math.sin(a)*r;
   this.tree(p,x,z,.8+(i%4)*.18);
  }
- if(mode==='dungeon')return;
- const points=[[-22,-10],[19,20],[-18,21]];
- points.forEach(([x,z],index)=>{
-  const y=terrainHeight(mode,x,z),group=new T.Group();group.userData.batchable=true;p.add(group);
-  const color=['#b3a8df','#76c9d5','#d9b46c','#95c778'][index%4];
-  if(index%3===0){
-   for(const side of [-1,1]){this.box(group,'#7e8c85',x+side*3,y+3,z,1.6,6,1.6);for(let tier=0;tier<3;tier++)this.box(group,'#adb8a6',x+side*3,y+6+tier*.3,z,2-tier*.3,.3,2-tier*.3);}
-   this.box(group,'#9ba795',x,y+6,z,8,.8,1.8);this.box(group,color,x,y+1.5,z,1,3,1);
-  }else if(index%3===1){
-   for(let j=0;j<7;j++){const a=j*2.4,r=j===0?0:3;const crystal=this.shape(group,new T.ConeGeometry(j===0?1.3:.55,j===0?10:4,5),color,x+Math.cos(a)*r,y+(j===0?5:2),z+Math.sin(a)*r);crystal.rotation.z=(j%3-1)*.15;}
-  }else{
-   for(let j=0;j<6;j++){const px=x+Math.cos(j*2.4)*4,pz=z+Math.sin(j*2.4)*4,py=terrainHeight(mode,px,pz);this.shape(group,new T.CylinderGeometry(.3,.5,4,10),'#ffe3ad',px,py+2,pz);this.shape(group,new T.SphereGeometry(2,16,10),index%2?'#b645be':'#ee6943',px,py+4,pz,1,.4,1);}
-  }
-  const beacon=new T.Mesh(new T.BoxGeometry(.2,15,.2),new T.MeshBasicMaterial({color,transparent:true,opacity:.32}));beacon.position.set(x,y+10,z);p.add(beacon);
- });
  }
 
  private actor(g:GLTF,height:number):Actor{const actor=createAxieActor(g,height);toonify(actor.root);return actor;}
@@ -314,7 +302,7 @@ export class WildseedGame {
  }
  equipMeal(id:CropId){if(this.mode!=='farm')return;if(this.farm.meals[id]<1){this.toast('Cook a meal first');return;}this.farm.meal=this.farm.meal===id?null:id;this.save();this.emit();}
  craftDungeonKey(tier:1|2,score=0){
- if(this.mode!=='farm')return 0;const key=tier===1?'grove':'hollow',before=this.farm.keys[key],msg=craftKey(this.farm,tier,score);if(this.farm.keys[key]===before){this.toast(msg);return 0;}this.sound(920);this.actionDone('unlock',new T.Vector3(-7,2,-5),1,'forge',msg);return 1;
+ if(this.mode!=='farm')return 0;const key=tier===1?'grove':'hollow',before=this.farm.keys[key],msg=craftKey(this.farm,tier,score);if(this.farm.keys[key]===before){this.toast(msg);return 0;}this.sound(920);this.actionDone('unlock',new T.Vector3(FARM_FORGE.x,2,FARM_FORGE.z),1,'forge',msg);return 1;
  }
  unlock(){
  if(this.mode!=='farm')return;const before=this.farm.unlocked,msg=offerHarvest(this.farm);

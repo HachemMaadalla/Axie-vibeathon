@@ -19,3 +19,10 @@ assert.equal(miss.hits.length,1);assert.equal(miss.hits[0],0);
 const cold=new ForgeRun();cold.heat=.26;cold.press();cold.release();cold.elapsed=(Math.asin((cold.target-.5)/.46)+Math.PI/2)/4.2;cold.press();assert.equal(cold.hits[0],0);
 miss.phase='quench';miss.heat=.01;miss.tick(.05);assert.equal(miss.phase,'done');assert.equal(miss.quench,0);
 console.log('PASS forge heating, five targets, temperature scoring, perfect quench, timeouts and terminal state');
+
+const {FARM_FORGE,nearestService}=await import('../lib/game/island.ts');
+assert.ok(Math.hypot(FARM_FORGE.x+7,FARM_FORGE.z+5)>5,'Forge must be outside the cottage');
+assert.equal(nearestService({x:FARM_FORGE.x,y:0,z:FARM_FORGE.z+1.5},'pomodoro').service?.kind,'forge');
+assert.equal(nearestService({x:7.5,y:0,z:-4.4},'pomodoro').service?.kind,'travel');
+assert.equal(nearestService({x:-7,y:0,z:1.6},'pomodoro').service?.kind,'kitchen');
+console.log('PASS forge clear of cottage and all three stations reachable');

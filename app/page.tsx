@@ -7,7 +7,7 @@ import type {Stars} from '@/lib/game/quality';
 import {CookingPanel} from './cooking-ui';
 import {JourneyMap,PermanentUpgrades,CompostRecipes} from './progression-ui';
 import {CHALLENGES,type Challenge} from '@/lib/game/progression';
-import {Map as MapIcon,CheckCheck} from 'lucide-react';
+import {Maximize,Minimize,Map as MapIcon,CheckCheck} from 'lucide-react';
 import {useEffect,useRef,useState} from 'react';
 import {Sparkles,ChevronsUp,FastForward} from 'lucide-react';
 import {freshBuild,xpNeeded} from '@/lib/game/build';
@@ -32,6 +32,17 @@ export default function Home(){
  const [v,setV]=useState<View>(initial),[started,setStarted]=useState(false),[modal,setModal]=useState<'forge'|'kitchen'|'travel'|'help'|'hero'|'garden'|'inventory'|'build'|'map'|null>(null),[muted,setMuted]=useState(false),[userPaused,setUserPaused]=useState(false),[volume,setVolume]=useState(.7);
  useEffect(()=>{try{setMuted(localStorage.getItem('wildseed-muted')==='true');setVolume(Math.max(0,Math.min(1,Number(localStorage.getItem('wildseed-volume')??.7))));}catch{}},[]);
  const [tutorialTool,setTutorialTool]=useState<FarmItem|null>(null),[tutorialReplay,setTutorialReplay]=useState(0);
+
+ const [fullscreen,setFullscreen]=useState(false),[fullscreenAvailable,setFullscreenAvailable]=useState(false),[screenError,setScreenError]=useState('');
+ useEffect(()=>{
+  const sync=()=>setFullscreen(Boolean(document.fullscreenElement));
+  const context=(e:MouseEvent)=>{e.preventDefault();};
+  setFullscreenAvailable(Boolean(document.fullscreenEnabled));sync();
+  document.addEventListener('fullscreenchange',sync);
+  document.addEventListener('contextmenu',context);
+  return()=>{document.removeEventListener('fullscreenchange',sync);document.removeEventListener('contextmenu',context);};
+ },[]);
+ const toggleFullscreen=async()=>{setScreenError('');try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{setScreenError('Fullscreen unavailable in this browser.');}};
  const [talkHero,setTalkHero]=useState<HeroId|null>(null);
  useEffect(()=>{let cancelled=false;import('../lib/game/scene').then(async({WildseedGame})=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));if(cancelled||!mount.current)return;try{game.current=new WildseedGame(mount.current,setV,service=>{setTalkHero(service.hero??null);setModal(service.kind);});}catch(e){console.error(e);setV(s=>({...s,error:'This browser could not start 3D graphics. Try a browser with WebGL enabled.'}));}}).catch(()=>setV(s=>({...s,error:'The game could not load. Please reload to try again.'})));return()=>{cancelled=true;game.current?.dispose();game.current=null;};},[]);
  useEffect(()=>{game.current?.setPaused(Boolean(modal)||userPaused);},[modal,userPaused]);
@@ -47,6 +58,7 @@ export default function Home(){
    <div className="wordmark"><Sprout/><strong>Wildseed</strong></div>
    <div className={'day-chip'+(!isFarm&&(v.waveBreak??0)>0?' wave-rest':'')} title={!isFarm?CHALLENGES[v.challenge??'calm'].name:undefined} aria-label={isFarm?'Day '+v.farm.day:'Expedition time'}>{isFarm?<Sun size={18}/>:<Moon size={18}/>} {isFarm?'Day '+v.farm.day:'Wave '+(v.wave??1)+((v.waveBreak??0)>0?' · '+Math.ceil(v.waveBreak!)+'s':'')}{!isFarm&&<><StarBadge value={v.build.keyStars??1}/>{!(v.waveBreak??0)&&<span className="wave-remaining" title="Enemies remaining"><Swords size={13}/>{v.enemiesLeft??0}</span>}</>}</div>
    <nav className="utility" aria-label="Game controls">
+    {fullscreenAvailable&&<button title={fullscreen?"Exit fullscreen":"Fullscreen"} aria-label={fullscreen?"Exit fullscreen":"Fullscreen"} onClick={toggleFullscreen}>{fullscreen?<Minimize size={19}/>:<Maximize size={19}/>}</button>}
     {started&&<button title="Inventory · I" aria-label="Inventory · I" onClick={()=>open('inventory')}><Package size={20}/><kbd>I</kbd></button>}
     {started&&<button title="Spells & combinations · B" aria-label="Spells & combinations" onClick={()=>open('build')}><Sparkles size={20}/><kbd>B</kbd></button>}
     {started&&<button title="Map & discoveries · M" aria-label="Map & discoveries" onClick={()=>open('map')}><MapIcon size={20}/><kbd>M</kbd></button>}
@@ -71,6 +83,7 @@ export default function Home(){
   {started&&!modal&&!userPaused&&!v.upgrade&&!v.result&&<div className="traversal-actions"><button className="panel" title="Jump / double jump · Space" aria-label="Jump or double jump" onClick={()=>game.current?.jumpNow()}><ChevronsUp size={23}/><kbd>SPACE</kbd></button><button className="panel" title="Dash · Q" aria-label="Dash" disabled={v.dash>0} onClick={()=>game.current?.dashNow()}><Wind size={23}/><kbd>{v.dash>0?v.dash.toFixed(1):'Q'}</kbd></button><button className="panel touch-sprint" title="Hold to sprint" aria-label="Hold to sprint" onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);game.current?.moveKey('shift',true);}} onPointerUp={()=>game.current?.moveKey('shift',false)} onPointerCancel={()=>game.current?.moveKey('shift',false)}><FastForward size={23}/></button></div>}
   {started&&!modal&&!userPaused&&!v.upgrade&&!v.result&&<div className="touch-controls" aria-label="Touch movement">{[['w',ArrowUp],['a',ArrowLeft],['s',ArrowDown],['d',ArrowRight]].map(([key,Icon])=>{const I=Icon as typeof ArrowUp;return <button key={key as string} aria-label={'Move '+key} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);game.current?.moveKey(key as string,true);}} onPointerUp={()=>game.current?.moveKey(key as string,false)} onPointerCancel={()=>game.current?.moveKey(key as string,false)}><I size={23}/></button>;})}</div>}
   {started&&<FarmTutorial key={tutorialReplay} view={v} replay={tutorialReplay>0} hidden={!!modal||userPaused||!!v.result||v.upgrade} onGuide={setTutorialTool}/>}
+  {screenError&&<output className="toast" role="status" onClick={()=>setScreenError("")}>{screenError}</output>}
   {v.message&&started&&!modal&&!v.result&&!v.upgrade&&<output className="toast" aria-live="polite"><Leaf size={18}/>{v.message}</output>}
   {userPaused&&!modal&&<div className="pause-cover"><div className="panel pause-card"><Moon size={30}/><h2>Paused</h2><label className="setting-row">Reduce motion<input type="checkbox" checked={v.reducedMotion??false} onChange={e=>game.current?.setReducedMotion(e.target.checked)}/></label><label className="setting-row">Volume<input type="range" aria-label="Sound volume" min="0" max="1" step=".05" value={volume} onChange={e=>{setVolume(Number(e.target.value));game.current?.setVolume(Number(e.target.value));}}/></label><span className="save-status">{v.saved?<><CheckCheck size={16}/> Saved</>:'Save unavailable'}</span><button className="primary" onClick={()=>setUserPaused(false)}><Play size={18}/> Resume</button></div></div>}
   {v.error&&<div className="error-panel panel" role="alert"><h2>Lunacia needs a moment</h2><p>{v.error}</p><button className="primary" onClick={()=>location.reload()}>Reload game</button></div>}

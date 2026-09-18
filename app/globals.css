@@ -295,3 +295,6 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 @keyframes forge-smash{0%{transform:rotate(-65deg)}45%{transform:rotate(18deg)}100%{transform:rotate(-30deg)}}
 @media(prefers-reduced-motion:reduce){.hammer-impact{animation:none}}
 @media(max-width:480px){.forge-recipes{gap:8px}.forge-recipes>div{padding:18px 8px}.forge-stages{gap:12px}}
+
+/* Fit the viewport in both windowed and fullscreen play. */
+html,body{width:100%;height:100%;overflow:hidden}.game-shell{height:100dvh;min-height:0!important;width:100%}:root:fullscreen{background:#142735}.world{user-select:none;-webkit-user-select:none}

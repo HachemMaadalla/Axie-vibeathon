@@ -88,8 +88,8 @@ export class GardenArt{
  constructor(parent:T.Group){
   this.root.name='sky-garden-art';parent.add(this.root);
   const staticArt=new T.Group();staticArt.name='garden-dressing';staticArt.userData.batchable=true;parent.add(staticArt);
-  this.cliffs(staticArt);this.paths(staticArt);this.pavilion(staticArt);this.stream(staticArt);this.flowers(staticArt);this.distantIslands(staticArt);
-  for(const [x,z] of [[-4.9,-3.3],[5,-2.7],[-6.5,6.1],[6.2,6.4],[-5,14.9],[5,14.9],[-9,-10],[9.8,-8.5],[15,20]])this.lantern(staticArt,x,z);
+  this.cliffs(staticArt);this.stream(staticArt);this.flowers(staticArt);this.distantIslands(staticArt);
+  for(const [x,z] of [[-4.9,-3.3],[5,-2.7],[-6.5,6.1],[6.2,6.4]])this.lantern(staticArt,x,z);
   const foamMat=new T.MeshBasicMaterial({color:'#e7fbff',transparent:true,opacity:.72,depthWrite:false});
   this.foam=new T.InstancedMesh(new T.SphereGeometry(1,6,4),foamMat,60);this.foam.userData.cameraIgnore=true;this.foam.name='waterfall-foam';this.foam.frustumCulled=false;this.root.add(this.foam);
   const leafShape=new T.Shape();leafShape.moveTo(-.38,0);leafShape.quadraticCurveTo(0,.3,.48,0);leafShape.quadraticCurveTo(0,-.3,-.38,0);

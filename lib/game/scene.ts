@@ -110,9 +110,22 @@ export class WildseedGame {
  this.box(fire,'#654431',0,1.75,0,1.55,.1,.1);
  const pot=this.shape(fire,new T.SphereGeometry(.46,12,8),'#344c57',0,1.12,0,1,.7,1);
  this.shape(fire,new T.CylinderGeometry(.4,.4,.06,12),'#9cc694',0,1.32,0);
+
+ const forge=new T.Group();forge.name='key-forge';forge.position.set(-7,terrainHeight('farm',-7,-5),-5);p.add(forge);
+ const base=this.box(forge,'#645447',0,.42,0,1.5,.84,1.15);base.userData.solid=true;
+ this.box(forge,'#344654',0,1.02,0,.65,.45,.6);
+ this.box(forge,'#7d939e',0,1.31,0,1.7,.22,.85);
+ const horn=this.shape(forge,new T.ConeGeometry(.3,.65,8),'#7d939e',1.08,1.31,0);horn.rotation.z=-Math.PI/2;
+ const handle=this.box(forge,'#9b6039',-.25,1.5,.1,.13,.13,.9);handle.rotation.y=.45;
+ this.box(forge,'#41586b',-.43,1.59,-.23,.48,.3,.3);
+ const furnace=this.box(forge,'#705e53',-1.55,.5,-.35,.85,1,.85);furnace.userData.solid=true;
+ this.box(forge,'#ff9b39',-1.55,.85,.085,.55,.37,.03);
+ this.shape(forge,new T.TorusGeometry(.24,.07,8,16),'#ffd577',0,2.38,-.5);
+ this.box(forge,'#ffd577',0,2.05,-.5,.11,.44,.11);this.box(forge,'#ffd577',.12,1.9,-.5,.3,.1,.11);
+ this.box(forge,'#6a4935',.65,1.3,-.62,.12,2.6,.12);this.box(forge,'#6a4935',.25,2.64,-.62,.9,.12,.12);
  this.addFarmDetails(p);
  // Wide, uncluttered paths to the island services.
- for(const [tx,tz] of [[-7,1.6],[-11,5.1],[7.5,-4.4],[0,-8.5]]){
+ for(const [tx,tz] of [[-7,-5],[-7,1.6],[-11,5.1],[7.5,-4.4],[0,-8.5]]){
   const start=new T.Vector3(tx<0?-4.8:5,0,tz<-7?-4.4:5.7),end=new T.Vector3(tx,0,tz),steps=Math.ceil(start.distanceTo(end)/1.1);
   for(let i=0;i<steps;i++){const pos=start.clone().lerp(end,i/steps);this.shape(p,new T.CylinderGeometry(.48,.5,.06,7),'#d5bf88',pos.x,.025,pos.z);}
  }
@@ -301,7 +314,7 @@ export class WildseedGame {
  }
  equipMeal(id:CropId){if(this.mode!=='farm')return;if(this.farm.meals[id]<1){this.toast('Cook a meal first');return;}this.farm.meal=this.farm.meal===id?null:id;this.save();this.emit();}
  craftDungeonKey(tier:1|2,score=0){
- if(this.mode!=='farm')return 0;const key=tier===1?'grove':'hollow',before=this.farm.keys[key],msg=craftKey(this.farm,tier,score);if(this.farm.keys[key]===before){this.toast(msg);return 0;}this.sound(920);this.actionDone('unlock',new T.Vector3(7.5,2,-5.8),1,'portal',msg);return 1;
+ if(this.mode!=='farm')return 0;const key=tier===1?'grove':'hollow',before=this.farm.keys[key],msg=craftKey(this.farm,tier,score);if(this.farm.keys[key]===before){this.toast(msg);return 0;}this.sound(920);this.actionDone('unlock',new T.Vector3(-7,2,-5),1,'forge',msg);return 1;
  }
  unlock(){
  if(this.mode!=='farm')return;const before=this.farm.unlocked,msg=offerHarvest(this.farm);

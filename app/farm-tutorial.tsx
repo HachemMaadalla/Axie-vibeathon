@@ -20,6 +20,6 @@ export function FarmTutorial({view:v,replay,hidden,onGuide}:{view:View;replay:bo
  if(lesson.step==='off'||hidden||v.mode!=='farm')return null;
  const Icon=lesson.step==='plant'?Sprout:lesson.step==='water'?Droplets:lesson.step==='done'?Check:Scissors;
  const title=lesson.step==='plant'?'Plant your first seed':lesson.step==='water'?'Give it water':lesson.step==='done'?'Your first harvest!':ripe?'Harvest your crop':'Growing...';
- const line=lesson.step==='plant'?'WASD to an empty bed. Select 1 Seeds, then E.':lesson.step==='water'?'Select 2 Water, then E beside your planted bed.':lesson.step==='done'?'Grow 24 Sunroot to forge your first dungeon key.':ripe?'Select 3 Harvest, then E beside the ripe crop.':'Plant more while you wait.';
+ const line=lesson.step==='plant'?'WASD to an empty bed. Select 1 Seeds, then E.':lesson.step==='water'?'Select 2 Water, then E beside your planted bed.':lesson.step==='done'?'Take 24 Sunroot to the anvil to forge a key.':ripe?'Select 3 Harvest, then E beside the ripe crop.':'Plant more while you wait.';
  return <aside className="farm-tutorial panel" aria-label="Farming tutorial"><Icon size={26}/><div><strong>{title}</strong><p>{line}</p>{lesson.step==='grow'&&!ripe&&<progress aria-label="Crop growth" max={1} value={plot?.growth??0}/>}</div>{lesson.step==='done'?<button onClick={()=>setLesson({step:'off',plot:null})}>Done</button>:<button title="Skip tutorial" aria-label="Skip tutorial" onClick={()=>setLesson({step:'off',plot:null})}><X size={16}/></button>}</aside>;
 }

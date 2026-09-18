@@ -1,4 +1,5 @@
 'use client';
+import {GameLoading} from './game-loading';
 import {StarBadge} from './quality-ui';
 import type {Stars} from '@/lib/game/quality';
 import {CookingPanel} from './cooking-ui';
@@ -28,7 +29,7 @@ export default function Home(){
  const [v,setV]=useState<View>(initial),[started,setStarted]=useState(false),[modal,setModal]=useState<'kitchen'|'travel'|'help'|'hero'|'garden'|'inventory'|'build'|'map'|null>(null),[muted,setMuted]=useState(false),[userPaused,setUserPaused]=useState(false),[volume,setVolume]=useState(.7);
  useEffect(()=>{try{setMuted(localStorage.getItem('wildseed-muted')==='true');setVolume(Math.max(0,Math.min(1,Number(localStorage.getItem('wildseed-volume')??.7))));}catch{}},[]);
  const [talkHero,setTalkHero]=useState<HeroId|null>(null);
- useEffect(()=>{let cancelled=false;import('../lib/game/scene').then(({WildseedGame})=>{if(cancelled||!mount.current)return;try{game.current=new WildseedGame(mount.current,setV,service=>{setTalkHero(service.hero??null);setModal(service.kind);});}catch(e){console.error(e);setV(s=>({...s,error:'This browser could not start 3D graphics. Try a browser with WebGL enabled.'}));}}).catch(()=>setV(s=>({...s,error:'The game could not load. Please reload to try again.'})));return()=>{cancelled=true;game.current?.dispose();game.current=null;};},[]);
+ useEffect(()=>{let cancelled=false;import('../lib/game/scene').then(async({WildseedGame})=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));if(cancelled||!mount.current)return;try{game.current=new WildseedGame(mount.current,setV,service=>{setTalkHero(service.hero??null);setModal(service.kind);});}catch(e){console.error(e);setV(s=>({...s,error:'This browser could not start 3D graphics. Try a browser with WebGL enabled.'}));}}).catch(()=>setV(s=>({...s,error:'The game could not load. Please reload to try again.'})));return()=>{cancelled=true;game.current?.dispose();game.current=null;};},[]);
  useEffect(()=>{game.current?.setPaused(Boolean(modal)||userPaused);},[modal,userPaused]);
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(!started||v.upgrade||v.result||e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;const target=e.target as HTMLElement;if(target?.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target?.tagName))return;const menu=e.key.toLowerCase()==='i'?'inventory':e.key.toLowerCase()==='b'?'build':e.key.toLowerCase()==='m'?'map':null;if(menu){e.preventDefault();setModal(current=>current===menu?null:menu);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[started,v.upgrade,v.result]);
  const p=v.farm.plots[v.selected],hero=HEROES[v.farm.hero],isFarm=v.mode==='farm';
@@ -50,7 +51,7 @@ export default function Home(){
     <button title="Help & credits" aria-label="Help & credits" onClick={()=>open('help')}><HelpCircle size={20}/></button>
    </nav>
   </header>
-  {!started&&<section className="quiet-welcome panel"><span className="menu-kicker">LUNACIA</span><h1>Wildseed</h1><button className="primary" disabled={!v.ready||!!v.error} onClick={()=>{setStarted(true);game.current?.setMuted(muted);game.current?.start();}}>{v.ready?'Enter Lunacia':'Loading...'}<Play size={18}/></button></section>}
+  {!started&&!v.error&&<GameLoading ready={v.ready} done={v.loadingDone} total={v.loadingTotal} onStart={()=>{if(!game.current?.ready)return;setStarted(true);game.current.setMuted(muted);game.current.start();}}/>}
   {started&&isFarm&&<>
    <FarmHotbar view={v} locked={!!modal||userPaused||!!v.result} onSelect={item=>game.current?.selectFarmItem(item)}/>
    {v.nearby&&!modal&&!userPaused&&<button className="island-interact panel" onClick={()=>game.current?.interact()}><kbd>E</kbd>{v.nearby.hero?HEROES[v.nearby.hero].name:v.nearby.label}</button>}

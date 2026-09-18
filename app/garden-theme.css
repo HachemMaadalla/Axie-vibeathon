@@ -247,3 +247,21 @@
 .game-shell .combat-belt button:hover{transform:translateY(-3px);background:#436256}
 @media(max-width:700px){.home-bearing{left:12px;top:164px;padding:6px 9px}.wave-remaining{margin-left:4px;padding-left:5px}.home-bearing span{display:none}}
 @media(prefers-reduced-motion:reduce){.game-shell .traversal-actions button,.game-shell .combat-belt button{transition:none}.game-shell .combat-belt button:hover{transform:none}}
+
+.game-loading{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 35%,#3c7166 0%,#173f43 55%,#102b35 100%);color:#fff0ca;text-align:center}
+.loading-content{width:min(320px,82vw);display:flex;flex-direction:column;align-items:center;gap:18px}
+.loading-emblem{color:#efca79;filter:drop-shadow(0 3px 0 #132e32)}
+.game-loading h1{font:bold clamp(42px,8vw,64px) Georgia,serif;letter-spacing:-2px;margin:0;text-shadow:0 4px #142f35}
+.loading-axie{object-fit:contain;filter:drop-shadow(0 12px 10px #071e2866);animation:loading-breathe 2.2s ease-in-out infinite}
+.loading-meter{width:100%;height:12px;border:2px solid #d9bd7e;border-radius:8px;background:#092b32;overflow:hidden;padding:2px}
+.loading-meter>span{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#50bd9b,#c1edaf);transition:width .25s ease}
+.loading-meter>.indeterminate{width:35%;animation:loading-sweep 1.5s ease-in-out infinite}
+.loading-caption{display:flex;justify-content:space-between;gap:18px;width:100%;font-size:13px;color:#c7dcd0;min-height:20px}
+.loading-caption b{font-variant-numeric:tabular-nums;color:#ffe4ac}
+.game-loading .loading-enter{display:flex;align-items:center;justify-content:center;gap:16px;width:100%;min-height:52px}
+.loading-retry{display:flex;align-items:center;gap:8px;color:#dfd6be;font-size:12px;padding:10px}
+.game-loading.is-ready .loading-axie{animation:none}
+.game-loading noscript{position:absolute;bottom:24px;font-size:14px}
+@keyframes loading-sweep{0%,100%{transform:translateX(0)}50%{transform:translateX(185%)}}
+@keyframes loading-breathe{50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.loading-axie,.loading-meter>.indeterminate{animation:none}.loading-meter>span{transition:none}}

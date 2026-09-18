@@ -36,7 +36,7 @@ import { CROPS, PLOT_COUNT, HERO_IDS, freshFarm, hydrateFarm, grow, tend, improv
 import { registerGameTools } from './webmcp';
 
 export type Result={outcome:'won'|'escaped'|'lost';loot:Loot;kills:number;tier:number};
-export type View={enemiesLeft?:number;exitBearing?:number;exitDistance?:number;wave?:number;waveBreak?:number;lootQuality?:QualityBag;boss?:{name:string;hp:number;max:number;enraged:boolean;color:string}|null;position?:{x:number;z:number};challenge?:Challenge;reducedMotion?:boolean;held:FarmItem;exitReady:boolean;nearExit:boolean;nearby:IslandService|null;build:Build;choices:Choice[];xp:number;xpNext:number;farm:FarmState;mode:'farm'|'dungeon';ready:boolean;error:string;selected:number;inReach:boolean;seed:CropId;hp:number;maxHp:number;time:number;kills:number;level:number;dash:number;loot:Loot;upgrade:boolean;result:Result|null;message:string;paused:boolean;saved:boolean;meal:CropId|null;tier:number};
+export type View={loadingDone?:number;loadingTotal?:number;enemiesLeft?:number;exitBearing?:number;exitDistance?:number;wave?:number;waveBreak?:number;lootQuality?:QualityBag;boss?:{name:string;hp:number;max:number;enraged:boolean;color:string}|null;position?:{x:number;z:number};challenge?:Challenge;reducedMotion?:boolean;held:FarmItem;exitReady:boolean;nearExit:boolean;nearby:IslandService|null;build:Build;choices:Choice[];xp:number;xpNext:number;farm:FarmState;mode:'farm'|'dungeon';ready:boolean;error:string;selected:number;inReach:boolean;seed:CropId;hp:number;maxHp:number;time:number;kills:number;level:number;dash:number;loot:Loot;upgrade:boolean;result:Result|null;message:string;paused:boolean;saved:boolean;meal:CropId|null;tier:number};
 type Actor={root:T.Group;mixer:T.AnimationMixer;actions:Map<string,T.AnimationAction>;current:string};
 
 export class WildseedGame {
@@ -193,6 +193,7 @@ export class WildseedGame {
  }
 
  private actor(g:GLTF,height:number):Actor{const actor=createAxieActor(g,height);toonify(actor.root);return actor;}
+ private loadingDone=0;private loadingTotal=0;
  private async loadActors(){
  const loader=new GLTFLoader();
  try{
@@ -208,7 +209,8 @@ export class WildseedGame {
     this.farmWorld.add(actor.root);this.residents.push({actor,spec,phase:index*.8});
    })
   ];
-  let cursor=0;await Promise.all(Array.from({length:3},async()=>{while(cursor<jobs.length)await jobs[cursor++]();}));
+  this.loadingTotal=jobs.length;this.loadingDone=0;this.emit();
+  let cursor=0;await Promise.all(Array.from({length:3},async()=>{while(!this.stopped&&cursor<jobs.length){await jobs[cursor++]();if(this.stopped)return;this.loadingDone++;this.emit();}}));
   if(this.stopped)return;this.syncHeroes();this.ready=true;this.emit();
  }catch(e){this.error='An Axie could not load. Reload to try again.';console.error('Axie asset loading failed',e);this.emit();}
  }
@@ -244,7 +246,7 @@ export class WildseedGame {
  }
  }
  private save(){try{localStorage.setItem('wildseed-v1',JSON.stringify(this.farm));this.saved=true;}catch{this.saved=false;}}
- private emit(){const boss=this.mode==='dungeon'?this.enemies.find(e=>e.boss&&e.hp>0):undefined;const exitOffset=this.returnPortal?.position.clone().sub(this.player.position),exitDistance=exitOffset?Math.hypot(exitOffset.x,exitOffset.z):0;const exitLocal=exitOffset?.applyQuaternion(this.camera.quaternion.clone().invert());this.listener({enemiesLeft:this.enemies.length+(this.waves?.pending??0),exitBearing:exitLocal?Math.atan2(exitLocal.x,-exitLocal.z):0,exitDistance,wave:this.waves?.number??1,waveBreak:this.waves?.breakLeft??0,lootQuality:{...this.lootQuality},boss:boss?{name:ENEMY_INFO[boss.kind].name,hp:boss.hp,max:boss.max,enraged:boss.enraged,color:ENEMY_INFO[boss.kind].color}:null,position:{x:this.player.position.x,z:this.player.position.z},challenge:this.challenge,reducedMotion:this.reducedMotion,held:this.held,exitReady:!!this.returnPortal,nearExit:this.mode==='dungeon'&&this.nearReturnPortal,nearby:this.mode==='farm'?this.nearby:null,build:structuredClone(this.build),choices:structuredClone(this.choices),xp:this.xp,xpNext:xpNeeded(this.level),farm:structuredClone(this.farm),mode:this.mode,ready:this.ready,error:this.error,selected:this.selected,inReach:this.inReach,seed:this.seed,hp:this.hp,maxHp:this.maxHp,time:this.time,kills:this.kills,level:this.level,dash:this.dash,loot:{...this.loot},upgrade:this.upgrade,result:this.result?structuredClone(this.result):null,message:this.message,paused:this.paused,saved:this.saved,meal:this.meal,tier:this.tier});}
+ private emit(){const boss=this.mode==='dungeon'?this.enemies.find(e=>e.boss&&e.hp>0):undefined;const exitOffset=this.returnPortal?.position.clone().sub(this.player.position),exitDistance=exitOffset?Math.hypot(exitOffset.x,exitOffset.z):0;const exitLocal=exitOffset?.applyQuaternion(this.camera.quaternion.clone().invert());this.listener({loadingDone:this.loadingDone,loadingTotal:this.loadingTotal,enemiesLeft:this.enemies.length+(this.waves?.pending??0),exitBearing:exitLocal?Math.atan2(exitLocal.x,-exitLocal.z):0,exitDistance,wave:this.waves?.number??1,waveBreak:this.waves?.breakLeft??0,lootQuality:{...this.lootQuality},boss:boss?{name:ENEMY_INFO[boss.kind].name,hp:boss.hp,max:boss.max,enraged:boss.enraged,color:ENEMY_INFO[boss.kind].color}:null,position:{x:this.player.position.x,z:this.player.position.z},challenge:this.challenge,reducedMotion:this.reducedMotion,held:this.held,exitReady:!!this.returnPortal,nearExit:this.mode==='dungeon'&&this.nearReturnPortal,nearby:this.mode==='farm'?this.nearby:null,build:structuredClone(this.build),choices:structuredClone(this.choices),xp:this.xp,xpNext:xpNeeded(this.level),farm:structuredClone(this.farm),mode:this.mode,ready:this.ready,error:this.error,selected:this.selected,inReach:this.inReach,seed:this.seed,hp:this.hp,maxHp:this.maxHp,time:this.time,kills:this.kills,level:this.level,dash:this.dash,loot:{...this.loot},upgrade:this.upgrade,result:this.result?structuredClone(this.result):null,message:this.message,paused:this.paused,saved:this.saved,meal:this.meal,tier:this.tier});}
  private toast(s:string){this.message=s;this.messageUntil=this.elapsed+2.5;this.emit();return s;}
  private changed(s:string){this.save();this.refreshPlants();return this.toast(s);}
  permanentUpgrade(id:Upgrade){if(this.mode!=='farm')return;if(buyUpgrade(this.farm,id)){this.sound(780);this.changed('Upgraded');}}

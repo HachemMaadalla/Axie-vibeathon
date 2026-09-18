@@ -9,9 +9,9 @@ export type PickupKind='xp'|keyof Loot;
 export type Pickup={stars?:Stars;kind:PickupKind;amount:number;position:T.Vector3;ground:number;age:number;pulling:boolean;pullAge:number;visual?:T.Group};
 export type Drop={kind:PickupKind;amount:number};
 // One roll per monster: seeds 8%, fertilizer 4%, rich soil 2%.
-export function rollDrops(tier:number,boss=false,random:()=>number=Math.random,kind?:EnemyKind,keyStars:Stars=1):Drop[]{
+export function rollDrops(tier:number,boss=false,random:()=>number=Math.random,kind?:EnemyKind,keyStars:Stars=1,foodLoot=0):Drop[]{
  if(boss)return [{kind:tier===2?'crystalbean':'glowcap',amount:keyStars},{kind:'soil',amount:keyStars}];
- const r=random()/(1+(keyStars-1)*.5);
+ const r=random()/((1+(keyStars-1)*.5)*(1+Math.max(0,Math.min(.25,foodLoot))));
  if(r<.08){const pool:CropId[]=tier===2?['embercorn','starpepper','crystalbean','cloudmelon']:['moonberry','cloudmelon','glowcap','dewleaf'];const favored:Record<string,number>={beetle:1,stalker:0,shaman:2,moth:3,bomber:2,crystal:3,brute:1};const index=kind&&Object.hasOwn(favored,kind)?favored[kind]:Math.min(pool.length-1,Math.floor(r/.08*pool.length));return [{kind:pool[index],amount:1}];}
  if(r<.12)return [{kind:'fertilizer',amount:1}];
  if(r<.14)return [{kind:'soil',amount:1}];

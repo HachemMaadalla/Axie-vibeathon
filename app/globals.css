@@ -298,3 +298,5 @@ h2,h3{font-family:Georgia,serif;font-weight:normal;letter-spacing:-.5px}h2{font-
 
 /* Fit the viewport in both windowed and fullscreen play. */
 html,body{width:100%;height:100%;overflow:hidden}.game-shell{height:100dvh;min-height:0!important;width:100%}:root:fullscreen{background:#142735}.world{user-select:none;-webkit-user-select:none}
+
+.meal-combos{display:flex;gap:6px;flex-wrap:wrap}.meal-combos>span{display:flex;align-items:center;gap:5px;padding:5px 9px;background:#284b3b;border:1px solid #86ba75;border-radius:6px;color:#daf2b6;font-size:12px}.meal-variety,.cook-note{display:block;color:#dfca97;font-size:12px;margin:8px 0}.cook-recipes .cook-pair{display:flex;align-items:center;justify-content:center;gap:5px;background:#253e42;border-radius:6px;padding:4px}.cook-pair small{color:#e8c981!important}

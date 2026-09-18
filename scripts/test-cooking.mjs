@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 import * as T from 'three';
 registerHooks({resolve(s,c,next){try{return next(s,c);}catch(e){if(s.startsWith('.')&&!/\.[a-z]+$/i.test(s))return next(s+'.ts',c);throw e;}}});
-const {freshFarm,hydrateFarm,cook,beginExpedition}=await import('../lib/game/state.ts');
+const {freshFarm,hydrateFarm,cook,beginExpedition,tend}=await import('../lib/game/state.ts');
 const {foodBuffs,foodLabels,cookingHit,cookingPosition,COOK_TARGETS}=await import('../lib/game/food.ts');
 const {freshBuild,modifiers,spellStats}=await import('../lib/game/build.ts');
 const {WildseedGame}=await import('../lib/game/scene.ts');
-const {BattlePickups}=await import('../lib/game/pickups.ts');
+const {qualityCounts}=await import('../lib/game/quality.ts');
+const {BattlePickups,rollDrops}=await import('../lib/game/pickups.ts');
 let n=0;const check=(s,fn)=>{fn();console.log('PASS '+s);n++;};
 check('Three timing targets are reachable; misses and perfect cooks have exact costs',()=>{
  for(let round=0;round<3;round++){assert.ok(cookingHit(COOK_TARGETS[round]*900,round));assert.equal(cookingHit(0,round),false);assert.equal(cookingHit(2800,round),false);}
@@ -34,7 +35,7 @@ check('Buff caps, casting speed and spell size match the food tray preview',()=>
 check('Food armor reduces actual received damage; fresh runs have no leftover food',()=>{
  const b=freshBuild();b.food=foodBuffs(['crystalbean','cloudmelon']);
  const g=Object.assign(Object.create(WildseedGame.prototype),{build:b,invuln:0,mode:'dungeon',hp:100,player:new T.Group(),motor:{velocity:new T.Vector3()},fx:{hurt(){}},combatAudio:{play(){}},reducedMotion:true});
- g.damagePlayer(20,new T.Vector3(1,0,0));assert.equal(g.hp,84);assert.equal(freshBuild().food,undefined);
+ g.damagePlayer(20,new T.Vector3(1,0,0));assert.equal(g.hp,85.6);assert.equal(freshBuild().food,undefined);
 });
 check('Pickup range bonus attracts distant XP without instant credit',()=>{
  const p=new BattlePickups(new T.Group(),()=>0,30);p.spawn('xp',1,new T.Vector3(7,0,0));let credits=0;
@@ -45,4 +46,32 @@ check('Existing meal inventories and legacy selection survive save migration',()
  const f=freshFarm();f.meals.sunroot=3;f.meal='sunroot';f.keys.grove=1;const loaded=hydrateFarm(JSON.parse(JSON.stringify(f)));
  assert.equal(loaded.meals.sunroot,3);assert.equal(beginExpedition(loaded,1).meal,'sunroot');assert.equal(loaded.meals.sunroot,2);
 });
+
+check('Meal pairs reward different crops once, with no duplicate stacking',()=>{
+ const comfort=foodBuffs(['sunroot','dewleaf']);assert.equal(comfort.health,85);assert.ok(Math.abs(comfort.regen-1.2)<1e-9);
+ assert.equal(foodBuffs(['embercorn','starpepper']).area,.4);
+ assert.equal(foodBuffs(['moonberry','glowcap']).magnet,3);
+ assert.ok(Math.abs(foodBuffs(['cloudmelon','crystalbean']).armor-.28)<1e-9);
+ assert.equal(foodBuffs(['sunroot','sunroot','dewleaf','dewleaf']).health,145);
+ assert.equal(foodBuffs(['sunroot','sunroot','sunroot','sunroot']).loot,0);
+ assert.equal(foodBuffs(['sunroot','moonberry','glowcap']).loot,.15);
+ assert.equal(foodBuffs(['sunroot','moonberry','glowcap','embercorn']).loot,.25);
+});
+check('Varied food improves physical supply drops without changing XP or boss guarantees',()=>{
+ assert.deepEqual(rollDrops(1,false,()=>.16),[]);
+ assert.equal(rollDrops(1,false,()=>.16,undefined,1,.25)[0].kind,'soil');
+ assert.equal(rollDrops(1,false,()=>.09,'stalker',1,.25)[0].kind,'moonberry');
+ assert.deepEqual(rollDrops(2,true,()=>.9,undefined,2,.25),rollDrops(2,true,()=>.9,undefined,2));
+});
+check('Rare harvests sustain planting and keep the seed rank, with an extra gardener seed',()=>{
+ for(const hero of ['bing','pomodoro']){
+  const f=freshFarm();f.hero=hero;f.seeds.moonberry=0;
+  f.plots[0]={crop:'moonberry',growth:1,watered:true,rich:false,fertilized:false,stars:2};
+  tend(f,0,'moonberry',()=>0);
+  assert.equal(f.seeds.moonberry,hero==='pomodoro'?2:1);
+  assert.equal(qualityCounts(f,'seed:moonberry')[1],f.seeds.moonberry);
+  tend(f,0,'moonberry',()=>0);assert.equal(f.plots[0].stars,2);
+ }
+});
+
 console.log(n+' cooking and food checks passed.');

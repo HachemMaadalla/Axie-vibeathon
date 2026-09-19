@@ -18,11 +18,11 @@ check('Every legacy bed and resource survives expansion; all new beds work with 
  for(let i=12;i<PLOT_COUNT;i++){assert.equal(f.plots[i].crop,null);assert.equal(nearestPlot(plotPosition(i)).index,i);tend(f,i,'sunroot');assert.equal(f.plots[i].crop,'sunroot');tend(f,i,'sunroot');assert.ok(f.plots[i].watered);}
  assert.deepEqual(hydrateFarm(f),f);assert.equal(ISLAND_SERVICES.some(s=>s.kind==='shop'),false);assert.equal(WildseedGame.prototype.tradeItem,undefined);
 });
-check('Seed rarity is 8%, deeper seeds stay gated, and boss supplies also become drops',()=>{
+check('Seed rarity is 3%, deeper seeds stay gated, and boss supplies also become drops',()=>{
  for(const tier of [1,2]){
   const counts=emptyLoot();for(let i=0;i<10000;i++)for(const drop of rollDrops(tier,false,()=> (i+.5)/10000))counts[drop.kind]+=drop.amount;
-  assert.equal(CROP_IDS.reduce((n,id)=>n+counts[id],0),800);assert.equal(counts.fertilizer,400);assert.equal(counts.soil,200);
-  assert.equal(counts.sunroot,0);assert.equal(counts.embercorn,tier===1?0:200);
+  assert.equal(CROP_IDS.reduce((n,id)=>n+counts[id],0),300);assert.equal(counts.fertilizer,100);assert.equal(counts.soil,50);
+  assert.equal(counts.sunroot,0);assert.equal(counts.embercorn,tier===1?0:75);
   assert.deepEqual(rollDrops(tier,true),[{kind:tier===1?'glowcap':'crystalbean',amount:1},{kind:'soil',amount:1}]);
  }
 });

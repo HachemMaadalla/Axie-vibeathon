@@ -30,6 +30,7 @@ const material=inkMaterial(.04),shader={uniforms:{},vertexShader:'#include <begi
 visuals.release(two);visuals.dispose();assert.equal(cachedDisposed,1);
 console.log('PASS Shared models survive individual effect cleanup; hull shader uses an available vertex normal');
 const scene=new T.Scene(),fx=new CombatFX(scene),engine=new SpellEngine(scene,{fx,height});
+const camera=new T.PerspectiveCamera();for(let i=0;i<100;i++)fx.impact(new T.Vector3(),20,'#ffbb77',false,false,new T.Vector3(1,0,0));fx.update(.01,camera);assert.equal(fx.root.getObjectByName('impact-flashes').count,48);fx.update(.2,camera);assert.equal(fx.root.getObjectByName('impact-flashes').count,0);
 const target={mesh:new T.Group(),hp:100000,boss:false};target.mesh.position.set(2,height(2,0),0);
 const build={items:{thorn:3,petal:3,spore:3,storm:3,ember:3,echo:3},evolved:['thorn','petal','spore','storm','ember']};
 let transient=0,released=0;const seen=new Set();

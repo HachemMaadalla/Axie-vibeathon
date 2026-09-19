@@ -27,7 +27,7 @@ export class SpellEngine{
   const mesh=this.visuals.ring(point,radius,color,this.feedback.height);this.root.add(mesh);return mesh;
  }
  private line(from:T.Vector3,to:T.Vector3,evolved:boolean){
-  const bolt=this.visuals.lightning(from,to,evolved);this.root.add(bolt);this.flashes.push({object:bolt,life:.19});
+  const bolt=this.visuals.lightning(from,to,evolved);this.root.add(bolt);this.flashes.push({object:bolt,life:.12});
  }
  private zone(point:T.Vector3,radius:number,life:number,damage:number,slow:boolean,heal:boolean,color:string,fire=false,style?:'frost'|'void'|'venom'){
   const mesh=new T.Group();mesh.name=fire?'solar-burning-ground':heal?'dream-garden':'spore-cloud';mesh.position.copy(point);
@@ -46,7 +46,7 @@ export class SpellEngine{
  speedMultiplier(target:SpellTarget){return (this.chilled.get(target)??0)>this.clock?.45:this.zones.some(z=>z.slow&&z.mesh.position.distanceTo(target.mesh.position)<z.radius)? .65:1;}
  healingAt(position:T.Vector3){return this.zones.some(z=>z.heal&&z.mesh.position.distanceTo(position)<z.radius)?3:0;}
  update(dt:number,player:T.Vector3,build:Build,baseDamage:number,targets:SpellTarget[],hit:(target:SpellTarget,damage:number)=>void){
-  this.clock+=dt;this.trailAt-=dt;const emitTrail=this.trailAt<=0;if(emitTrail)this.trailAt=.03;
+  this.clock+=dt;this.trailAt-=dt;const emitTrail=this.trailAt<=0;if(emitTrail)this.trailAt=.06;
   const live=targets.filter(t=>t.hp>0),velocity=new Map<SpellTarget,T.Vector3>();
   for(const t of live){const before=this.previousTargets.get(t);if(before&&dt>0){const v=t.mesh.position.clone().sub(before).divideScalar(dt);v.y=0;v.clampLength(0,12);velocity.set(t,v);}this.previousTargets.set(t,t.mesh.position.clone());}
   const aimAt=(t:SpellTarget,origin:T.Vector3,speed:number)=>center(t).addScaledVector(velocity.get(t)??new T.Vector3(),Math.min(.35,origin.distanceTo(center(t))/speed)*.75);
@@ -138,7 +138,7 @@ export class SpellEngine{
    }
    const angle=Math.atan2(swing.direction.x,swing.direction.z);
    if(swing.id==='hammer')this.flashes.push({object:this.ring(player,swing.radius,swing.color),life:.2});
-   else{const effect=swing.id==='sword'?this.visuals.swordStrike(player,swing.radius,angle,swing.color,swing.evolved):this.visuals.axeCleave(player,swing.radius,angle,swing.color,swing.evolved);this.root.add(effect);this.cuts.push({object:effect,age:0,max:swing.id==='sword'?.24:.3,kind:swing.id,angle});}
+   else{const effect=swing.id==='sword'?this.visuals.swordStrike(player,swing.radius,angle,swing.color,swing.evolved):this.visuals.axeCleave(player,swing.radius,angle,swing.color,swing.evolved);this.root.add(effect);this.cuts.push({object:effect,age:0,max:swing.id==='sword'?.16:.21,kind:swing.id,angle});}
    this.feedback.fx?.burst(player.clone().addScaledVector(swing.direction,1.5),swing.color,swing.id==='hammer'?15:6,swing.id==='hammer'?4:2);
    if(swing.id==='hammer')this.feedback.audio?.play('hammer');
    this.melee.splice(i,1);
@@ -166,13 +166,13 @@ export class SpellEngine{
   }
   for(let i=this.meteors.length-1;i>=0;i--){
    const m=this.meteors[i];m.life-=dt;m.mesh.position.y=m.point.y+Math.max(.35,m.life*10);m.mesh.rotation.y+=dt*7;if(emitTrail){this.feedback.fx?.trail(m.mesh.position,'#ffae58',.3);this.feedback.fx?.trail(m.mesh.position.clone().add(new T.Vector3(0,.45,0)),'#fa7053',.2);}
-   if(m.life<=0){this.feedback.fx?.burst(m.point.clone().add(new T.Vector3(0,.3,0)),'#ffc578',28,7);this.feedback.fx?.ring(m.point,m.radius*1.2,'#ffe7ab',.4);this.feedback.audio?.play('meteor');splash(m.point,m.radius,m.damage);this.discard(m.mesh);this.discard(m.marker);this.flashes.push({object:this.ring(m.point,m.radius,'#ffe2a1'),life:.3});if(m.burn)this.zone(m.point,m.radius,4,m.damage*.15,false,false,'#ff933d',true);this.meteors.splice(i,1);}
+   if(m.life<=0){this.feedback.fx?.burst(m.point.clone().add(new T.Vector3(0,.3,0)),'#ffc578',16,7);this.feedback.fx?.ring(m.point,m.radius*1.2,'#ffe7ab',.28);this.feedback.audio?.play('meteor');splash(m.point,m.radius,m.damage);this.discard(m.mesh);this.discard(m.marker);this.flashes.push({object:this.ring(m.point,m.radius,'#ffe2a1'),life:.3});if(m.burn)this.zone(m.point,m.radius,4,m.damage*.15,false,false,'#ff933d',true);this.meteors.splice(i,1);}
   }
   for(let i=this.zones.length-1;i>=0;i--){
    const z=this.zones[i];z.life-=dt;z.tick-=dt;if(emitTrail){const a=this.clock*3+i*2;this.feedback.fx?.trail(z.mesh.position.clone().add(new T.Vector3(Math.cos(a)*z.radius*.7,.3+Math.sin(a)*.15,Math.sin(a)*z.radius*.7)),z.style==='void'?'#b299ff':z.style==='frost'?'#8eeaff':z.fire?'#ff7136':z.heal?'#63efc6':'#8ddb46',.12);}
    if(z.style==='void')for(const t of live){const offset=z.mesh.position.clone().sub(t.mesh.position);offset.y=0;const d=offset.length();if(t.hp>0&&d<z.radius&&d>.3){const next=t.mesh.position.clone().addScaledVector(offset.normalize(),Math.min(d-.3,dt*(t.boss?.7:3.8)));if(!this.feedback.collision?.(t.mesh.position,next))t.mesh.position.copy(next);}}
    if(z.tick<=0){z.tick=.5;splash(z.mesh.position,z.radius,z.damage);}
-   z.motes.forEach((m,j)=>{const angle=j/z.motes.length*Math.PI*2+(z.fire?0:this.clock*.45),x=Math.cos(angle)*z.radius*.64,zp=Math.sin(angle)*z.radius*.64;m.position.set(x,(this.feedback.height?.(z.mesh.position.x+x,z.mesh.position.z+zp)??z.mesh.position.y)-z.mesh.position.y+(z.fire?.05:.38+Math.sin(this.clock*3+j)*.15),zp);m.rotation.y=this.clock*(z.fire?1.5:.5)+j;m.scale.setScalar(Math.min(1,(z.max-z.life)*8,z.life*4)*(z.fire?.8+Math.sin(this.clock*10+j)*.16:1.25));});
+   z.motes.forEach((m,j)=>{const angle=j/z.motes.length*Math.PI*2+(z.fire?0:this.clock*.6),x=Math.cos(angle)*z.radius*.64,zp=Math.sin(angle)*z.radius*.64;m.position.set(x,(this.feedback.height?.(z.mesh.position.x+x,z.mesh.position.z+zp)??z.mesh.position.y)-z.mesh.position.y+(z.fire?.05:.38+Math.sin(this.clock*3+j)*.15),zp);m.rotation.y=this.clock*(z.fire?1.5:.5)+j;m.scale.setScalar(Math.min(1,(z.max-z.life)*8,z.life*4)*(z.fire?.8+Math.sin(this.clock*10+j)*.16:.85));});
    if(z.life<=0){this.discard(z.mesh);this.zones.splice(i,1);}
   }
   for(let i=this.cuts.length-1;i>=0;i--){const c=this.cuts[i];c.age+=dt;const t=c.age/c.max;if(t>=1){this.discard(c.object);this.cuts.splice(i,1);continue;}const tail=Math.min(1,(1-t)*4);if(c.kind==="sword"){c.object.scale.set(tail,tail,.45+.55*Math.min(1,c.age/.055));}else{c.object.rotation.y=c.angle+(t-.25)*.55;const grow=.55+.45*Math.min(1,c.age/.045);c.object.scale.set(grow*tail,1,grow*tail);}}

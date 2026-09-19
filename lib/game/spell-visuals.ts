@@ -36,7 +36,7 @@ function merge(parts:Part[]){
   if(g!==p.g)p.g.dispose();
   g.deleteAttribute('uv');
   if(p.scale)g.scale(p.scale[0],p.scale[1],p.scale[2]);
-  if(p.rotation){g.rotateX(p.rotation[0]);g.rotateY(p.rotation[1]);g.rotateZ(p.rotation[2]);}
+  if(p.rotation)g.applyMatrix4(new T.Matrix4().makeRotationFromEuler(new T.Euler(p.rotation[0],p.rotation[1],p.rotation[2])));
   if(p.position)g.translate(p.position[0],p.position[1],p.position[2]);
   const color=new T.Color(p.color),values=new Float32Array(g.getAttribute('position').count*3);
   for(let i=0;i<values.length;i+=3){values[i]=color.r;values[i+1]=color.g;values[i+2]=color.b;}
@@ -49,9 +49,9 @@ function blade(points:number[][],depth=.09){
  const g=new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1,curveSegments:1});g.translate(0,0,-depth/2);g.rotateX(Math.PI/2);return g;
 }
 function leaf(length=1,width=.3){return blade([[0,-length*.5],[-width*.7,-length*.12],[-width,length*.13],[0,length*.5],[width*.48,length*.07],[width*.45,-length*.27]]);}
-function band(radius:number,color:string,inner=.87){
+function band(radius:number,color:string,inner=.95){
  return merge([
-  {g:new T.RingGeometry(radius*(inner-.035),radius*1.025,48),color:SPELL_INK},
+  {g:new T.RingGeometry(radius*(inner-.018),radius*1.01,48),color:SPELL_INK},
   {g:new T.RingGeometry(radius*inner,radius,48),color,position:[0,0,.012]}
  ]);
 }
@@ -60,7 +60,7 @@ export function cartoonBandGeometry(inner:number,outer:number,color:string){retu
 export class SpellVisuals{
  private geometries=new Map<string,T.BufferGeometry>();
  private toon=toonMaterial('#ffffff');
- private ink=inkMaterial();
+ private ink=inkMaterial(.02);
  private flat=new T.MeshBasicMaterial({vertexColors:true,side:T.DoubleSide});
  constructor(){this.toon.vertexColors=true;this.toon.emissive.set('#203449');this.toon.emissiveIntensity=.22;this.toon.name='cel-shaded-spell';}
  private cached(key:string,build:()=>Part[]){
@@ -130,8 +130,8 @@ export class SpellVisuals{
   const root=new T.Group();root.name='vertical-sword-strike';root.position.copy(point);root.rotation.y=angle;
   for(const offset of evolved?[-1,0,1]:[0]){
    const cut=this.cached('vertical-sword-'+color,()=>[
-    {g:blade([[.1,.05],[2.4,.12],[2.75,.24],[1.35,.7],[.22,1],[.06,.89],[.65,.5],[.95,.2]],.16),color,rotation:[0,0,Math.PI/2]},
-    {g:blade([[.27,.86],[1.28,.61],[2.37,.23],[1.2,.65],[.22,.98]],.025),color:'#f4ffff',rotation:[0,0,Math.PI/2],position:[-.095,0,0]},
+    {g:blade([[2.65,.04],[2.5,.15],[.18,.98],[.04,1.04],[.08,.91],[2.4,.04]],.075),color,rotation:[0,0,Math.PI/2]},
+    {g:blade([[2.48,.07],[2.42,.11],[.12,.98],[.1,.95]],.025),color:'#f4ffff',rotation:[0,0,Math.PI/2],position:[-.047,0,0]},
     {g:blade([[-.055,.18],[.055,.18],[.085,.88],[0,1],[-.085,.88]],.035),color:'#dcffff',position:[0,.065,0]}
    ]);
    cut.position.x=offset;cut.scale.z=radius;root.add(cut);
@@ -143,9 +143,9 @@ export class SpellVisuals{
   for(const turn of evolved?[0,Math.PI]:[0]){
    const cleave=this.cached('axe-cleave-'+color+'-'+evolved,()=>{
     const arc=evolved?Math.PI*1.12:Math.PI*1.25,outer:number[][]=[],inner:number[][]=[],edge:number[][]=[];
-    for(let i=0;i<=24;i++){const t=i/24,a=(t-.5)*arc,taper=Math.sin(t*Math.PI),r=.91+(i%4===2?.085:0)*taper;outer.push([Math.sin(a)*r,Math.cos(a)*r]);inner.push([Math.sin(a)*(r-.31*taper),Math.cos(a)*(r-.31*taper)]);edge.push([Math.sin(a)*(r-.055*taper),Math.cos(a)*(r-.055*taper)]);}
+    for(let i=0;i<=24;i++){const t=i/24,a=(t-.5)*arc,taper=Math.sin(t*Math.PI),r=.91+(i%4===2?.085:0)*taper;outer.push([Math.sin(a)*r,Math.cos(a)*r]);inner.push([Math.sin(a)*(r-.18*taper),Math.cos(a)*(r-.31*taper)]);edge.push([Math.sin(a)*(r-.055*taper),Math.cos(a)*(r-.055*taper)]);}
     return [
-     {g:blade([...outer,...inner.slice().reverse()],.18),color},
+     {g:blade([...outer,...inner.slice().reverse()],.07),color},
      {g:blade([...outer,...edge.reverse()],.035),color:'#fff2c7',position:[0,.11,0]}
     ];
    });
@@ -166,8 +166,8 @@ export class SpellVisuals{
   const parts:Part[]=[];
   for(let i=0;i<3;i++){
    const d=points[i+1].clone().sub(points[i]),mid=points[i].clone().add(points[i+1]).multiplyScalar(.5),rotation=new T.Euler().setFromQuaternion(new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),d.clone().normalize()));
-   parts.push({g:new T.CylinderGeometry(.10,.14,d.length()+.08,5),color:evolved?'#59d5ff':'#24baff',position:mid.toArray(),rotation:[rotation.x,rotation.y,rotation.z]});
-   parts.push({g:new T.CylinderGeometry(.038,.045,d.length()+.04,4),color:'#dcffff',position:mid.clone().add(new T.Vector3(0,.115,0)).toArray(),rotation:[rotation.x,rotation.y,rotation.z]});
+   parts.push({g:new T.CylinderGeometry(.06,.085,d.length()+.08,5),color:evolved?'#59d5ff':'#24baff',position:mid.toArray(),rotation:[rotation.x,rotation.y,rotation.z]});
+   parts.push({g:new T.CylinderGeometry(.025,.03,d.length()+.04,4),color:'#dcffff',position:mid.clone().add(new T.Vector3(0,.115,0)).toArray(),rotation:[rotation.x,rotation.y,rotation.z]});
   }
   if(evolved)for(let i=1;i<3;i++){const p=points[i];parts.push({g:new T.ConeGeometry(.13,.85,4),color:'#ab8aff',position:p.clone().add(new T.Vector3(.14,.3,0)).toArray(),rotation:[0,0,-.65]});}
   const geo=merge(parts),mesh=new T.Mesh(geo,this.toon);mesh.name=evolved?'thunder-grove-bolt':'storm-seed-bolt';mesh.userData.transientGeometry=true;mesh.add(new T.Mesh(geo,this.ink));return mesh;

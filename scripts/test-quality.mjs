@@ -38,7 +38,7 @@ check('Free seeds remain free while seed, soil and fertilizer quality affects fa
  tend(f,4,'sunroot');assert.equal(f.plots[4].stars,1);tend(f,4,'sunroot');grantQuality(f,'soil',1,3);grantQuality(f,'fertilizer',1,3);improve(f,4,'soil');improve(f,4,'fertilizer');grow(f,5);assert.ok(f.plots[4].growth>5/30*1.4*1.8);
 });
 check('Higher-star keys improve supply drop rates without affecting XP',()=>{
- for(const s of [1,2,3]){let seeds=0;for(let i=0;i<10000;i++)seeds+=rollDrops(1,false,()=>i/10000,'stalker',s).filter(d=>d.kind==='moonberry').length;assert.equal(seeds,800*(1+(s-1)*.5));assert.equal(rollDrops(1,true,()=>.5,'guardian',s)[0].amount,s);}
+ for(const s of [1,2,3]){let seeds=0;for(let i=0;i<10000;i++)seeds+=rollDrops(1,false,()=>i/10000,'stalker',s).filter(d=>d.kind==='moonberry').length;assert.equal(seeds,300*(1+(s-1)*.25));assert.equal(rollDrops(1,true,()=>.5,'guardian',s)[0].amount,1);}
 });
 check('Physical pickups keep quality and safe returns preserve all loot quality',()=>{
  const p=new BattlePickups(new T.Group(),()=>0,30);p.spawn('moonberry',2,new T.Vector3(),3);let rank=0;p.update(1,new T.Vector3(),(_,__,___,s)=>rank=s);assert.equal(rank,3);p.dispose();

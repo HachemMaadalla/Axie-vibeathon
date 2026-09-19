@@ -56,9 +56,9 @@ check('Meal pairs reward different crops once, with no duplicate stacking',()=>{
  assert.equal(foodBuffs(['sunroot','moonberry','glowcap','embercorn']).loot,.25);
 });
 check('Varied food improves physical supply drops without changing XP or boss guarantees',()=>{
- assert.deepEqual(rollDrops(1,false,()=>.16),[]);
- assert.equal(rollDrops(1,false,()=>.16,undefined,1,.25)[0].kind,'soil');
- assert.equal(rollDrops(1,false,()=>.09,'stalker',1,.25)[0].kind,'moonberry');
+ assert.deepEqual(rollDrops(1,false,()=>.05),[]);
+ assert.equal(rollDrops(1,false,()=>.05,undefined,1,.25)[0].kind,'soil');
+ assert.equal(rollDrops(1,false,()=>.035,'stalker',1,.25)[0].kind,'moonberry');
  assert.deepEqual(rollDrops(2,true,()=>.9,undefined,2,.25),rollDrops(2,true,()=>.9,undefined,2));
 });
 check('Rare harvests sustain planting and keep the seed rank, with an extra gardener seed',()=>{

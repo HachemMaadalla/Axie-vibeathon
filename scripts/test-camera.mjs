@@ -55,6 +55,7 @@ assert.equal(rig.distance,18);close(camera.position,beforeWheel);
 enabled=false;const yaw=rig.yaw;
 pointer('pointerdown',100,100);pointer('pointermove',200,100);pointer('pointerup',200,100);
 assert.equal(rig.yaw,yaw);assert.equal(taps,1);
+enabled=true;rig.reset();rig.snap(player);rig.show(new T.Vector3(12,0,4),1,.8);for(let i=0;i<60;i++)rig.update(1/60,player,[]);assert.ok(rig.yaw>.8,'Tour turns toward its target');assert.equal(rig.distance,18);rig.rotate(10,0);const manualYaw=rig.yaw;rig.update(1/60,player,[]);assert.equal(rig.yaw,manualYaw,'Dragging cancels the guided camera');rig.show(new T.Vector3(12,0,4),1,.8);for(let i=0;i<360;i++)rig.update(1/60,player,[]);assert.ok(Math.abs(camera.position.distanceTo(focus)-18)<.01,'Tour returns to the player');
 rig.dispose();enabled=true;pointer('pointerdown',100,100);pointer('pointerup',100,100);assert.equal(taps,1);
 console.log('Camera checks passed: movement, follow, full orbit clearance, fixed zoom/pitch bounds, wall clearance, tap/drag, pinch, pause, cleanup.');
 

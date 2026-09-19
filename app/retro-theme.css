@@ -126,3 +126,19 @@ body .game-shell .traversal-actions button{width:52px;height:54px;opacity:.85}
  body .combat-belt button{width:32px;height:46px}
  body .combat-belt .skill-art-icon{width:26px!important;height:26px!important}
 }
+
+/* Small world-anchored crop labels remain visible without selecting a bed. */
+.crop-timers{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.crop-timer{position:absolute;left:0;top:0;padding:3px 6px;background:#203126ed;color:#fff0bf;border:1px solid #a9b47c;box-shadow:2px 2px #14201799;font:14px/1 WildseedPixel,monospace;white-space:nowrap;min-width:26px;text-align:center;font-variant-numeric:tabular-nums}
+.crop-timer[data-state=ready]{background:#385b2c;color:#ddf7a1;border-color:#b2dc7b}
+.crop-timer[data-state=dry]{background:#263f4b;color:#bdeaff;border-color:#7ab8d3}
+body .guided-tutorial{display:grid;grid-template-columns:30px 1fr 22px;gap:8px 12px;width:min(360px,calc(100vw - 28px));padding:16px!important;top:90px;bottom:auto;left:22px;transform:none;z-index:20}
+.guided-tutorial .tutorial-progress{grid-column:1/-1;display:flex;gap:5px;margin-bottom:4px}
+.tutorial-progress i{height:3px;flex:1;background:#556349}
+.tutorial-progress i.current{background:#f2d588}
+body .guided-tutorial strong{font-size:19px;color:#ffe2a2}
+body .guided-tutorial p{font-size:13px;color:#dce4c8!important;line-height:1.4;margin:5px 0 0}
+.guided-tutorial .tutorial-actions{grid-column:2/-1;display:flex;justify-content:space-between;gap:12px;margin-top:6px}
+.guided-tutorial .tutorial-actions button{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 10px!important;min-height:32px;font-size:12px;width:auto}
+.guided-tutorial .tutorial-skip{align-self:start;color:#cbd3bc;padding:2px}
+@media(max-width:600px){body .guided-tutorial{top:112px;left:14px;padding:12px!important;gap:6px 8px}body .guided-tutorial strong{font-size:17px}.crop-timer{font-size:12px;padding:2px 4px}}

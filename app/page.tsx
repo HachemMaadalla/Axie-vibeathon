@@ -1,5 +1,5 @@
 'use client';
-import {FarmTutorial} from './farm-tutorial';
+import {FarmTutorial,type TutorialFocus} from './farm-tutorial';
 import type {FarmItem} from '@/lib/game/farm-tools';
 import {GameLoading} from './game-loading';
 import {StarBadge} from './quality-ui';
@@ -8,7 +8,7 @@ import {CookingPanel} from './cooking-ui';
 import {JourneyMap,PermanentUpgrades,CompostRecipes} from './progression-ui';
 import {CHALLENGES,type Challenge} from '@/lib/game/progression';
 import {Maximize,Minimize,Map as MapIcon,CheckCheck} from 'lucide-react';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {Sparkles,ChevronsUp,FastForward} from 'lucide-react';
 import {freshBuild,xpNeeded} from '@/lib/game/build';
 import {FarmHotbar} from './farm-hotbar';
@@ -31,6 +31,7 @@ export default function Home(){
  const mount=useRef<HTMLDivElement>(null),game=useRef<WildseedGame|null>(null);
  const [v,setV]=useState<View>(initial),[started,setStarted]=useState(false),[modal,setModal]=useState<'forge'|'kitchen'|'travel'|'help'|'hero'|'garden'|'inventory'|'build'|'map'|null>(null),[muted,setMuted]=useState(false),[userPaused,setUserPaused]=useState(false),[volume,setVolume]=useState(.7);
  useEffect(()=>{try{setMuted(localStorage.getItem('wildseed-muted')==='true');setVolume(Math.max(0,Math.min(1,Number(localStorage.getItem('wildseed-volume')??.7))));}catch{}},[]);
+ const focusTutorial=useCallback((focus:TutorialFocus,plot:number|null)=>game.current?.tutorialFocus(focus,plot),[]);
  const [tutorialTool,setTutorialTool]=useState<FarmItem|null>(null),[tutorialReplay,setTutorialReplay]=useState(0);
 
  const [fullscreen,setFullscreen]=useState(false),[fullscreenAvailable,setFullscreenAvailable]=useState(false),[screenError,setScreenError]=useState('');
@@ -79,7 +80,7 @@ export default function Home(){
   {started&&!isFarm&&!modal&&!userPaused&&!v.upgrade&&!v.result&&v.nearExit&&<button className="island-interact panel" onClick={()=>game.current?.returnHome()}><kbd>E</kbd>Return home</button>}
   {started&&!modal&&!userPaused&&!v.upgrade&&!v.result&&<div className="traversal-actions"><button className="panel" title="Jump / double jump · Space" aria-label="Jump or double jump" onClick={()=>game.current?.jumpNow()}><ChevronsUp size={23}/><kbd>SPACE</kbd></button><button className="panel" title="Dash · Q" aria-label="Dash" disabled={v.dash>0} onClick={()=>game.current?.dashNow()}><Wind size={23}/><kbd>{v.dash>0?v.dash.toFixed(1):'Q'}</kbd></button><button className="panel touch-sprint" title="Hold to sprint" aria-label="Hold to sprint" onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);game.current?.moveKey('shift',true);}} onPointerUp={()=>game.current?.moveKey('shift',false)} onPointerCancel={()=>game.current?.moveKey('shift',false)}><FastForward size={23}/></button></div>}
   {started&&!modal&&!userPaused&&!v.upgrade&&!v.result&&<div className="touch-controls" aria-label="Touch movement">{[['w',ArrowUp],['a',ArrowLeft],['s',ArrowDown],['d',ArrowRight]].map(([key,Icon])=>{const I=Icon as typeof ArrowUp;return <button key={key as string} aria-label={'Move '+key} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);game.current?.moveKey(key as string,true);}} onPointerUp={()=>game.current?.moveKey(key as string,false)} onPointerCancel={()=>game.current?.moveKey(key as string,false)}><I size={23}/></button>;})}</div>}
-  {started&&<FarmTutorial key={tutorialReplay} view={v} replay={tutorialReplay>0} hidden={!!modal||userPaused||!!v.result||v.upgrade} onGuide={setTutorialTool}/>}
+  {started&&<FarmTutorial key={tutorialReplay} view={v} replay={tutorialReplay>0} hidden={!!modal||userPaused||!!v.result||v.upgrade} onGuide={setTutorialTool} onFocus={focusTutorial}/>}
   {screenError&&<output className="toast" role="status" onClick={()=>setScreenError("")}>{screenError}</output>}
   {v.message&&started&&!modal&&!v.result&&!v.upgrade&&<output className="toast" aria-live="polite"><Leaf size={18}/>{v.message}</output>}
   {userPaused&&!modal&&<div className="pause-cover"><div className="panel pause-card"><Moon size={30}/><h2>Paused</h2><div className="pause-tools">{fullscreenAvailable&&<button title={fullscreen?"Exit fullscreen":"Fullscreen"} aria-label={fullscreen?"Exit fullscreen":"Fullscreen"} className="secondary" onClick={toggleFullscreen}>{fullscreen?<Minimize size={19}/>:<Maximize size={19}/>}</button>}<button title={muted?'Enable sound':'Mute sound'} aria-label={muted?'Enable sound':'Mute sound'} className="secondary" onClick={setMute}>{muted?<VolumeX size={19}/>:<Volume2 size={19}/>}</button><button title="Help & credits" aria-label="Help & credits" onClick={()=>{setUserPaused(false);open('help');}} className="secondary"><HelpCircle size={20}/></button></div><label className="setting-row">Reduce motion<input type="checkbox" checked={v.reducedMotion??false} onChange={e=>game.current?.setReducedMotion(e.target.checked)}/></label><label className="setting-row">Volume<input type="range" aria-label="Sound volume" min="0" max="1" step=".05" value={volume} onChange={e=>{setVolume(Number(e.target.value));game.current?.setVolume(Number(e.target.value));}}/></label><span className="save-status">{v.saved?<><CheckCheck size={16}/> Saved</>:'Save unavailable'}</span><button className="primary" onClick={()=>setUserPaused(false)}><Play size={18}/> Resume</button></div></div>}

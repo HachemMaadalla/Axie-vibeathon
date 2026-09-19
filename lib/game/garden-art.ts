@@ -150,8 +150,8 @@ export class GardenArt{
   }
  }
  private flowers(p:T.Group){
-  for(let i=0;i<310;i++){
-   const a=i*2.399,r=7+Math.sqrt((i+.5)/310)*21,x=Math.cos(a)*r,z=Math.sin(a)*r;
+  for(let i=0;i<90;i++){
+   const a=i*2.399,r=7+Math.sqrt((i+.5)/90)*21,x=Math.cos(a)*r,z=Math.sin(a)*r;
    if(Math.abs(x)<6.7&&z>-4&&z<15||Math.abs(x)<5.5&&z<-15||gardenStreamNear(x,z)||x< -4.5&&x> -14&&z> -8&&z<12)continue;
    const y=ground(x,z),c=['#ffcf65','#f1a4c4','#e3eab0','#91be60'][i%4];
    for(let j=0;j<3;j++){const b=j*2.09;puff(p,'#599642',x+Math.cos(b)*.12,y+.18,z+Math.sin(b)*.12,.06,.23,.08,.025);}

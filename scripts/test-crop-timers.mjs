@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,next){try{return next(s,c);}catch(e){if(s.startsWith('.')&&!/\.[a-z]+$/i.test(s))return next(s+'.ts',c);throw e;}}});
+const {freshFarm,cropSecondsRemaining,grow}=await import('../lib/game/state.ts');
+const f=freshFarm(),p=f.plots[4];Object.assign(p,{crop:'sunroot',growth:0,watered:true});
+assert.equal(cropSecondsRemaining(f,p),30);
+grow(f,10);assert.equal(cropSecondsRemaining(f,p),20);
+p.watered=false;const before=p.growth;grow(f,10);assert.equal(p.growth,before);
+Object.assign(p,{watered:true,rich:true,soilStars:3,fertilized:true,fertilizerStars:2});f.progress.upgrades.greenhouse=2;
+const seconds=cropSecondsRemaining(f,p);assert.ok(seconds<20);grow(f,seconds);assert.equal(p.growth,1);assert.equal(cropSecondsRemaining(f,p),0);
+console.log('PASS Crop countdown matches growth, bonuses, dry beds and harvest readiness.');

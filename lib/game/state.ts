@@ -41,7 +41,9 @@ export function hydrateFarm(value:unknown):FarmState{
  fresh.keys={grove:count(v.keys?.grove),hollow:count(v.keys?.hollow)};
  for(const k of ['fertilizer','soil','runs','harvests','clears','day'] as const)fresh[k]=count(v[k]);fresh.day=Math.max(1,fresh.day);fresh.progress=hydrateProgress(v.progress);hydrateQuality(fresh,v.quality);if(v.lastCraft)fresh.lastCraft={stars:Math.max(1,Math.min(3,Math.floor(v.lastCraft.stars)||1)) as Stars,amount:v.lastCraft.amount===2?2:1};for(const id of CROP_IDS)if(fresh.seeds[id]||fresh.crops[id]||fresh.meals[id])discover(fresh,'crop:'+id);return fresh;
 }
-export function grow(farm:FarmState,seconds:number){for(const p of farm.plots)if(p.crop&&p.watered&&p.growth<1)p.growth=Math.min(1,p.growth+Math.max(0,seconds)/CROPS[p.crop].seconds*(p.rich?1+.4*qualityPower(p.soilStars??1):1)*(p.fertilized?1+.8*qualityPower(p.fertilizerStars??1):1)*(1+(farm.progress?.upgrades.greenhouse??0)*.08));}
+export function cropGrowthRate(farm:FarmState,p:Plot){return p.crop?1/CROPS[p.crop].seconds*(p.rich?1+.4*qualityPower(p.soilStars??1):1)*(p.fertilized?1+.8*qualityPower(p.fertilizerStars??1):1)*(1+(farm.progress?.upgrades.greenhouse??0)*.08):0;}
+export function cropSecondsRemaining(farm:FarmState,p:Plot){return p.crop?Math.max(0,Math.ceil(Math.max(0,1-p.growth)/cropGrowthRate(farm,p)-1e-6)):0;}
+export function grow(farm:FarmState,seconds:number){for(const p of farm.plots)if(p.crop&&p.watered&&p.growth<1)p.growth=Math.min(1,p.growth+Math.max(0,seconds)*cropGrowthRate(farm,p));}
 export function tend(farm:FarmState,index:number,seed:CropId,random=Math.random):string{
  if(!Number.isInteger(index)||index<0||index>=farm.plots.length||!Object.hasOwn(CROPS,seed))return 'Choose a garden bed.';const p=farm.plots[index];
  if(!p.crop){if(seed!=='sunroot'&&farm.seeds[seed]<=0)return 'No seeds left. Find more in the wilds.';p.stars=seed==='sunroot'?1:takeQuality(farm,'seed:'+seed,1)[0];p.crop=seed;p.growth=0;p.watered=false;p.fertilized=false;return CROPS[seed].name+' planted. Water it to start growing.';}

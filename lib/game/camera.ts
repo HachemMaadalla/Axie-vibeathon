@@ -9,6 +9,9 @@ export function cameraMovement(x:number,z:number,yaw:number){
 export class FollowCamera {
  yaw=0;pitch=.48;readonly distance=18;
  private focus=new T.Vector3();
+ private preview:{point:T.Vector3;yaw:number;pitch:number;time:number}|null=null;
+ show(point:T.Vector3,yaw=.3,pitch=.8){this.preview={point:point.clone(),yaw,pitch,time:3.5};}
+ cancelPreview(){this.preview=null;}
  private ray=new T.Raycaster();
  private pointers=new Map<number,{x:number;y:number;startX:number;startY:number;dragged:boolean;button:number}>();
  private abort=new AbortController();
@@ -24,17 +27,19 @@ export class FollowCamera {
   canvas.addEventListener('contextmenu',e=>e.preventDefault(),{signal});
  }
  rotate(dx:number,dy:number){
+  this.cancelPreview();
   this.yaw=T.MathUtils.euclideanModulo(this.yaw-dx*.005,Math.PI*2);
   this.pitch=T.MathUtils.clamp(this.pitch+dy*.004,.08,1.48);
  }
- snap(player:T.Vector3){this.focus.copy(player).y+=1.1;this.place([]);}
- reset(yaw=0){this.yaw=yaw;this.pitch=.48;}
+ snap(player:T.Vector3){this.cancelPreview();this.focus.copy(player).y+=1.1;this.place([]);}
+ reset(yaw=0){this.cancelPreview();this.yaw=yaw;this.pitch=.48;}
  movement(x:number,z:number){return cameraMovement(x,z,this.yaw);}
  update(dt:number,player:T.Vector3,obstacles:T.Object3D[],height?:(x:number,z:number)=>number){
   if(!this.active())this.cancel();
   // Smooth the target rather than the camera's world position, so rotating can never
   // interpolate through the Axie when the view changes by 180 degrees.
-  const target=player.clone();target.y+=1.1;
+  const target=(this.preview?.point??player).clone();target.y+=1.1;
+  if(this.preview){const blend=1-Math.exp(-dt*3);this.yaw+=Math.atan2(Math.sin(this.preview.yaw-this.yaw),Math.cos(this.preview.yaw-this.yaw))*blend;this.pitch=T.MathUtils.lerp(this.pitch,this.preview.pitch,blend);this.preview.time-=dt;if(this.preview.time<=0)this.preview=null;}
   this.focus.lerp(target,1-Math.exp(-dt*16));
   this.place(obstacles,dt);
   if(height){this.camera.position.y=Math.max(this.camera.position.y,height(this.camera.position.x,this.camera.position.z)+1);this.camera.lookAt(this.focus);this.camera.updateMatrixWorld();}
